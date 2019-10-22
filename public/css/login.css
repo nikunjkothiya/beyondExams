@@ -1,0 +1,65 @@
+body {
+	font-family: Montserrat, sans-serif;
+	background-color: #fff;
+}
+.header{
+	height: 100vh;
+	background: url('../images/bg1.svg') no-repeat bottom right;
+	background-size: auto 75%;
+}
+.title{
+	margin-top: 20vh;
+	margin-bottom: -35vh;
+}
+.title .logo h2{
+	padding: 10px;
+	display: inline-block;
+	vertical-align: middle;
+}
+.subtitle{
+	margin-top: 30px;
+	font-size: 20pt;
+	font-weight: 600;
+}
+.subtext{
+	font-size:14pt;
+}
+.login-card{
+	margin: 40vh 5vh 0vh 5vh;
+	border-radius: 1px;
+	box-shadow: 2px 2px 25px 2px rgba(0,0,0,0.2);
+	background-color: #fff;
+	padding-bottom: 30px; 
+}
+.login-card .login-title{
+	padding: 20px;
+	margin: 10px;
+	text-align: center;
+	font-size: 14pt; 
+}
+.login-card hr{
+	margin-top: 0px;
+	width: 80%;
+}
+.login-btn{
+	padding: 5px;
+	margin: 5px;
+}
+.login-btn a:hover{
+	font-weight: 600;
+	color: #fff;
+}
+.btn-facebook{
+	background-color: #3B5998;
+	color: #fff;
+	border-radius: 20px;
+	width: 200px;
+	padding: 5px;
+}
+.btn-google{
+	background-color: #4285F4;
+	color: #fff;
+	border-radius: 20px;
+	width: 200px;
+	padding: 5px;
+}

@@ -1,0 +1,19 @@
+body {
+	font-family: Montserrat, sans-serif;
+	background-color: #fff;
+}
+.support{
+	margin-top: 80px;
+}
+.support h2{
+	
+}
+.support hr{
+	border-width: 2px;
+	border-color:#5b3495;
+	margin-bottom:20px;
+}
+.support .list-group .active{
+	background: #5b3495;
+	border-color: #5b3495;
+}

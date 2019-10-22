@@ -1,0 +1,19 @@
+body {
+	font-family: Montserrat, sans-serif;
+	background-color: #fff;
+}
+.subscription{
+	margin-top: 80px;
+}
+.subscription h2{
+	
+}
+.subscription hr{
+	border-width: 2px;
+	border-color:#5b3495;
+	margin-bottom:20px;
+}
+.subscription .list-group .active{
+	background: #5b3495;
+	border-color: #5b3495;
+}

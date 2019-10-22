@@ -1,0 +1,19 @@
+body {
+	font-family: Montserrat, sans-serif;
+	background-color: #fff;
+}
+.profile{
+	margin-top: 80px;
+}
+.profile h2{
+	
+}
+.profile hr{
+	border-width: 2px;
+	border-color:#5b3495;
+	margin-bottom:20px;
+}
+.profile .list-group .active{
+	background: #5b3495;
+	border-color: #5b3495;
+}
