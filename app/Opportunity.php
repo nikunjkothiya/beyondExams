@@ -11,26 +11,22 @@ class Opportunity extends Model implements TranslatableContract
     use Translatable;
 
     public $translatedAttributes = ['title', 'description'];
-    protected $fillable = ['image','link','deadline','fund_type_id','opportunity_location_id'];
+    protected $fillable = ['image','link','deadline','fund_type_id','opportunity_location_id','slug'];
 
     public function tags(){
         return $this->belongsToMany('App\Tag');
     }
 
-    public function disciplines(){
-    	return $this->belongsToMany('App\Discipline');
-    }
-
-    public function qualifications(){
-    	return $this->belongsToMany('App\Qualification');
+    public function tag_types(){
+        
     }
 
     public function fund_type(){
-    	return $this->hasMany('App\FundType');
+    	return $this->belongsTo('App\FundType');
     }
 
     public function location(){
-    	return $this->hasMany('App\OpportunityLocation');
+    	return $this->belongsTo('App\OpportunityLocation');
     }
 
     public function eligible_regions(){

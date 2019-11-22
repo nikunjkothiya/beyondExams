@@ -3,7 +3,8 @@
 return [
 
     'logout' => 'Logout',
-    'settings' => 'Settings',
+    'profile' => 'Profile',
     'lang' => 'Language',
+    'premium' => 'Premium'
 
 ];

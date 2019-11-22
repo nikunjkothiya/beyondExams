@@ -9,4 +9,12 @@ class UserDetail extends Model
     protected $fillable = [
         'user_id', 'language_id', 'firstname', 'lastname', 'college', 'city', 'gpa', 'qualification_id', 'discipline_id', 'country_id'
     ];
+
+    public function qualification(){
+        return $this->belongsTo('App\Qualification');
+    }
+
+    public function discipline(){
+        return $this->belongsTo('App\Discipline');
+    }
 }

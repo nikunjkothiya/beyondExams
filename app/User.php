@@ -5,10 +5,11 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -38,23 +39,15 @@ class User extends Authenticatable
     ];
 
     public function role(){
-        return $this->hasOne('App\Role');
+        return $this->belongsTo('App\Role');
     }
 
     public function tags(){
         return $this->belongsToMany('App\Tag');
     }
 
-    public function disciplines(){
-        return $this->belongsToMany('App\Discipline');
-    }
-
-    public function qualifications(){
-        return $this->belongsToMany('App\Qualification');
-    }
-
     public function saved_opportunities(){
-        return $this->belongsToMany('App\Opportunities');
+        return $this->belongsToMany('App\Opportunity');
     }
 
     public function premium_subscription(){
@@ -71,5 +64,9 @@ class User extends Authenticatable
 
     public function social_accounts(){
         return $this->hasMany('App\UserSocial');
+    }
+
+    public function opportunities(){
+
     }
 }

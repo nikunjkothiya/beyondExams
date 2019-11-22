@@ -27,7 +27,7 @@
 										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group">
-												    <label for="firstname">First Name</label>
+												    <label for="firstname">@lang('setup.firstname')</label>
 												    <input type="text" class="form-control @error('firstname') is-invalid @enderror" id="firstname" aria-describedby="firstnameHelp" placeholder="Enter First Name" name="firstname" value="{{ old('firstname') }}" required autocomplete="firstname" autofocus>
 												    @error('firstname')
 						                                <span class="invalid-feedback" role="alert">
@@ -38,7 +38,7 @@
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-												    <label for="lastname">Last Name</label>
+												    <label for="lastname">@lang('setup.lastname')</label>
 												    <input type="text" class="form-control @error('lastname') is-invalid @enderror" id="lastname" aria-describedby="lastnameHelp" placeholder="Enter Last Name" name="lastname" value="{{ old('lastname') }}" required autocomplete="lastname" autofocus>
 												    @error('lastname')
 						                                <span class="invalid-feedback" role="alert">
@@ -49,9 +49,22 @@
 											</div>
 										</div>
 										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group">
+												    <label for="email">@lang('setup.email')</label>
+												    <input type="email" value="{{ \Auth::user()->email }}" class="form-control @error('email') is-invalid @enderror" id="email" aria-describedby="emailHelp" placeholder="Enter Your Primary Email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus >
+												    @error('email')
+						                                <span class="invalid-feedback" role="alert">
+						                                    <strong>{{ $message }}</strong>
+						                                </span>
+						                            @enderror
+												</div>
+											</div>
+										</div>
+										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group">
-												    <label for="college">College/School</label>
+												    <label for="college">@lang('setup.college')</label>
 												    <input type="text" class="form-control @error('college') is-invalid @enderror" id="college" aria-describedby="collegeHelp" placeholder="Enter College or School Name" name="college" value="{{ old('college') }}" required autocomplete="college" autofocus>
 												    @error('college')
 						                                <span class="invalid-feedback" role="alert">
@@ -62,7 +75,7 @@
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-												    <label for="gpa">GPA</label>
+												    <label for="gpa">@lang('setup.gpa')</label>
 												    <input type="text" class="form-control @error('gpa') is-invalid @enderror" id="gpa" aria-describedby="gpaHelp" placeholder="Enter GPA" name="gpa" value="{{ old('gpa') }}" required autocomplete="gpa" autofocus>
 												    <small id="gpaHelp" class="form-text text-muted">out of 10</small>
 												    @error('gpa')
@@ -76,7 +89,7 @@
 										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="qualification">Qualifications</label>
+													<label for="qualification">@lang('setup.qualification')</label>
 						                            <select id="qualification" class="form-control @error('qualification') is-invalid @enderror" name="qualification" required autofocus>
 						                            @error('qualification')
 						                                <span class="invalid-feedback" role="alert">
@@ -92,7 +105,7 @@
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="discipline">Discipline</label>
+													<label for="discipline">@lang('setup.discipline')</label>
 						                            <select id="discipline" class="form-control @error('discipline') is-invalid @enderror" name="discipline" required autofocus>
 						                            @error('discipline')
 						                                <span class="invalid-feedback" role="alert">
@@ -110,13 +123,13 @@
 										<div class="row">
 											<div class="col-md-6">
 												<div class="form-group">
-												    <label for="city">City</label>
+												    <label for="city">@lang('setup.city')</label>
 												    <input type="text" class="form-control @error('city') is-invalid @enderror" id="city" aria-describedby="cityHelp" placeholder="Enter City" name="city" value="{{ old('city') }}" required autocomplete="city" autofocus>
 												</div>
 											</div>
 											<div class="col-md-6">
 												<div class="form-group">
-													<label for="country">Country</label>
+													<label for="country">@lang('setup.country')</label>
 						                            <select id="country" class="form-control @error('country') is-invalid @enderror" name="country" required autofocus>
 						                            @error('country')
 						                                <span class="invalid-feedback" role="alert">

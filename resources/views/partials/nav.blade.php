@@ -1,7 +1,10 @@
 	<nav class="navbar navbar-expand-lg fixed-top navbar-light" style="background-color:#fff;">
 		<div class="container">
 		  	<a class="navbar-brand" href="{{ url('dashboard') }}">
-		  		<img src="{{asset('images/logo.png')}}" width="30" height="30" class="d-inline-block align-top" alt=""> Precisely
+		  		<img src="{{asset('images/logo.png')}}" width="30" height="30" class="d-inline-block align-top" alt=""> Precisely 
+		  		@if($txnflag>0)
+		  			<span class="badge badge-primary" style="background: #5b3495">@lang('nav.premium')</span>
+		  		@endif
 		  	</a>
 		  	<button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
     			<span class="navbar-toggler-icon"></span>
@@ -15,7 +18,7 @@
 			          <img src="{{ \Auth::user()->avatar }}" width="30" height="30" style="border-radius: 50px;margin-top: -5px;"/>&nbsp;&nbsp;{{ \Auth::user()->name }}
 			        </a>
 			        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-			          <a class="dropdown-item" href="#">@lang('nav.settings')</a>
+			          <a class="dropdown-item" href="{{ url('dashboard/profile') }}">@lang('nav.profile')</a>
 			          <a class="dropdown-item" href="{{ url('logout') }}">@lang('nav.logout')</a>
 			        </div>
 			      </li>

@@ -17,3 +17,77 @@ body {
 	background: #5b3495;
 	border-color: #5b3495;
 }
+.subscription .list-group {
+	box-shadow: 2px 2px 25px 2px rgba(0,0,0,0.2);
+}
+.subscription .content{
+	margin: 10px;
+	padding: 10px;
+}
+.subscription .content-subtitle{
+	color:#5b3495;
+	font-size: 16pt; 
+}
+.subscription .content-title{
+	color:#5b3495;
+	font-weight: 600;
+	font-size: 28pt; 
+}
+.subscription .description{
+	margin: 5px;
+	padding: 5px; 
+}
+.subscription ol li{
+	padding: 5px;
+	text-align: justify;
+}
+.subscription .plans{
+	margin-top: 40px;
+}
+.subscription .plans input[type="radio"]{
+	display: none;
+}
+.subscription .plans input[type="radio"] + label{
+	margin: 10px;
+	padding: 10px;
+	font-size: 14pt;
+	border:1px solid #5b3495;
+	border-radius: 5px;
+	color: #212529;
+	width: 100%;
+	cursor: pointer;
+}
+.subscription .plans input[type="radio"] + label i{
+	position: relative;
+	float: right;
+}
+.subscription .plans input[type="radio"]:checked + label{
+	margin: 10px;
+	padding: 10px;
+	font-size: 14pt;
+	border-radius: 5px;
+	color:white;
+	background: #5b3495;
+}
+.subscription .buy{
+	margin-top: 10px;
+	margin-left: 10px;
+	background: #5b3495;
+	color: white;	
+}
+.subscription .proceed{
+	margin-top: 10px;
+	margin-left: 10px;
+	background: #5b3495;
+	color: white;	
+}
+.subscription .sub{
+	margin:20px;
+}
+.subscription .sub h1{
+	color:#5b3495;
+	font-weight: 600;
+}
+.subscription .sub p{
+	font-size:15pt;
+}

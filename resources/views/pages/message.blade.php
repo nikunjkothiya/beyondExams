@@ -31,7 +31,7 @@
 					  	<a href="{{ url('dashboard/subscription') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
 					  		@lang('dashboard.option5')
 					  	</a>
-					  	<a href="{{ url('dashboard/support') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center active">
+					  	<a href="{{ url('dashboard/message') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center active">
 					  		@lang('dashboard.option6')
 					  	</a>
 					  	<a href="{{ url('logout') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
@@ -40,7 +40,7 @@
 					</div>
 				</div>
 				<div class="col-md-9">
-					
+					<h2 style="margin:20px">Comming Soon :)</h2>
 				</div>
 			</div>
 		</div>

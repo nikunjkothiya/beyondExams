@@ -3,7 +3,7 @@
 return [
 
     'logout' => 'Ausloggen',
-    'settings' => 'die Einstellungen',
+    'profile' => 'Profil',
     'lang' => 'Sprache',
 
 ];

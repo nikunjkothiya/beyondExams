@@ -40,7 +40,16 @@ body {
 	margin: 10px;
 	padding: 10px;
 	font-size: 15pt;
-	color: 
+	color: #6c757d;
+	font-weight: 600;
+}
+.card .content .save{
+	margin: 5px 15px 5px 5px;
+	padding: 5px;
+}
+.card .content .save a{
+	font-size: 25pt;
+	color: #5b3495;
 }
 .card .content .description{
 	margin: 10px;
@@ -49,7 +58,21 @@ body {
 	text-align: justify;
   	text-justify: inter-word;
 }
-.card .content .apply{
-	margin:10px;
-	padding: 10px;
+.card .apply-btn {
+	color: #fff;
+	border-radius: 25px;
+	background-color: #5b3495;
+	text-decoration: none;
+}
+.card .share-btn {
+	color: #5b3495;
+	border-color: #5b3495;
+	border-width: 1px;
+	border-radius: 25px;
+	background-color: #fff;
+	text-decoration: none;
+}
+.back-btn{
+	color:#000;
+	text-decoration: none;
 }

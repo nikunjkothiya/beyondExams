@@ -17,21 +17,22 @@ class CreateUserDetailsTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('language_id');
+            $table->string('email')->nullable();
             $table->string('firstname');
             $table->string('lastname');
             $table->string('college');
             $table->string('city');
             $table->unsignedDecimal('gpa', 4, 2);
-            $table->unsignedBigInteger('qualification_id');
-            $table->unsignedBigInteger('discipline_id');
             $table->unsignedBigInteger('country_id');
+            $table->unsignedBigInteger('discipline_id');
+            $table->unsignedBigInteger('qualification_id');
             $table->timestamps();
         });
         Schema::table('user_details',function($table){
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('language_id')->references('id')->on('languages');
-            $table->foreign('qualification_id')->references('id')->on('qualifications');
             $table->foreign('discipline_id')->references('id')->on('disciplines');
+            $table->foreign('qualification_id')->references('id')->on('qualifications');
+            $table->foreign('language_id')->references('id')->on('languages');
             $table->foreign('country_id')->references('id')->on('countries');
         });
     }

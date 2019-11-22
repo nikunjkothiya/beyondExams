@@ -19,6 +19,7 @@ class CreateTransactionsTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('product_id');
             $table->datetime('datetime');
+            $table->boolean('valid')->default(0);
             $table->timestamps();
         });
         Schema::table('transactions',function($table){

@@ -8,7 +8,8 @@ return [
     'option3' => 'Profile',
     'option4' => 'Saved Opportunities',
     'option5' => 'My Subscription',
-    'option6' => 'Support',
-    'option7' => 'Logout'
-
+    'option6' => 'Messages',
+    'option7' => 'Logout',
+    'deadline' => 'Deadline',
+    'readmore' => 'Read More'
 ];

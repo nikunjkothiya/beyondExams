@@ -2,9 +2,9 @@
 
 return [
 
-    'title' => 'International Student Opportunities at your fingertips',
-    'subtitle' => "Introduding Precisely for Web, now keep in sync with your opportunities when you're online.",
-    'subtitle2' => 'Also available on',
+    'title' => 'International Student Opportunities',
+    'subtitle' => "internships, Scholarships, Conferences, Competitions and much more.",
+    'subtitle2' => 'Download our app from the Play Store',
     'cardtitle' => 'Continue with',
     'lang' => 'Language',
     'facebook' => 'Facebook',

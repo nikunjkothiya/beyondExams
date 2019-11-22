@@ -19,6 +19,7 @@ class CreatePlusTransactionsTable extends Migration
             $table->unsignedBigInteger('opportunity_id');
             $table->datetime('datetime');
             $table->unsignedDecimal('amount', 8, 2);
+            $table->boolean('valid')->default(0);
             $table->timestamps();
         });
         Schema::table('plus_transactions',function($table){

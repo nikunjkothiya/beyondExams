@@ -12,8 +12,8 @@ class FundTypeTableSeeder extends Seeder
     public function run()
     {
         $fundtypes = array(
-			array('type' => 'Fully'),
-			array('type' => 'Partially'),
+			array('type' => 'Fully Funded'),
+			array('type' => 'Partially Funded'),
 			array('type' => 'NA'),
 		);
 		DB::table('fund_types')->insert($fundtypes);

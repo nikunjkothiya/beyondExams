@@ -36,14 +36,14 @@
 								@if(in_array($tag->id,$utid))
 									<a href="#" class="tag tagcl" id="tag{{$tag->id}}">
 										<div class="overlay overlay-selected">
-											<div class="text">{{ $tag->tag }}</div>
+											<div class="text">{{ __($tag->tag) }}</div>
 											<input type="checkbox" name="tags[]" value="{{$tag->id}}" hidden="hidden" checked="checked" />
 										</div>
 									</a>
 								@else
 									<a href="#" class="tag tagcl" id="tag{{$tag->id}}">
 										<div class="overlay">
-											<div class="text">{{ $tag->tag }}</div>
+											<div class="text">{{ __($tag->tag) }}</div>
 											<input type="checkbox" name="tags[]" value="{{$tag->id}}" hidden="hidden" />
 										</div>
 									</a>
@@ -65,18 +65,18 @@
 					<div class="content">
 						<div class="row">
 							@foreach($qualifications as $qualification)
-								@if(in_array($qualification->id,$uqid))
+								@if(in_array($qualification->id,$utid))
 									<a href="#" class="tag quacl" id="qua{{$qualification->id}}">
 										<div class="overlay overlay-selected">
-											<div class="text">{{ $qualification->qualification }}</div>
-											<input type="checkbox" name="qualifications[]" value="{{$qualification->id}}" hidden="hidden" checked="checked" />
+											<div class="text">{{ __($qualification->tag) }}</div>
+											<input type="checkbox" name="tags[]" value="{{$qualification->id}}" hidden="hidden" checked="checked" />
 										</div>
 									</a>
 								@else
 									<a href="#" class="tag quacl" id="qua{{$qualification->id}}">
 										<div class="overlay">
-											<div class="text">{{ $qualification->qualification }}</div>
-											<input type="checkbox" name="qualifications[]" value="{{$qualification->id}}" hidden="hidden" />
+											<div class="text">{{ __($qualification->tag) }}</div>
+											<input type="checkbox" name="tags[]" value="{{$qualification->id}}" hidden="hidden" />
 										</div>
 									</a>
 								@endif
@@ -97,18 +97,18 @@
 					<div class="content">
 						<div class="row">
 							@foreach($disciplines as $discipline)
-								@if(in_array($discipline->id,$udid))
+								@if(in_array($discipline->id,$utid))
 									<a href="#" class="tag discl" id="dis{{$discipline->id}}">
 										<div class="overlay overlay-selected">
-											<div class="text">{{ $discipline->discipline }}</div>
-											<input type="checkbox" name="disciplines[]" value="{{$discipline->id}}" hidden="hidden" checked="checked" />
+											<div class="text">{{ __($discipline->tag) }}</div>
+											<input type="checkbox" name="tags[]" value="{{$discipline->id}}" hidden="hidden" checked="checked" />
 										</div>
 									</a>
 								@else
 									<a href="#" class="tag discl" id="dis{{$discipline->id}}">
 										<div class="overlay">
-											<div class="text">{{ $discipline->discipline }}</div>
-											<input type="checkbox" name="disciplines[]" value="{{$discipline->id}}" hidden="hidden" />
+											<div class="text">{{ __($discipline->tag) }}</div>
+											<input type="checkbox" name="tags[]" value="{{$discipline->id}}" hidden="hidden" />
 										</div>
 									</a>
 								@endif
@@ -131,7 +131,8 @@
 
 @section('script')
 	<script type="text/javascript">
-		$('.tagcl').click(function() {
+		$('.tagcl').click(function(e) {
+			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
   			if($check == 'checked')
@@ -139,7 +140,8 @@
   			else	
   				$(this).find('input').attr('checked',true);
 		});
-		$('.quacl').click(function() {
+		$('.quacl').click(function(e) {
+			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
   			if($check == 'checked')
@@ -147,7 +149,8 @@
   			else	
   				$(this).find('input').attr('checked',true);
 		});
-		$('.discl').click(function() {
+		$('.discl').click(function(e) {
+			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
   			if($check == 'checked')

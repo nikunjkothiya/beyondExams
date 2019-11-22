@@ -18,6 +18,7 @@ class CreateOpportunitiesTable extends Migration
             $table->string('image');
             $table->string('link');
             $table->date('deadline');
+            $table->string('slug');
             $table->unsignedBigInteger('fund_type_id');
             $table->unsignedBigInteger('opportunity_location_id');
             $table->timestamps();

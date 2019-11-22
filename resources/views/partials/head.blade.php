@@ -5,7 +5,8 @@
     	<meta name="keywords" content="HTML,CSS,XML,JavaScript">
 		<meta http-equiv="x-ua-compatible" content="ie=edge">
 		<!--Fonts-->
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700,800">
+		<link href="https://fonts.googleapis.com/css?family=Raleway:400,500,600,700,800&display=swap" rel="stylesheet">
+
 	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	    <!--CSS-->
 	    <link rel="stylesheet" href="{{asset('css/bootstrap.min.css')}}">

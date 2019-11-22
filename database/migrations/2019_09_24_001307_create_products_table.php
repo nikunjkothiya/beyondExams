@@ -17,6 +17,7 @@ class CreateProductsTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->unsignedDecimal('price', 8, 2);
+            $table->unsignedBigInteger('months');
             $table->boolean('enable')->default(1);
             $table->timestamps();
         });

@@ -19,6 +19,7 @@ class OpportunitiesTableSeeder extends Seeder
         		'image' => 'https://www.noticebard.com/wp-content/uploads/2019/08/wfi.png',
         		'link' => 'https://www.noticebard.com/call-for-applications-international-fellowship-world-forestry-center/',
         		'fund_type_id' => 3,
+                'slug' => 'international-fellowship-world-forestry-center-823nf892fv2ncicw',
         		'opportunity_location_id' => 1,
         		'bn' => [
         			'title' => 'আন্তর্জাতিক ফেলোশিপ বিশ্বের বনজ কেন্দ্র',
@@ -115,9 +116,8 @@ class OpportunitiesTableSeeder extends Seeder
         );
 
        	$r = Opportunity::create($opportunities);
-       	$r->tags()->sync([1]);
-       	$r->disciplines()->sync([4]);
-       	$r->qualifications()->sync([4]); 
+       	$r->tags()->sync([1,14,19]); 
+        $r->eligible_regions()->sync([243]);
 
        	/*--------------------------------------------------------------------------------*/
 
@@ -127,6 +127,7 @@ class OpportunitiesTableSeeder extends Seeder
         		'image' => 'http://competitions.archi/wp-content/uploads/2019/08/city-of-dreams.jpg',
         		'link' => 'http://competitions.archi/competition/city-of-dreams-pavilion-2020-call-for-proposals/',
         		'fund_type_id' => 3,
+                'slug' => 'city-of-dreams-pavilion-2020-call-for-proposals-182bnc89bvxc2e3',
         		'opportunity_location_id' => 1,
         		'bn' => [
         			'title' => "স্বপ্ন পটমণ্ডপ 2020 শহরে: প্রস্তাব জন্য কল",
@@ -223,9 +224,8 @@ class OpportunitiesTableSeeder extends Seeder
         );
 
        	$r = Opportunity::create($opportunities);
-       	$r->tags()->sync([1]);
-       	$r->disciplines()->sync([1]);
-       	$r->qualifications()->sync([3]);
+       	$r->tags()->sync([1,11,18]);
+        $r->eligible_regions()->sync([243]);
 
        	/*--------------------------------------------------------------------------------*/
 
@@ -235,6 +235,7 @@ class OpportunitiesTableSeeder extends Seeder
         		'image' => 'https://d8it4huxumps7.cloudfront.net/uploads/images/150x150/5d56543de4bf0_moon_trip1.jpg',
         		'link' => 'https://competitions.uni.xyz/moontrip',
         		'fund_type_id' => 3,
+                'slug' => 'moon-trip-inspiring-humanity-to-explore-beyond-earth-1jf83bvcdu3fgduh',
         		'opportunity_location_id' => 243,
         		'bn' => [
         			'title' => "চাঁদ ট্রিপ - পৃথিবী অতিক্রম অন্বেষণ করতে মানবতা দীপক",
@@ -331,8 +332,223 @@ class OpportunitiesTableSeeder extends Seeder
         );
 
        	$r = Opportunity::create($opportunities);
-       	$r->tags()->sync([2]);
-       	$r->disciplines()->sync([1,2,3,4,5]);
-       	$r->qualifications()->sync([1,2,3,4,5]);
+       	$r->tags()->sync([2,11,12,13,14,15,16,17,18,19,20]);
+        $r->eligible_regions()->sync([243]);
+
+        /*--------------------------------------------------------------------------------*/
+
+        $opportunities = array(
+                'id' => 2792,
+                'deadline' => '2022-02-12',
+                'image' => 'https://d8it4huxumps7.cloudfront.net/uploads/images/150x150/5c626936d0e46_Brentwood-Open-Learning-College.png',
+                'link' => 'https://dare2compete.com/o/bolc-distance-learning-scholarships-brentwood-open-learning-college-80847',
+                'fund_type_id' => 3,
+                'slug' => 'bolc-distance-learning-scholarships-brentwood-open-learning-college-009ehf93ubcdyu9f',
+                'opportunity_location_id' => 243,
+                'bn' => [
+                    'title' => "bolc দূরশিক্ষণ বৃত্তি",
+                    'description' => "সারা পৃথিবী শিক্ষার্থীদের জন্য আরো সাশ্রয়ী মূল্যের শেখার তুলতে পরিকল্পিত - Brentwood খোলা লার্নিং কলেজ নতুন bolc দূরশিক্ষণ বৃত্তি প্রকল্প ঘোষণা করে হয়। এই একচেটিয়া বৃত্তি চাহিদা এবং আবেদনকারীর যোগ্যতা অনুযায়ী, £ থেকে 100 এবং £ 460 (অবশ্যই ফি পর্যন্ত 80%) পরিসীমা।",
+                ],
+                'de' => [
+                    'title' => "BOLC Fernunterricht Stipendien",
+                    'description' => "brent offenes Lernen College freut sich, die neue BOLC Fernstudium Stipendienprogramms bekannt zu geben - entworfen, um mehr Geld für Studenten auf der ganzen Welt zu machen das Lernen. Diese exklusiven Stipendien reichen von £ 100 und £ 460 (bis zu 80% der Kursgebühr), in Übereinstimmung mit den Bedürfnissen und Förderfähigkeit des Antragstellers.",
+                ],
+                'en' => [
+                    'title' => "BOLC Distance Learning Scholarships",
+                    'description' => "Brentwood Open Learning College is pleased to announce the new BOLC Distance Learning Scholarship scheme – designed to make learning more affordable for students all over the world. These exclusive scholarships range from £100 and £460 (Up to 80% of the course fee), in accordance with the needs and eligibility of the applicant.",
+                ],
+                'es' => [
+                    'title' => "beca internacional en centros forestal mundial",
+                    'description' => "museo descubrimiento del Congreso, que se abrió en 1971 para educar al público en general acerca de los bosques locales y globales y la silvicultura sostenible. granja de árboles monumento Magness, nuestro bosque demostración Premier encuentra cerca de Sherwood, Oregon, ofrece un enfoque práctico al aire libre para el aprendizaje del medio ambiente.",
+                ],
+                'fr' => [
+                    'title' => "bourses d'apprentissage à distance BOLC",
+                    'description' => "brentwood collège d'apprentissage ouvert est heureux d'annoncer le nouveau programme de bourses d'apprentissage à distance BOLC - conçu pour rendre l'apprentissage plus abordable pour les étudiants du monde entier. ces bourses exclusives vont de 100 £ et 460 £ (jusqu'à 80% des frais de cours), conformément aux besoins et à l'admissibilité du demandeur.",
+                ],
+                'hi' => [
+                    'title' => "bolc दूरस्थ शिक्षा छात्रवृत्ति",
+                    'description' => "दुनिया भर में छात्रों के लिए और अधिक किफायती सीखने बनाने के लिए डिजाइन - Brentwood खुला सीखने कॉलेज नई bolc दूरस्थ शिक्षा छात्रवृत्ति योजना घोषणा करते हुए खुशी है। इन विशेष छात्रवृत्ति की जरूरत है और आवेदक की पात्रता के अनुसार, £ 100 और £ 460 (पाठ्यक्रम शुल्क के 80% तक) सीमा होती है।",
+                ],
+                'id' => [
+                    'title' => "beasiswa pembelajaran jarak jauh bolc",
+                    'description' => "brentwood pembelajaran terbuka perguruan tinggi dengan bangga mengumumkan jarak bolc skema pembelajaran beasiswa baru - yang dirancang untuk membuat belajar lebih terjangkau bagi siswa di seluruh dunia. ini beasiswa eksklusif berkisar dari £ 100 dan £ 460 (hingga 80% dari biaya kursus), sesuai dengan kebutuhan dan kelayakan dari pemohon.",
+                ],
+                'it' => [
+                    'title' => "BOLC borse di studio di formazione a distanza",
+                    'description' => "Brentwood apprendimento aperto college è lieta di annunciare la nuova distanza BOLC schema di apprendimento di borse di studio - ha progettato per rendere l'apprendimento più accessibile per gli studenti di tutto il mondo. queste borse di studio esclusive vanno da £ 100 e £ 460 (fino al 80% del costo del corso), in conformità con le esigenze e l'ammissibilità del richiedente.",
+                ],
+                'ja' => [
+                    'title' => "bolc遠隔学習奨学金",
+                    'description' => "世界中の学生のための学習がより手頃な価格にするために設計された - ブレントウッドオープン学習カレッジは、新しいbolc距離学習奨学金制度を発表しています。これらの排他的な奨学金は、申請者のニーズ及び資格に応じて、£100と£460（コース料金の80％まで）の範囲です。",
+                ],
+                'km' => [
+                    'title' => "អាហារូបករណ៍សិក្សាពីចម្ងាយ bolc",
+                    'description' => "Brentwood មហាវិទ្យាល័យបើកចំហរៀនគឺសេចក្តីរីករាយសូមប្រកាសគម្រោងចម្ងាយ bolc ថ្មីអាហារូបករណ៍រៀន - បានរចនាឡើងដើម្បីធ្វើឱ្យការរៀនបន្ថែមទៀតដែលមានតំលៃសមរម្យសម្រាប់សិស្សនិស្សិតទាំងអស់នៅលើពិភពលោក។ អាហារូបករណ៍ផ្តាច់មុខទាំងនេះមានចាប់ពី£ 100 និង£ 460 (រហូតដល់ទៅ 80% នៃថ្លៃពិតណាស់) ដែលស្របតាមតម្រូវការនិងសិទ្ធិទទួលបានរបស់បេក្ខជន។",
+                ],
+                'ko' => [
+                    'title' => "BOLC 원격 교육 장학금",
+                    'description' => "전 세계 학생들에게보다 저렴한 학습하도록 설계 - 브렌트 우드 열린 학습 대학은 새로운 BOLC 거리 학습 장학금 제도를 발표하게 된 것을 기쁘게 생각합니다. 이러한 독점 장학금 신청자의 요구와 자격에 따라,에서 £ 100 £ 460 (수강료의 최대 80 %)까지 다양합니다.",
+                ],
+                'lo' => [
+                    'title' => "bolc ທຶນການສຶກສາຮຽນຮູ້ໄລຍະທາງ",
+                    'description' => "Brentwood ວິທະຍາໄລການຮຽນຮູ້ເປີດມີຄວາມຍິນດີທີ່ຈະປະກາດ bolc ໄລຍະທຶນການສຶກສາຮຽນຮູ້ການໃຫມ່ - ອອກແບບມາເພື່ອເຮັດໃຫ້ການຮຽນສາມາດໃຫ້ໄດ້ສໍາລັບນັກສຶກສາທັງຫມົດໃນທົ່ວໂລກ. ທຶນການສຶກສາພິເສດເຫຼົ່ານີ້ໄດ້ສະຈາກ£ 100 ແລະ£ 460 (ສູງເຖິງ 80% ຂອງຄ່າທໍານຽມວິຊາການ), ໃນສອດຄ່ອງກັບຄວາມຕ້ອງການແລະສິດຂອງຜູ້ສະຫມັກ.",
+                ],
+                'ms' => [
+                    'title' => "bolc biasiswa pembelajaran jarak jauh",
+                    'description' => "brentwood kolej pembelajaran terbuka dengan sukacitanya mengumumkan skim pembelajaran biasiswa jarak bolc baru - yang direka untuk menjadikan pembelajaran lebih murah untuk pelajar di seluruh dunia. ini biasiswa eksklusif berkisar dari £ 100 dan £ 460 (sehingga 80% daripada yuran kursus), selaras dengan keperluan dan kelayakan pemohon.",
+                ],
+                'my' => [
+                    'title' => "bolc အကွာအဝေးသင်ယူမှုပညာသင်ဆု",
+                    'description' => "လောကီနိုင်ငံအရပ်ရပ်ရှိသမျှကျော်ကျောင်းသားများအတွက်သင်ယူပိုပြီးတတ်နိုင်စေရန်ဒီဇိုင်း - brentwood ပွင့်လင်းသင်ယူမှုကောလိပ်သစ်ကို bolc အကွာအဝေးသင်ယူမှုပညာသင်ဆုအစီအစဉ်ကိုကြေညာဖို့နှစ်သက်သည်။ ထိုအသီးသန့်ပညာသင်ဆုလျှောက်ထား၏လိုအပ်ချက်များကိုဖြည့်နှင့်ရထိုက်ခွင့်များနှင့်အညီ, £ 100 နဲ့£ 460 (သင်တန်းကြေး၏အထိ 80%) ကနေအထိ။",
+                ],
+                'ne' => [
+                    'title' => "bolc दूरी सिक्ने छात्रवृत्ति",
+                    'description' => "सबै दुनिया भर विद्यार्थीहरूको लागि थप किफायती सिक्ने बनाउन डिजाइन - Brentwood खुला सिक्ने कलेज नयाँ bolc दूरी सिक्ने छात्रवृत्ति योजना घोषणा गर्न खुसी हुनुहुन्छ। यी विशेष छात्रवृत्ति अनुसार आवश्यकता र आवेदक को योग्यता संग देखि £ 100 र £ 460 (पाठ्यक्रम शुल्क को माथि 80%) को दायरामा।",
+                ],
+                'ro' => [
+                    'title' => "bolc burse de învățare la distanță",
+                    'description' => "colegiu de învățare deschis Brentwood are plăcerea să anunțe noul program de burse de învățare la distanță bolc - conceput pentru a face procesul de învățare mai accesibile pentru studenți din întreaga lume. aceste burse exclusive variază de la £ 100 si £ 460 (până la 80% din taxa de curs), în conformitate cu nevoile și eligibilitatea solicitantului.",
+                ],
+                'ru' => [
+                    'title' => "bolc стипендии дистанционного обучения",
+                    'description' => "Brentwood колледж открытого обучения рад объявить о выпуске новой bolc дистанционного обучения стипендиальной схемы - разработано, чтобы сделать обучение более доступным для студентов во всем мире. эти эксклюзивные стипендии варьируются от £ 100 и £ 460 (до 80% от стоимости курса), в соответствии с потребностями и правами заявителя.",
+                ],
+                'si' => [
+                    'title' => "bolc දුරස්ථ අධ්යාපන ශිෂ්යත්ව",
+                    'description' => "ලොව පුරා සිසුන් සඳහා ඉගෙන වඩා දැරිය හැකි පත් කිරීම සඳහා සැලැසුම් කරන - brentwood විවෘත ඉගෙනුම් විද්යාලයේ නව bolc දුරස්ථ අධ්යාපන ශිෂ්යත්ව ක්රමයක් නිවේදනය පිළිබඳව අපි සතුටු වෙනවා. මෙම සුවිශේෂී ශිෂ්යත්ව ඉල්ලුම්කරුෙග් අවශ්යතා හා සුදුසුකම් අනුව, £ 100 හා £ 460 (පාඨමාලා ගාස්තු සියයට 80% ක් පමණ) සිට ක්රියාත්මක වේ.",
+                ],
+                'ta' => [
+                    'title' => "bolc தொலைதூர கல்வி உதவித் தொகை",
+                    'description' => "உலகம் முழுவதும் மாணவர்கள் வாங்கக்கூடிய விலையில் கற்றல் செய்ய வடிவமைக்கப்பட்டுள்ளது - Brentwood திறந்த கற்றல் கல்லூரி புதிய bolc தொலைதூர கல்வி உதவித்தொகை திட்டம் அறிவிக்க மகிழ்ச்சி. இந்த பிரத்தியேக உதவித்தொகைகளையோ, இருந்து £ 100 மற்றும் £ 460 (நிச்சயமாக கட்டணம் வரை 80%) வரை விண்ணப்பதாரரின் தேவைகள் மற்றும் தகுதி ஏற்ப.",
+                ],
+                'th' => [
+                    'title' => "bolc ทุนการศึกษาการเรียนทางไกล",
+                    'description' => "เบรนท์วิทยาลัยการเรียนรู้ที่เปิดกว้างมีความยินดีที่จะประกาศ bolc ระยะทุนการศึกษาการเรียนรู้โครงการใหม่ - ออกแบบมาเพื่อทำให้การเรียนรู้ที่เหมาะสมมากขึ้นสำหรับนักเรียนทุกคนทั่วโลก ทุนการศึกษาพิเศษเหล่านี้มีตั้งแต่£ 100 และ£ 460 (ไม่เกิน 80% ของค่าเรียน) ให้สอดคล้องกับความต้องการและคุณสมบัติของผู้สมัคร",
+                ],
+                'tl' => [
+                    'title' => "bolc distance pag-aaral ng scholarship",
+                    'description' => "brentwood bukas na pag-aaral sa kolehiyo ay i-anunsyo ang bagong bolc distance pag-aaral ng scholarship scheme - na dinisenyo upang gumawa ng pag-aaral ng higit pang mga abot-kayang para sa mga estudyante sa buong mundo. mga eksklusibong mga scholarship saklaw mula £ 100 at £ 460 (hanggang sa 80% ng kurso fee), alinsunod sa mga pangangailangan at pagiging karapat-dapat ng aplikante.",
+                ],
+                'vi' => [
+                    'title' => "bolc học bổng đào tạo từ xa",
+                    'description' => "brentwood học tập mở đại học là vui mừng thông báo khoảng cách bolc học bổng học tập chương trình mới - được thiết kế để làm cho việc học chi phí hợp lý dành cho sinh viên trên toàn thế giới. những học bổng độc quyền dao động từ £ 100 đến £ 460 (lên đến 80% học phí), phù hợp với nhu cầu và đủ điều kiện của người nộp đơn.",
+                ],
+                'zh' => [
+                    'title' => "BOLC遠程教育獎學金",
+                    'description' => "布倫特伍德開放學習學院很高興地宣布新BOLC遠程教育獎學金計劃 - 旨在使學習的學生遍布世界各地更多的實惠。這些獨特的獎學金範圍從£100和£460（的過程費用高達80％），按照與申請人的需要和資格。",
+                ],
+        );
+
+        $r = Opportunity::create($opportunities);
+        $r->tags()->sync([3,11,12,13,14,15,16,17,18,19,20]);
+        $r->eligible_regions()->sync([243]);
+
+        /*--------------------------------------------------------------------------------*/
+
+        $opportunities = array(
+                'id' => 2940,
+                'deadline' => '2020-05-31',
+                'image' => 'https://opportunitydesk.org/wp-content/uploads/2019/08/Engage-Art-Contest-in-North-America-2019-2020.jpg',
+                'link' => 'https://engageart.submittable.com/submit/',
+                'fund_type_id' => 3,
+                'slug' => 'engage-art-contest-in-north-america-023089fwbjhciu91',
+                'opportunity_location_id' => 243,
+                'bn' => [
+                    'title' => "এন্ট্রি জন্য কল: উত্তর আমেরিকা 2019/2020 সালে শিল্প প্রতিযোগিতা নিয়োজিত ($ 100,000 মোট নগদ পুরস্কার)",
+                    'description' => "এন্ট্রি উত্তর আমেরিকা 2019/2020 নিয়োজিত শিল্প প্রতিযোগিতার জন্য আমন্ত্রণ জানানো হয়েছে। ব্যস্ত শিল্প প্রতিযোগিতার মূল চাক্ষুষ শিল্প, সঙ্গীত ভিডিও, চলচ্চিত্র ও পারফর্মিং আর্টস একটি juried প্রতিযোগিতা। 10-20 ও সংশ্লিষ্ট আয়াত: প্রতিযোগিতার থিম আধ্যাত্মিক ইফিষীয় 6 বর্ণিত যুদ্ধ হয়। আপনি ইফিষীয় উত্তরণ বা অন্য কোন কিতাব কোন অংশ জ্বালান আপনার আর্টওয়ার্ক, যতদিন আপনি এটা কোনো না কোনোভাবে যে উত্তরণ ফিরে কহা করতে পারেন হতে পারে। সেখানে যুদ্ধ চিত্রাবলী ব্যবহার করার কোনও প্রয়োজন নেই। ব্যস্ত শিল্প প্রতিযোগিতার যে উভয় লেজার শ্রেনীর এবং অনন্ত শাস্ত্রীয় থিম নিয়ে শৈল্পিক সৃজনশীলতার গভীর শিরা খনি করতে চায়। আধ্যাত্মিক যুদ্ধ উপস্থিত মুহূর্ত পর্যন্ত সামনে রেকর্ড ইতিহাস থেকে raged হয়েছে। মানুষের ভাল এবং মন্দ মধ্যে এই সংঘর্ষ একটি গুরুত্বপূর্ণ এবং কখনও কখনও অনিচ্ছাকৃত অংশ খেলা এবং খেলার। আল্লাহর বাণী আমাদের উভয় অপরাধ এবং আমাদের প্রতিরক্ষা সমালোচনামূলক তথ্য, একটি প্লেবুক, অনুপ্রেরণা, দিক, আশ্রয়স্থল, এবং দুর্গ প্রদানের এই প্রয়াসে আমাদের সাহায্য বোঝানো হয়। সব ব্যাকগ্রাউন্ড থেকে শিল্পী সহস্রাব্দ ধরে খ্রিস্টান ধর্মগ্রন্থ থেকে অনুপ্রেরণা গ্রহণ করেছে, এবং এই প্রতিযোগিতা যে কেউ আধ্যাত্মিক যুদ্ধ প্রায় থিম ব্যস্ত কলা ব্যবহার করতে আগ্রহী এর জন্য।",
+                ],
+                'de' => [
+                    'title' => "BOLC Fernunterricht Stipendien",
+                    'description' => "brent offenes Lernen College freut sich, die neue BOLC Fernstudium Stipendienprogramms bekannt zu geben - entworfen, um mehr Geld für Studenten auf der ganzen Welt zu machen das Lernen. Diese exklusiven Stipendien reichen von £ 100 und £ 460 (bis zu 80% der Kursgebühr), in Übereinstimmung mit den Bedürfnissen und Förderfähigkeit des Antragstellers.",
+                ],
+                'en' => [
+                    'title' => "BOLC Distance Learning Scholarships",
+                    'description' => "Brentwood Open Learning College is pleased to announce the new BOLC Distance Learning Scholarship scheme – designed to make learning more affordable for students all over the world. These exclusive scholarships range from £100 and £460 (Up to 80% of the course fee), in accordance with the needs and eligibility of the applicant.",
+                ],
+                'es' => [
+                    'title' => "beca internacional en centros forestal mundial",
+                    'description' => "museo descubrimiento del Congreso, que se abrió en 1971 para educar al público en general acerca de los bosques locales y globales y la silvicultura sostenible. granja de árboles monumento Magness, nuestro bosque demostración Premier encuentra cerca de Sherwood, Oregon, ofrece un enfoque práctico al aire libre para el aprendizaje del medio ambiente.",
+                ],
+                'fr' => [
+                    'title' => "bourses d'apprentissage à distance BOLC",
+                    'description' => "brentwood collège d'apprentissage ouvert est heureux d'annoncer le nouveau programme de bourses d'apprentissage à distance BOLC - conçu pour rendre l'apprentissage plus abordable pour les étudiants du monde entier. ces bourses exclusives vont de 100 £ et 460 £ (jusqu'à 80% des frais de cours), conformément aux besoins et à l'admissibilité du demandeur.",
+                ],
+                'hi' => [
+                    'title' => "bolc दूरस्थ शिक्षा छात्रवृत्ति",
+                    'description' => "दुनिया भर में छात्रों के लिए और अधिक किफायती सीखने बनाने के लिए डिजाइन - Brentwood खुला सीखने कॉलेज नई bolc दूरस्थ शिक्षा छात्रवृत्ति योजना घोषणा करते हुए खुशी है। इन विशेष छात्रवृत्ति की जरूरत है और आवेदक की पात्रता के अनुसार, £ 100 और £ 460 (पाठ्यक्रम शुल्क के 80% तक) सीमा होती है।",
+                ],
+                'id' => [
+                    'title' => "beasiswa pembelajaran jarak jauh bolc",
+                    'description' => "brentwood pembelajaran terbuka perguruan tinggi dengan bangga mengumumkan jarak bolc skema pembelajaran beasiswa baru - yang dirancang untuk membuat belajar lebih terjangkau bagi siswa di seluruh dunia. ini beasiswa eksklusif berkisar dari £ 100 dan £ 460 (hingga 80% dari biaya kursus), sesuai dengan kebutuhan dan kelayakan dari pemohon.",
+                ],
+                'it' => [
+                    'title' => "BOLC borse di studio di formazione a distanza",
+                    'description' => "Brentwood apprendimento aperto college è lieta di annunciare la nuova distanza BOLC schema di apprendimento di borse di studio - ha progettato per rendere l'apprendimento più accessibile per gli studenti di tutto il mondo. queste borse di studio esclusive vanno da £ 100 e £ 460 (fino al 80% del costo del corso), in conformità con le esigenze e l'ammissibilità del richiedente.",
+                ],
+                'ja' => [
+                    'title' => "bolc遠隔学習奨学金",
+                    'description' => "世界中の学生のための学習がより手頃な価格にするために設計された - ブレントウッドオープン学習カレッジは、新しいbolc距離学習奨学金制度を発表しています。これらの排他的な奨学金は、申請者のニーズ及び資格に応じて、£100と£460（コース料金の80％まで）の範囲です。",
+                ],
+                'km' => [
+                    'title' => "អាហារូបករណ៍សិក្សាពីចម្ងាយ bolc",
+                    'description' => "Brentwood មហាវិទ្យាល័យបើកចំហរៀនគឺសេចក្តីរីករាយសូមប្រកាសគម្រោងចម្ងាយ bolc ថ្មីអាហារូបករណ៍រៀន - បានរចនាឡើងដើម្បីធ្វើឱ្យការរៀនបន្ថែមទៀតដែលមានតំលៃសមរម្យសម្រាប់សិស្សនិស្សិតទាំងអស់នៅលើពិភពលោក។ អាហារូបករណ៍ផ្តាច់មុខទាំងនេះមានចាប់ពី£ 100 និង£ 460 (រហូតដល់ទៅ 80% នៃថ្លៃពិតណាស់) ដែលស្របតាមតម្រូវការនិងសិទ្ធិទទួលបានរបស់បេក្ខជន។",
+                ],
+                'ko' => [
+                    'title' => "BOLC 원격 교육 장학금",
+                    'description' => "전 세계 학생들에게보다 저렴한 학습하도록 설계 - 브렌트 우드 열린 학습 대학은 새로운 BOLC 거리 학습 장학금 제도를 발표하게 된 것을 기쁘게 생각합니다. 이러한 독점 장학금 신청자의 요구와 자격에 따라,에서 £ 100 £ 460 (수강료의 최대 80 %)까지 다양합니다.",
+                ],
+                'lo' => [
+                    'title' => "bolc ທຶນການສຶກສາຮຽນຮູ້ໄລຍະທາງ",
+                    'description' => "Brentwood ວິທະຍາໄລການຮຽນຮູ້ເປີດມີຄວາມຍິນດີທີ່ຈະປະກາດ bolc ໄລຍະທຶນການສຶກສາຮຽນຮູ້ການໃຫມ່ - ອອກແບບມາເພື່ອເຮັດໃຫ້ການຮຽນສາມາດໃຫ້ໄດ້ສໍາລັບນັກສຶກສາທັງຫມົດໃນທົ່ວໂລກ. ທຶນການສຶກສາພິເສດເຫຼົ່ານີ້ໄດ້ສະຈາກ£ 100 ແລະ£ 460 (ສູງເຖິງ 80% ຂອງຄ່າທໍານຽມວິຊາການ), ໃນສອດຄ່ອງກັບຄວາມຕ້ອງການແລະສິດຂອງຜູ້ສະຫມັກ.",
+                ],
+                'ms' => [
+                    'title' => "bolc biasiswa pembelajaran jarak jauh",
+                    'description' => "brentwood kolej pembelajaran terbuka dengan sukacitanya mengumumkan skim pembelajaran biasiswa jarak bolc baru - yang direka untuk menjadikan pembelajaran lebih murah untuk pelajar di seluruh dunia. ini biasiswa eksklusif berkisar dari £ 100 dan £ 460 (sehingga 80% daripada yuran kursus), selaras dengan keperluan dan kelayakan pemohon.",
+                ],
+                'my' => [
+                    'title' => "bolc အကွာအဝေးသင်ယူမှုပညာသင်ဆု",
+                    'description' => "လောကီနိုင်ငံအရပ်ရပ်ရှိသမျှကျော်ကျောင်းသားများအတွက်သင်ယူပိုပြီးတတ်နိုင်စေရန်ဒီဇိုင်း - brentwood ပွင့်လင်းသင်ယူမှုကောလိပ်သစ်ကို bolc အကွာအဝေးသင်ယူမှုပညာသင်ဆုအစီအစဉ်ကိုကြေညာဖို့နှစ်သက်သည်။ ထိုအသီးသန့်ပညာသင်ဆုလျှောက်ထား၏လိုအပ်ချက်များကိုဖြည့်နှင့်ရထိုက်ခွင့်များနှင့်အညီ, £ 100 နဲ့£ 460 (သင်တန်းကြေး၏အထိ 80%) ကနေအထိ။",
+                ],
+                'ne' => [
+                    'title' => "bolc दूरी सिक्ने छात्रवृत्ति",
+                    'description' => "सबै दुनिया भर विद्यार्थीहरूको लागि थप किफायती सिक्ने बनाउन डिजाइन - Brentwood खुला सिक्ने कलेज नयाँ bolc दूरी सिक्ने छात्रवृत्ति योजना घोषणा गर्न खुसी हुनुहुन्छ। यी विशेष छात्रवृत्ति अनुसार आवश्यकता र आवेदक को योग्यता संग देखि £ 100 र £ 460 (पाठ्यक्रम शुल्क को माथि 80%) को दायरामा।",
+                ],
+                'ro' => [
+                    'title' => "bolc burse de învățare la distanță",
+                    'description' => "colegiu de învățare deschis Brentwood are plăcerea să anunțe noul program de burse de învățare la distanță bolc - conceput pentru a face procesul de învățare mai accesibile pentru studenți din întreaga lume. aceste burse exclusive variază de la £ 100 si £ 460 (până la 80% din taxa de curs), în conformitate cu nevoile și eligibilitatea solicitantului.",
+                ],
+                'ru' => [
+                    'title' => "bolc стипендии дистанционного обучения",
+                    'description' => "Brentwood колледж открытого обучения рад объявить о выпуске новой bolc дистанционного обучения стипендиальной схемы - разработано, чтобы сделать обучение более доступным для студентов во всем мире. эти эксклюзивные стипендии варьируются от £ 100 и £ 460 (до 80% от стоимости курса), в соответствии с потребностями и правами заявителя.",
+                ],
+                'si' => [
+                    'title' => "bolc දුරස්ථ අධ්යාපන ශිෂ්යත්ව",
+                    'description' => "ලොව පුරා සිසුන් සඳහා ඉගෙන වඩා දැරිය හැකි පත් කිරීම සඳහා සැලැසුම් කරන - brentwood විවෘත ඉගෙනුම් විද්යාලයේ නව bolc දුරස්ථ අධ්යාපන ශිෂ්යත්ව ක්රමයක් නිවේදනය පිළිබඳව අපි සතුටු වෙනවා. මෙම සුවිශේෂී ශිෂ්යත්ව ඉල්ලුම්කරුෙග් අවශ්යතා හා සුදුසුකම් අනුව, £ 100 හා £ 460 (පාඨමාලා ගාස්තු සියයට 80% ක් පමණ) සිට ක්රියාත්මක වේ.",
+                ],
+                'ta' => [
+                    'title' => "bolc தொலைதூர கல்வி உதவித் தொகை",
+                    'description' => "உலகம் முழுவதும் மாணவர்கள் வாங்கக்கூடிய விலையில் கற்றல் செய்ய வடிவமைக்கப்பட்டுள்ளது - Brentwood திறந்த கற்றல் கல்லூரி புதிய bolc தொலைதூர கல்வி உதவித்தொகை திட்டம் அறிவிக்க மகிழ்ச்சி. இந்த பிரத்தியேக உதவித்தொகைகளையோ, இருந்து £ 100 மற்றும் £ 460 (நிச்சயமாக கட்டணம் வரை 80%) வரை விண்ணப்பதாரரின் தேவைகள் மற்றும் தகுதி ஏற்ப.",
+                ],
+                'th' => [
+                    'title' => "bolc ทุนการศึกษาการเรียนทางไกล",
+                    'description' => "เบรนท์วิทยาลัยการเรียนรู้ที่เปิดกว้างมีความยินดีที่จะประกาศ bolc ระยะทุนการศึกษาการเรียนรู้โครงการใหม่ - ออกแบบมาเพื่อทำให้การเรียนรู้ที่เหมาะสมมากขึ้นสำหรับนักเรียนทุกคนทั่วโลก ทุนการศึกษาพิเศษเหล่านี้มีตั้งแต่£ 100 และ£ 460 (ไม่เกิน 80% ของค่าเรียน) ให้สอดคล้องกับความต้องการและคุณสมบัติของผู้สมัคร",
+                ],
+                'tl' => [
+                    'title' => "bolc distance pag-aaral ng scholarship",
+                    'description' => "brentwood bukas na pag-aaral sa kolehiyo ay i-anunsyo ang bagong bolc distance pag-aaral ng scholarship scheme - na dinisenyo upang gumawa ng pag-aaral ng higit pang mga abot-kayang para sa mga estudyante sa buong mundo. mga eksklusibong mga scholarship saklaw mula £ 100 at £ 460 (hanggang sa 80% ng kurso fee), alinsunod sa mga pangangailangan at pagiging karapat-dapat ng aplikante.",
+                ],
+                'vi' => [
+                    'title' => "bolc học bổng đào tạo từ xa",
+                    'description' => "brentwood học tập mở đại học là vui mừng thông báo khoảng cách bolc học bổng học tập chương trình mới - được thiết kế để làm cho việc học chi phí hợp lý dành cho sinh viên trên toàn thế giới. những học bổng độc quyền dao động từ £ 100 đến £ 460 (lên đến 80% học phí), phù hợp với nhu cầu và đủ điều kiện của người nộp đơn.",
+                ],
+                'zh' => [
+                    'title' => "BOLC遠程教育獎學金",
+                    'description' => "布倫特伍德開放學習學院很高興地宣布新BOLC遠程教育獎學金計劃 - 旨在使學習的學生遍布世界各地更多的實惠。這些獨特的獎學金範圍從£100和£460（的過程費用高達80％），按照與申請人的需要和資格。",
+                ],
+        );
+
+        $r = Opportunity::create($opportunities);
+        $r->tags()->sync([2,11,12,13,14,15,16,17,18,19,20]);
+        $r->eligible_regions()->sync([1,2,140]);
     }
 }

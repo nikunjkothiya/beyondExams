@@ -6,11 +6,12 @@
     <link rel="shortcut icon" href="{{asset('images/fav.png')}}">
 	@include('partials.head')
 	@yield('style')
+	@include('partials.analytics')
 	</head>
 	<body>
 		@include('partials.nav')
 		@yield('content')
+		@include('partials.footer')	
 		@yield('script')
-	@include('partials.footer')	
 	</body>
 </html>

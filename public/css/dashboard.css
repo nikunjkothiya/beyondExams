@@ -9,6 +9,26 @@ body {
 .dashboard h2{
 	
 }
+.card{
+  margin: 45px 70px 20px 20px;
+  border-radius: 5px;
+  box-shadow: 2px 2px 15px 2px rgba(0,0,0,0.2);
+  background-color: #fff;
+  padding: 30px;
+  min-height: 450px;
+}
+.card .header{
+  margin: 10px 0px 0px 0px;
+}
+.card .save{
+  margin: 5px;
+  padding: 5px;
+  float: right;
+}
+.card .save a{
+  font-size: 25pt;
+  color: #5b3495;
+}
 .dashboard hr{
 	border-width: 2px;
 	border-color:#5b3495;
@@ -20,6 +40,28 @@ body {
 }
 .dashboard .list-group {
 	box-shadow: 2px 2px 25px 2px rgba(0,0,0,0.2);
+}
+.apply-btn {
+  color: #fff;
+  border-radius: 25px;
+  background-color: #5b3495;
+  text-decoration: none;
+}
+a.apply-btn:hover{
+  color: #fff;
+  font-weight: 500;
+}
+a.share-btn:hover{
+  color: #5b3495;
+  font-weight: 500;
+}
+.share-btn {
+  color: #5b3495;
+  border-color: #5b3495;
+  border-width: 1px;
+  border-radius: 25px;
+  background-color: #fff;
+  text-decoration: none;
 }
 .material_card-stack {
   	width: 100%;
@@ -45,14 +87,24 @@ body {
 .material_card-stack .material_prev {
   	left: auto;
     right: 15px;
-    top:40%;
+    top:35%;
     margin-bottom:20px;
+    border: none;
+    background: none;
 }
 .material_card-stack .material_next {
   	left: auto;
   	right: 15px;
-    top:50%;
+    top:45%;
     margin-bottom:20px;
+    border: none;
+    background: none;
+}
+#next{
+  cursor:pointer;
+}
+#prev{
+  cursor:pointer;
 }
 .material_card-stack .carousel .material_buttons:hover {
   	color: #C01313 ;
@@ -61,110 +113,24 @@ body {
 .material_card-stack .material_card-list {
   	width: 100%;
 }
-.material_card-stack .material_card-list li {
-  	transition: all 100ms ease-in-out;
-  	border-radius: 2px;
-  	position: absolute;
-  	list-style: none;
-  	height: 450px;
-  	-webkit-box-shadow: 2px 2px 25px 2px rgba(225, 225, 225, 0.2);
-  	box-shadow: 2px 2px 25px 2px rgba(0,0,0,0.2);
-  	left: 0;
-  	right: 0;
-  	margin: 0 auto;
-  	padding-top: 20px;
-  	text-align: center;
-  	background-size: cover;
+.material_card-stack .material_card-list .card img{
+  border-radius: 5%;
 }
-.material_card-stack .material_card-list li:nth-child(1) {
-  	top: 24px;
-  	width: 60%;
-  /* animation: scaleCard 100ms; */
+.material_card-stack .material_card-list .card .title{
+  margin: 0px 0px 0px 10px;
+  padding: 10px;
 }
-.material_card-stack .material_card-list li:nth-child(2) {
-  	top: 36px;
-  	width: 70%;
+.material_card-stack .material_card-list .card p{
+  margin-top: 10px;
+  margin-bottom: 30px;
+  text-align: justify; 
+  overflow: hidden;
+  max-height: 80px;
 }
-.material_card-stack .material_card-list li:nth-child(3) {
-  	top: 48px;
-  	width: 80%;
-}
-.material_card-stack .material_card-list li:nth-child(4) {
-  	top: 60px;
-  	width: 90%;
-}
-.material_card-stack .material_card-list li:nth-child(5) {
-  	top: 72px;
-  	width: 100%;
-}
+
 .material_card-stack:hover > .material_buttons.material_prev {
   	
 }
 .material_card-stack:hover > .material_buttons.material_next {
   	
 }
-.transformThis {
-  	animation: scaleDown 500ms;
-}
-.transformPrev {
-  	animation: scaleUp 100ms;
-}
-@keyframes scaleUp {
-  0% {
-    transform: scale(1.2) translateY(50px);
-    opacity: 0;
-  }
-  20% {
-    transform: scale(1.15) translateY(40px);
-    opacity: 0.10;
-  }
-  40% {
-    transform: scale(1.1) translateY(30px);
-    opacity: 0.20;
-  }
-  60% {
-    transform: scale(1.05) translateY(20px);
-    opacity: 0.40;
-  }
-  80% {
-    transform: scale(1.01) translateY(10px);
-    opacity: 0.80;
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-@keyframes scaleDown {
-  0% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-  20% {
-    transform: scale(1.01) translateY(20px);
-    opacity: 0.80;
-  }
-  40% {
-    transform: scale(1.05) translateY(40px);
-    opacity: 0.40;
-  }
-  60% {
-    transform: scale(1.1) translateY(60px);
-    opacity: 0.20;
-  }
-  80% {
-    transform: scale(1.15) translateY(80px);
-    opacity: 0.10;
-  }
-  100% {
-    transform: scale(1.2) translateY(100px);
-    opacity: 0;
-  }
-}
-@keyframes scaleCard {
-  0% {
-    top: 5px;
-  }
-  100% {
-    top: 24px;
-  }
