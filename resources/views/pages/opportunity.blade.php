@@ -80,13 +80,13 @@
 								@endforeach
 							</div>
 							<div class="col-auto ml-auto">
-								<a href="mailto:?Subject={{$opportunity->title}}&amp;Body={{$opportunity->description}} {{ url('/opportunity/'.$opportunity->id) }}" class="btn btn-lg share-btn">@lang('opportunity.share')</a>
+								<a href="mailto:?Subject={{$opportunity->title}}&amp;Body={{$opportunity->description}} {{ url('/opportunity/'.$opportunity->id) }}" class="btn share-btn">@lang('opportunity.share')</a>
 							</div>
 							<div class="col-auto">
 								@auth
-									<a href="{{ $opportunity->link }}" target="_blank" class="btn btn-lg apply-btn">@lang('opportunity.apply')</a>
+									<a href="{{ $opportunity->link }}" target="_blank" class="btn apply-btn">@lang('opportunity.apply')</a>
 								@else
-									<a href="{{ url('login') }}" class="btn btn-lg apply-btn">@lang('opportunity.apply')</a>
+									<a href="{{ url('login') }}" class="btn apply-btn">@lang('opportunity.apply')</a>
 								@endauth
 							</div>
 						</div>

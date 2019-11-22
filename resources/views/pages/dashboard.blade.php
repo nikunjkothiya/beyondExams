@@ -88,10 +88,10 @@
 												@endforeach
 											</div>
 											<div class="col-auto ml-auto">
-												<a href="mailto:?Subject={{$opportunity->title}}&amp;Body={{$opportunity->description}} {{ url('/opportunity/'.$opportunity->id) }}" class="btn btn-lg share-btn">@lang('opportunity.share')</a>
+												<a href="mailto:?Subject={{$opportunity->title}}&amp;Body={{$opportunity->description}} {{ url('/opportunity/'.$opportunity->id) }}" class="btn btn share-btn">@lang('opportunity.share')</a>
 											</div>
 											<div class="col-auto">
-												<a href="{{ url('opportunity/'.$opportunity->slug) }}" target="_blank" class="btn btn-lg apply-btn">@lang('dashboard.readmore')</a>
+												<a href="{{ url('opportunity/'.$opportunity->slug) }}" target="_blank" class="btn btn apply-btn">@lang('dashboard.readmore')</a>
 											</div>
 										</div>
 									</div>
