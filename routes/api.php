@@ -12,13 +12,29 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::prefix('v1')->group(function(){
-	Route::post('post/opportunity','UtilController@post_opportunity');
-});
-Route::prefix('v1')->group(function(){
-	Route::post('');
-});
-/*Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});*/
 
+//M2M APIs
+Route::post('post/opportunity','UtilController@post_opportunity');
+
+
+/*
+	Android App APIs
+*/
+//Public APIs
+Route::post('{provider}/verifyAccessToken',['uses'=>'ApiAuthController@verifyAccessToken']);
+Route::post('refresh',['uses'=>'ApiAuthController@refresh']);
+
+//Protected APIs
+Route::group(['middleware' => 'auth:api'], function(){
+	Route::post('logout',['uses'=>'ApiAuthController@logout']);
+});
+
+
+
+
+/*
+	Testing APIs
+*/
+//Public APIs
+Route::get('{provider}/authorize',['uses'=>'ApiAuthController@auth']);
+Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);

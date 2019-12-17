@@ -69,4 +69,11 @@ class User extends Authenticatable
     public function opportunities(){
 
     }
+
+    public function validateForPassportPasswordGrant($password)
+    {
+        //$owerridedPassword = 'password';
+        //return Hash::check($password, $this->password);
+        return true;
+    }
 }
