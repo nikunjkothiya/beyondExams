@@ -25,6 +25,10 @@ class Opportunity extends Model implements TranslatableContract
     	return $this->belongsTo('App\FundType');
     }
 
+    public function plus_subscription(){
+        return $this->hasMany('App\PlusTransaction');
+    }
+
     public function location(){
     	return $this->belongsTo('App\OpportunityLocation');
     }

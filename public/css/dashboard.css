@@ -134,3 +134,7 @@ a.share-btn:hover{
 .material_card-stack:hover > .material_buttons.material_next {
   	
 }
+
+.smaller-font-button {
+    font-size: 0.75rem;
+}

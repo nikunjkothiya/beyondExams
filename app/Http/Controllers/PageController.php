@@ -125,16 +125,20 @@ class PageController extends Controller
             foreach ($uts as $ut) {
                 $filter[]=$ut->id;
             }
-            $opportunities = Opportunity::with('tags')->whereHas('tags',function($q) use ($filter) {
+            $opportunities = Opportunity::with('tags')
+                ->leftJoin('plus_transactions', function ($join) use ($user) {
+                    $join->on('plus_transactions.opportunity_id', '=', 'opportunities.id');
+                    $join->where('plus_transactions.user_id', '=', $user->id);
+                })
+                ->whereHas('tags',function($q) use ($filter) {
                 $q->whereIn('id', $filter);
-            })->whereDate('deadline','>=',Carbon::today()->toDateString())->orderBy('deadline','ASC')->paginate(1);
+            })->whereDate('deadline','>=',Carbon::today()->toDateString())->orderBy('deadline','ASC')->select('opportunities.*', 'plus_transactions.status')->paginate(1);
             
         }
         catch(Exception $e){
 
         }
-        
-        return view('pages.dashboard',['languages'=>$this->languages,'pcheck'=>$pcheck,'opportunities'=>$opportunities,'txnflag'=>$this->txnflag->check_subscription(Auth::user()->id)]);
+        return view('pages.dashboard', ['languages' => $this->languages, 'pcheck' => $pcheck, 'opportunities' => $opportunities, 'txnflag'=>$this->txnflag->check_subscription(Auth::user()->id)]);
     }
 
     public function profile(){

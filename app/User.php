@@ -55,7 +55,7 @@ class User extends Authenticatable
     }
 
     public function plus_subscription(){
-        return $this->hasOne('App\PlusTransaction');
+        return $this->hasMany('App\PlusTransaction');
     }
 
     public function details(){

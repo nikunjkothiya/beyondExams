@@ -40,4 +40,5 @@ Route::group(['middleware'=>['locale','auth']],function(){
 	Route::post('checkout',['as'=>'checkout','uses'=>'SubscriptionController@checkout']);
 	Route::post('success',['as'=>'success','uses'=>'SubscriptionController@success']);
 	Route::post('failure',['as'=>'failure','uses'=>'SubscriptionController@failure']);
+    Route::post('opportunity/request_guidance',['as'=>'request-guidance','uses'=>'UtilController@request_guidance']);
 });
