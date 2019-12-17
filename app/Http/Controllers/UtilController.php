@@ -269,6 +269,145 @@ class UtilController extends Controller
                 'slug' => $slug,
                 'opportunity_location_id' => $request->opportunity_location,
             );
+            if(!is_null($request->bn)){
+                $opportunity['bn'] = [
+                    'title' => $request->bn['title'],
+                    'description' => $request->bn['description'],
+                ];
+            }
+            if(!is_null($request->de)){
+                $opportunity['de'] = [
+                    'title' => $request->de['title'],
+                    'description' => $request->de['description'],
+                ];
+            }
+            if(!is_null($request->en)){
+                $opportunity['en'] = [
+                    'title' => $request->en['title'],
+                    'description' => $request->en['description'],
+                ];
+            }
+            if(!is_null($request->es)){
+                $opportunity['es'] = [
+                    'title' => $request->es['title'],
+                    'description' => $request->es['description'],
+                ];
+            }
+            if(!is_null($request->fr)){
+                $opportunity['fr'] = [
+                    'title' => $request->fr['title'],
+                    'description' => $request->fr['description'],
+                ];
+            }
+            if(!is_null($request->hi)){
+                $opportunity['hi'] = [
+                    'title' => $request->hi['title'],
+                    'description' => $request->hi['description'],
+                ];
+            }
+            if(!is_null($request->id)){
+                $opportunity['id'] = [
+                    'title' => $request->id['title'],
+                    'description' => $request->id['description'],
+                ];
+            }
+            if(!is_null($request->it)){
+                $opportunity['it'] = [
+                    'title' => $request->it['title'],
+                    'description' => $request->it['description'],
+                ];
+            }
+            if(!is_null($request->ja)){
+                $opportunity['ja'] = [
+                    'title' => $request->ja['title'],
+                    'description' => $request->ja['description'],
+                ];
+            }
+            if(!is_null($request->km)){
+                $opportunity['km'] = [
+                    'title' => $request->km['title'],
+                    'description' => $request->km['description'],
+                ];
+            }
+            if(!is_null($request->ko)){
+                $opportunity['ko'] = [
+                    'title' => $request->ko['title'],
+                    'description' => $request->ko['description'],
+                ];
+            }
+            if(!is_null($request->lo)){
+                $opportunity['lo'] = [
+                    'title' => $request->lo['title'],
+                    'description' => $request->lo['description'],
+                ];
+            }
+            if(!is_null($request->ms)){
+                $opportunity['ms'] = [
+                    'title' => $request->ms['title'],
+                    'description' => $request->ms['description'],
+                ];
+            }
+            if(!is_null($request->my)){
+                $opportunity['my'] = [
+                    'title' => $request->my['title'],
+                    'description' => $request->my['description'],
+                ];
+            }
+            if(!is_null($request->ne)){
+                $opportunity['ne'] = [
+                    'title' => $request->ne['title'],
+                    'description' => $request->ne['description'],
+                ];
+            }
+            if(!is_null($request->ro)){
+                $opportunity['ro'] = [
+                    'title' => $request->ro['title'],
+                    'description' => $request->ro['description'],
+                ];
+            }
+            if(!is_null($request->ru)){
+                $opportunity['ru'] = [
+                    'title' => $request->ru['title'],
+                    'description' => $request->ru['description'],
+                ];
+            }
+            if(!is_null($request->si)){
+                $opportunity['si'] = [
+                    'title' => $request->si['title'],
+                    'description' => $request->si['description'],
+                ];
+            }
+            if(!is_null($request->ta)){
+                $opportunity['ta'] = [
+                    'title' => $request->ta['title'],
+                    'description' => $request->ta['description'],
+                ];
+            }
+            if(!is_null($request->th)){
+                $opportunity['th'] = [
+                    'title' => $request->th['title'],
+                    'description' => $request->th['description'],
+                ];
+            }
+            if(!is_null($request->tl)){
+                $opportunity['tl'] = [
+                    'title' => $request->tl['title'],
+                    'description' => $request->tl['description'],
+                ];
+            }
+            if(!is_null($request->vi)){
+                $opportunity['vi'] = [
+                    'title' => $request->vi['title'],
+                    'description' => $request->vi['description'],
+                ];
+            }
+            if(!is_null($request->zh)){
+                $opportunity['zh'] = [
+                    'title' => $request->zh['title'],
+                    'description' => $request->zh['description'],
+                ];
+            }
+
 
             $r = Opportunity::create($opportunity);
             $r->tags()->sync($request->tags);
