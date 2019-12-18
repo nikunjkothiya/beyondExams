@@ -199,7 +199,10 @@ class UtilController extends Controller
                 'deadline' => 'required|date',
                 'image' => 'required|string',
                 'link' => 'required|string',
+//               NA fundtype = 3, PF = 2, FF = 1
                 'fund_type' => 'required|integer|min:1|max:' . FundType::count(),
+//                Many2many: To handle multiple origins
+//                Replace null with online
                 'opportunity_location' => 'required|integer|min:1|max:' . OpportunityLocation::count(),
 
                 'bn.title' => 'string',
@@ -262,8 +265,10 @@ class UtilController extends Controller
             }
             $slug = str_replace(" ", "-", strtolower($request->en['title'])) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
             $opportunity = array(
+//                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
                 'deadline' => $request->deadline,
                 'image' => $request->image,
+//                Google home page in case of no link
                 'link' => $request->link,
                 'fund_type_id' => $request->fund_type,
                 'slug' => $slug,
