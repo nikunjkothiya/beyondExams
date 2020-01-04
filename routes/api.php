@@ -23,6 +23,9 @@ Route::post('post/opportunity','UtilController@post_opportunity');
 //Public APIs
 Route::post('{provider}/verifyAccessToken',['uses'=>'ApiAuthController@verifyAccessToken']);
 Route::post('refresh',['uses'=>'ApiAuthController@refresh']);
+Route::get('get_all_languages',['uses'=>'PreciselyController@get_language']);
+Route::get('get_filters',['uses'=>'PreciselyController@get_filters']);
+Route::post('submit_user_profile',['uses'=>'PreciselyController@submit_profile']);
 
 //Protected APIs
 Route::group(['middleware' => 'auth:api'], function(){

@@ -17,6 +17,7 @@ class CreateLanguagesTable extends Migration
             $table->bigIncrements('id');
             $table->string('code')->unique();
             $table->string('language')->unique();
+            $table->string('language_example')->unique();
             $table->timestamps();
         });
     }
