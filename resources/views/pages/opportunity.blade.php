@@ -89,6 +89,16 @@
 									<a href="{{ url('login') }}" class="btn apply-btn">@lang('opportunity.apply')</a>
 								@endauth
 							</div>
+                            {{dd($plus_status)}}
+                            @if($plus_status == 1)
+                                <div class="col-auto ml-auto">
+                                    <a class="btn btn-lg share-btn smaller-font-button">@lang('opportunity.guidance_requested')</a>
+                                </div>
+                            @else
+                                <div class="col-auto ml-auto" value="{{ $opportunity->id }}" id="guidance_request_button">
+                                    <a class="btn btn-lg share-btn smaller-font-button">@lang('opportunity.request_guidance')</a>
+                                </div>
+                            @endif
 						</div>
 					</div>
 				</div>
