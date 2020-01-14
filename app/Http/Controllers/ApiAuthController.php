@@ -42,6 +42,7 @@ class ApiAuthController extends Controller
 	        }
 
 	        $email = "";
+//	        Provider instance. To extract user details
 	        $provider_obj=NULL;
     		if($provider=='google'){
 	    		$config = [
@@ -52,6 +53,7 @@ class ApiAuthController extends Controller
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
 	    	}
     		$user = $provider_obj->userFromToken($request->access_token);
+//    		Check account in own database
     		$check_account = UserSocial::where('provider_id', $user->id)->first();
     		if($check_account){
     			$email = $check_account->user->email; 
@@ -93,7 +95,8 @@ class ApiAuthController extends Controller
     }
 
     public function proxy($grantType, array $data = []){
-    	$config = app()->make('config');
+//    	Get Laravel app config
+ 	    $config = app()->make('config');
         $data = array_merge($data, [
             'client_id'     => env('PASSWORD_CLIENT_ID'),
             'client_secret' => env('PASSWORD_CLIENT_SECRET'),
@@ -127,11 +130,13 @@ class ApiAuthController extends Controller
     public function proxyLogin($email,$password){
     	$user = User::where('email',$email)->first();
     	if (!is_null($user)) {
-            $res = 1;
-            $accessTokens = $this->token($user->id);
-            foreach ($accessTokens as $accessToken) {
-                $res = $res * $this->proxyLogout($accessToken->id);
-            }
+//            $res = 1;
+////          Returns all existing tokens (Active devices
+//            $accessTokens = $this->token($user->id);
+////          Logout everyone who is logged in with this account
+//            foreach ($accessTokens as $accessToken) {
+//                $res = $res * $this->proxyLogout($accessToken->id);
+//            }
 
             return $this->proxy('password', [
                 'username' => $email,
@@ -284,7 +289,9 @@ class ApiAuthController extends Controller
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
 	    	}
     		$user = $provider_obj->stateless()->user();
-    		dd($user);
+    		$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'],"email"=>$user->email, "avatar"=>$user->avatar);
+            return $this->apiResponse->sendResponse(200,'Success', $data);
+//    		dd($user);
     	}
     	catch(Exception $e){
     		return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
