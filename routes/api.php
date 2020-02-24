@@ -48,7 +48,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 //Public APIs
 Route::get('{provider}/authorize',['uses'=>'ApiAuthController@auth']);
 Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
-Route::post('opportunity',['uses' => 'ApiOpportunityController@get_opp']);
+Route::get('opportunity/{slug}',['uses' => 'ApiOpportunityController@get_opp']);
 Route::post('comment',['uses' => 'ApiRecordCommentController@save_comment']);
 Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
 Route::get('comment/{opportunity_id}',['uses' => 'ApiRecordCommentController@show_comment']);
