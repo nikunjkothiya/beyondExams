@@ -14,11 +14,11 @@
 Route::get('lang/{locale}','UtilController@locale');
 Route::get('auth/{provider}', 'AuthController@redirect');
 Route::get('auth/{provider}/callback', 'AuthController@callback');
+Route::get('admin', 'AdminController@show');
 
 Route::group(['middleware'=>['locale']],function(){
 	Route::get('/',['as' => 'index','uses' => 'PageController@index']);
 	Route::get('login',['as' => 'login','uses' => 'AuthController@login']);
-	Route::get('opportunity/{slug}',['uses' => 'OpportunityController@get_opp']);
 });
 
 Route::group(['middleware'=>['locale','auth']],function(){
