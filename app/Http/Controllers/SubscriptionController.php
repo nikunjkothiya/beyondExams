@@ -82,7 +82,10 @@ class SubscriptionController extends Controller
         catch(Exception $e){
             
         }
-        return view('pages.subscription',['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email]);
+        $data = ['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
+        return view('pages.subscription',$data);
+        
+        #return view('pages.subscription',['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email]);
     }
 
     public function checkout(Request $request){
@@ -137,7 +140,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
 
         }
-        return view('pages.payumoney',['endPoint'=>$this->url,'hash'=>$hash,'parameters'=>$this->data]);
+        $data = ['endPoint'=>$this->url,'hash'=>$hash,'parameters'=>$this->data];
+        return view('pages.payumoney',$data);
     }
 
     public function success(Request $request){
