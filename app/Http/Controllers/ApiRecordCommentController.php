@@ -22,7 +22,6 @@ class ApiRecordCommentController extends Controller
 
  	public function __construct(ApiResponse $apiResponse){
         $this->apiResponse=$apiResponse;
-        $this->KEY = env('SYS_API_KEY');
      }
      
     public function save_comment(Request $request)
@@ -35,16 +34,12 @@ class ApiRecordCommentController extends Controller
                 $plus_status = PlusTransaction::where('user_id', $user->id)->where('opportunity_id', $opportunity->id)->select('status');
                 
                 $check = Validator::make($request->all(), [
-                    'token' => 'required|string',
                     'message' => 'required|string',
                     'opportunity_id' => 'required|string',
                     ]);
 
                 if ($check->fails()) {
-                    return $apiResponse->sendResponse(400, 'Bad Request', $check->errors());
-                }
-                if ($request->token != $this->KEY) {
-                    return $apiResponse->sendResponse(401, 'Unauthorized Request', '');
+                    return $this->apiResponse->sendResponse(400, 'Bad Request', $check->errors());
                 }
 
                 $data = new ListComments;
@@ -54,7 +49,7 @@ class ApiRecordCommentController extends Controller
                 $comment_id = DB::table('list_comments')->orderBy('id', 'DESC')->first()->id;
 
                 $data = new UserComments;
-                $data->user_id = $user->id;
+                $data->$user->id;
                 $data->comment_id = $comment_id;
                 $data->save();
 
@@ -64,7 +59,7 @@ class ApiRecordCommentController extends Controller
                 $data->save();
 
                 return $this->apiResponse->sendResponse(200,'Success','Recorded');
-            };
+            }
             
 
         } catch (Exception $e) {
@@ -82,7 +77,6 @@ class ApiRecordCommentController extends Controller
                 $plus_status = PlusTransaction::where('user_id', $user->id)->where('opportunity_id', $opportunity->id)->select('status');
                 
                 $check = Validator::make($request->all(), [
-                    'token' => 'required|string',
                     'content' => 'required|string',
                     'comment_id' => 'required|string',
                     'user_name' => 'required|string',
@@ -90,9 +84,6 @@ class ApiRecordCommentController extends Controller
 
                 if ($check->fails()) {
                     return $apiResponse->sendResponse(400, 'Bad Request', $check->errors());
-                }
-                if ($request->token != $this->KEY) {
-                    return $apiResponse->sendResponse(401, 'Unauthorized Request', '');
                 }
 
                 $data = new RecordReply;

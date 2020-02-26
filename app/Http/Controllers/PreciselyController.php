@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+
 /**
  * @property ApiResponse apiResponse
  */
@@ -219,9 +220,7 @@ class PreciselyController extends Controller
             }
             // dd(json_decode($tags));
             // Read $tags as json
-            foreach (json_decode($tags) as $tag){
-                $user->tags()->attach($tag);
-            }
+            $user->tags()->sync(json_decode($tags));
             return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
         }
         catch(Exception $e){
@@ -232,5 +231,25 @@ class PreciselyController extends Controller
     public function get_all_countries(Request $request){
         $countries = Country::all();
         return $this->apiResponse->sendResponse(200, 'All countries fetched.', $countries);
+    }
+
+    public function get_location($location_id){
+        try{
+        $country = DB::table('opportunity_locations')->select('location')->where('id',$location_id)->get();
+        return $this->apiResponse->sendResponse(200, 'Success', $country);
+        }
+        catch(Exception $e){
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
+    }
+
+    public function get_funding_status($id){
+        try{
+        $fund_status = DB::table('fund_types')->select('type')->where('id',$id)->get();
+        return $this->apiResponse->sendResponse(200, 'Success', $fund_status);
+        }
+        catch(Exception $e){
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
     }
 }
