@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\ApiResponse;
 
 use Auth;
 
@@ -12,7 +13,7 @@ use App\Product;
 use App\Transaction;
 use Carbon\Carbon;
 
-class SubscriptionController extends Controller
+class ApiSubscriptionController extends Controller
 {
     protected $languages;
     protected $key;
@@ -21,11 +22,12 @@ class SubscriptionController extends Controller
     protected $hashSequence = "key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10";
     protected $data = array();
 
-    public function __construct(){
+    public function __construct(ApiResponse $apiResponse){
         try{
             $this->languages = Language::all();
             $this->key = env('PAYU_MERCHANT_KEY');
             $this->salt = env('PAYU_MERCHANT_SALT');
+            $this->apiResponse=$apiResponse;
             if(env('APP_DEBUG') == 'true'){
                 $this->url = env('PAYU_TEST_URL');
             }
@@ -83,8 +85,8 @@ class SubscriptionController extends Controller
             return $this->apiResponse->sendResponse(500,'Internal Server Error',$e);
         }
         $data = ['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
-        return view('pages.subscription',$data);
-        #return $this->apiResponse->sendResponse(200,'Success',$data);
+        #return view('pages.subscription',$data);
+        return $this->apiResponse->sendResponse(200,'Success',$data);
         #return view('pages.subscription',['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email]);
     }
 
@@ -108,12 +110,12 @@ class SubscriptionController extends Controller
                     $buy->valid = 1;
                     $buy->save();
 
-                    return redirect('/dashboard/subscription');
-                    #return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
+                    #return redirect('/dashboard/subscription');
+                    return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
                 }
                 else{
-                    return redirect()->back()->withErrors(['Free Trial Exhausted!']);
-                    #return $this->apiResponse->sendResponse(401,'Unauthorized','Free Trial Exhausted!');
+                    #return redirect()->back()->withErrors(['Free Trial Exhausted!']);
+                    return $this->apiResponse->sendResponse(401,'Unauthorized','Free Trial Exhausted!');
                 }
             }
             else{
@@ -143,8 +145,8 @@ class SubscriptionController extends Controller
 
         }
         $data = ['endPoint'=>$this->url,'hash'=>$hash,'parameters'=>$this->data];
-        return view('pages.payumoney',$data);
-        #return $this->apiResponse->sendResponse(200,'to payumoney',$data);
+        #return view('pages.payumoney',$data);
+        return $this->apiResponse->sendResponse(200,'to payumoney',$data);
     }
 
     public function success(Request $request){
@@ -156,8 +158,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
 
         }
-        return redirect('/dashboard/subscription');
-        #return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
+        #return redirect('/dashboard/subscription');
+        return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
     }
 
     public function failure(Request $request){
@@ -169,8 +171,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
 
         }
-        return redirect('/dashboard/subscription');
-        #return $this->apiResponse->sendResponse(500,'Failed','redirect to /dashboard/subscription');
+        #return redirect('/dashboard/subscription');
+        return $this->apiResponse->sendResponse(500,'Failed','redirect to /dashboard/subscription');
     }
 
     public function generateTransactionID(){
