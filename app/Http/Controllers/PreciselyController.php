@@ -14,7 +14,7 @@ use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-
+use Auth;
 
 /**
  * @property ApiResponse apiResponse
@@ -120,24 +120,28 @@ class PreciselyController extends Controller
 
 //    TODO: CORRECT RETURN TYPE
     public function get_profile(Request $request){
-        try{
-            $pcheck = UserDetail::where('user_id',$request->user_id)->first();
-        }
-        catch(Exception $e){
-            return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-        }
+        if (Auth::check()) {
+            $user = User::find(Auth::user()->id);
+            try{
+                $pcheck = UserDetail::where('user_id',$user->id)->first();
+            }
+            catch(Exception $e){
+                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+            }
 
-        if($pcheck){
-            $countries = Country::all();
-            $disciplines = Discipline::all();
-            $qualifications = Qualification::all();
-            $data['user_details'] = $pcheck;
-            $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+            if($pcheck){
+                $countries = Country::all();
+                $disciplines = Discipline::all();
+                $qualifications = Qualification::all();
+                $data['user_details'] = $pcheck;
+                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
-            return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
+                return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
+            }
         }
-        return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
-
+        else{
+        return $this->apiResponse->sendResponse(500, 'Users not logged in', null);}         
+            
     }
 
     public function save_opportunity(Request $request)
