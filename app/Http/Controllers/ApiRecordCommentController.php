@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use App\Language;
 use App\Opportunity;
-use App\PlusTransaction;
 use App\User;
 use App\ListComments;
 use App\UserComments;
@@ -30,8 +29,6 @@ class ApiRecordCommentController extends Controller
             $flag = 0;
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                $flag = $this->txnflag->check_subscription(Auth::user()->id);
-                $plus_status = PlusTransaction::where('user_id', $user->id)->where('opportunity_id', $opportunity->id)->select('status');
                 
                 $check = Validator::make($request->all(), [
                     'message' => 'required|string',
@@ -48,8 +45,8 @@ class ApiRecordCommentController extends Controller
 
                 $comment_id = DB::table('list_comments')->orderBy('id', 'DESC')->first()->id;
 
-                $data = new UserComments;
-                $data->$user->id;
+                $data = new UserComments; 
+                $data->user_id=$user->id;
                 $data->comment_id = $comment_id;
                 $data->save();
 
@@ -58,12 +55,14 @@ class ApiRecordCommentController extends Controller
                 $data->comment_id = $comment_id;
                 $data->save();
 
-                return $this->apiResponse->sendResponse(200,'Success','Recorded');
+                $response_data["message"] = "Comment recorded";
+
+                return $this->apiResponse->sendResponse(200,'Success',null);
             }
             
 
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(404,'Page Not Found','Error');
+            return $this->apiResponse->sendResponse(404,'Page Not Found',null);
         }
     }
 
@@ -92,13 +91,13 @@ class ApiRecordCommentController extends Controller
                 $data->user_id = $user->id;
                 $data->user_name = $request->user_name;
                 $data->save();
-
-                return $this->apiResponse->sendResponse(200,'Success','Recorded');
+                $response_data["message"] = "Comment recorded";
+                return $this->apiResponse->sendResponse(200,'Success',$response_data);
             };
             
 
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(404,'Page Not Found','Error');
+            return $this->apiResponse->sendResponse(404,'Page Not Found',null);
         }
 
     }

@@ -48,7 +48,6 @@ Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
 
 Route::group(['middleware' => 'auth:api'], function(){
 	Route::get('get_location/{location_id}',['uses' => 'PreciselyController@get_location']);
-
 	Route::get('opportunity/{slug}',['uses' => 'ApiOpportunityController@get_opp']);
 	Route::post('comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);

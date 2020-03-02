@@ -98,8 +98,8 @@ class ApiAuthController extends Controller
 //    	Get Laravel app config
  	    $config = app()->make('config');
         $data = array_merge($data, [
-            'client_id'     => env('PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
+            'client_id'     =>  env('PASSWORD_CLIENT_ID'),
+            'client_secret' =>  env('PASSWORD_CLIENT_SECRET'),
             'grant_type'    => $grantType
         ]);
         try{
