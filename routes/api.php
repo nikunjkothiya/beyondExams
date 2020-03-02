@@ -28,7 +28,7 @@ Route::get('get_filters',['uses'=>'PreciselyController@get_filters']);
 Route::post('submit_user_profile',['uses'=>'PreciselyController@submit_profile']);
 Route::post('save_user_filters',['uses'=>'PreciselyController@save_user_filters']);
 Route::post('save_user_language',['uses'=>'PreciselyController@save_user_language']);
-Route::get('get_profile',['uses'=>'PreciselyController@get_profile']);
+
 Route::get('get_all_countries',['uses'=>'PreciselyController@get_all_countries']);
 
 
@@ -60,5 +60,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('checkout', ['uses'=>'SubscriptionController@checkout']);
 	Route::post('success',['uses'=>'SubscriptionController@success']);
 	Route::post('failure',['uses'=>'SubscriptionController@failure']);
+
+	Route::get('get_profile',['uses'=>'PreciselyController@get_profile']);
 });
 
