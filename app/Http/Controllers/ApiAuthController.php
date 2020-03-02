@@ -80,7 +80,7 @@ class ApiAuthController extends Controller
 		            );
     			}
     			else{
-    				return $this->apiResponse->sendResponse(500,'Internal server error','Provider error');
+    				return $this->apiResponse->sendResponse(500,'Internal server error',null);
     			}
 
     			$email = $user->email;
@@ -90,12 +90,13 @@ class ApiAuthController extends Controller
 
     	}
     	catch(\GuzzleHttp\Exception\BadResponseException $e){
-    		return $this->apiResponse->sendResponse($e->getCode(),'Invalid Access Tokens','');
+    		return $this->apiResponse->sendResponse($e->getCode(),'Invalid Access Tokens',null);
     	}
     }
 
     public function proxy($grantType, array $data = []){
 //    	Get Laravel app config
+		$details = User::where('email',$data['username'])->first();
  	    $config = app()->make('config');
         $data = array_merge($data, [
             'client_id'     =>  env('PASSWORD_CLIENT_ID'),
@@ -112,7 +113,10 @@ class ApiAuthController extends Controller
 	        $token_data = [
 	        	'access_token' => $data->access_token,
 	        	'expires_in' => $data->expires_in,
-	            'refresh_token' => $data->refresh_token,
+				'refresh_token' => $data->refresh_token,
+				'name' =>$details->name,
+				'email' =>$details->email,
+				'avatar' =>$details->avatar,
 	        ];
             return $this->apiResponse->sendResponse(200,'Login Successful',$token_data);
         }
@@ -185,8 +189,9 @@ class ApiAuthController extends Controller
             }
             if($response){
                 return $this->apiResponse->sendResponse(200,'Token successfully destroyed',$this->json_data);
-            }
-            return $this->apiResponse->sendResponse(500,'Internal server error','logout error');
+			}
+			$response_data["message"] = "Logout Error";
+            return $this->apiResponse->sendResponse(500,'Internal server error',$response_data);
         }
         catch(Exception $e){
             return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
@@ -234,11 +239,11 @@ class ApiAuthController extends Controller
 	        ]);
 
 	        if($validator->fails()){
-	        	return $this->apiResponse->sendResponse(400,$validator->errors(),'');
+	        	return $this->apiResponse->sendResponse(400,$validator->errors(),null);
 	        }
 
 	        if(!User::where('email',$request->email)->first()){
-	        	return $this->apiResponse->sendResponse(404,'User not found.',''); 
+	        	return $this->apiResponse->sendResponse(404,'User not found.',null); 
 	        }
 
     		$refreshToken = $request->get('refresh_token');
