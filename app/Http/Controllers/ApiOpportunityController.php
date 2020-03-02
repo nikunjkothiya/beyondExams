@@ -59,7 +59,7 @@ class ApiOpportunityController extends Controller
                 $opp_id_json_array = json_decode($opp_id_json, true);
                 $opp_ids = array();
                 foreach ($opp_id_json_array as $opp){
-                    $opp_ids[]=$opp['opportunity_id'];}
+                    $opp_ids[]=$opp['slug'];}
         
                 
                 return $this->apiResponse->sendResponse(200,'Success',$opp_ids);               
