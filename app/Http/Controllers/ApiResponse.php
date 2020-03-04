@@ -10,7 +10,7 @@ class ApiResponse extends Controller
     public function sendResponse($code,$message,$data){
     	if($code == 200 || $code == 201){
 			if (!is_null($data) && array_key_exists("token", $data)){
-				$cookie = Cookie::make('access_token', $data["token"], null, null, null, false, false);
+				$cookie = Cookie::make('access_token', $data["token"], 100, null, null, false, false);
 				return response([
 					'status' => 'success',
 					'status_code' => $code,
