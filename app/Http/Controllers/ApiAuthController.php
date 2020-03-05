@@ -294,7 +294,7 @@ class ApiAuthController extends Controller
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
 	    	}
     		$user = $provider_obj->stateless()->user();
-    		$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], /*"last_name"=>$user->user['family_name'],*/ "email"=>$user->email, "avatar"=>$user->avatar);
+    		$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'], "email"=>$user->email, "avatar"=>$user->avatar);
 			
 			return $this->apiResponse->sendResponse(200,'Success', $data);
 //    		dd($user);

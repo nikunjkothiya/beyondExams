@@ -25,7 +25,6 @@ Route::post('{provider}/verifyAccessToken',['uses'=>'ApiAuthController@verifyAcc
 Route::post('refresh',['uses'=>'ApiAuthController@refresh']);
 Route::get('get_all_languages',['uses'=>'PreciselyController@get_language']);
 Route::get('get_filters',['uses'=>'PreciselyController@get_filters']);
-Route::post('submit_user_profile',['uses'=>'PreciselyController@submit_profile']);
 Route::post('save_user_filters',['uses'=>'PreciselyController@save_user_filters']);
 Route::post('save_user_language',['uses'=>'PreciselyController@save_user_language']);
 
@@ -61,6 +60,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('success',['uses'=>'SubscriptionController@success']);
 	Route::post('failure',['uses'=>'SubscriptionController@failure']);
 
+	Route::post('submit_user_profile',['uses'=>'PreciselyController@submit_profile']);
 	Route::get('get_profile',['uses'=>'PreciselyController@get_profile']);
 });
 
