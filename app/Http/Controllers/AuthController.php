@@ -22,7 +22,7 @@ class AuthController extends Controller
 
     public function login(){
         if(Auth::check()){
-            return redirect('/setup/1');    
+            return redirect('/v2/setup/1');    
         }
     	return view('login',['languages'=>$this->languages]);
     }
