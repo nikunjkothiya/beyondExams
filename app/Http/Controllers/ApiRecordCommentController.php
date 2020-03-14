@@ -103,7 +103,28 @@ class ApiRecordCommentController extends Controller
     }
 
     public function show_comment($opportunity_id)
-    {
+    {   try{
+        $comment_id = DB::table('opportunity_comments')->select('comment_id')->where("opportunity_id",$opportunity_id)->get();
+        $comm_ids = array();
+        foreach ($comment_id as $id){$comm_ids[] = $id->comment_id;}
+
+        $comments = DB::table('list_comments')->select('message')->where("id",$comm_ids)->get();
+        $comm_message = [];
+        foreach ($comments as $comm){$comm_message[] = $comm->message;}
+
+        $replies  = DB::table('reply')->select('content')->where("comment_id",$comm_ids)->get();
+        $reply_message = [];
+        foreach ($replies as $reply){$reply_message[] = $reply->content;}
+
+        $data = [];
+        $i = 0;
+        foreach($comm_ids as $id){$data[] = array($id, $comm_message[$i], $reply_message[$i]); $i++;}        
+        return $this->apiResponse->sendResponse(200,'Success',$data);
+        
+        } 
+        catch(Exception $e) {
+            return $this->apiResponse->sendResponse(500,'Internal Server Error',null);
+        }
 
     }
 }

@@ -47,11 +47,12 @@ Route::group(['middleware' => 'auth:api'], function(){
 Route::get('{provider}/authorize',['uses'=>'ApiAuthController@auth']);
 Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
 
+
 Route::group(['middleware' => 'auth:api'], function(){
 	
 	Route::post('comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
-	#Route::get('comment/{opportunity_id}',['uses' => 'ApiRecordCommentController@show_comment']);
+	Route::get('comment/{opportunity_id}',['uses' => 'ApiRecordCommentController@show_comment']);
 	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
 	
 

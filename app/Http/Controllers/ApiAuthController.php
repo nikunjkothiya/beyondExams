@@ -80,7 +80,7 @@ class ApiAuthController extends Controller
 		            );
     			}
     			else{
-    				return $this->apiResponse->sendResponse(500,'Internal server error',null);
+    				return $this->apiResponse->sendResponse(500,'Internal server error 1',null);
     			}
 
     			$email = $user->email;
@@ -127,7 +127,7 @@ class ApiAuthController extends Controller
                 'expires_in' => '',
                 'refresh_token' => '',
             ];
-            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error',$response);
+            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error 2',$response);
         }
     }
 
@@ -191,10 +191,10 @@ class ApiAuthController extends Controller
                 return $this->apiResponse->sendResponse(200,'Token successfully destroyed',$this->json_data);
 			}
 			$response_data["message"] = "Logout Error";
-            return $this->apiResponse->sendResponse(500,'Internal server error',$response_data);
+            return $this->apiResponse->sendResponse(500,'Internal server error 3',$response_data);
         }
         catch(Exception $e){
-            return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+            return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 4',$e);
         }
     }
 
@@ -212,7 +212,7 @@ class ApiAuthController extends Controller
             return 0;
         }
         catch(Exception $e){
-        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 5',$e);
         }
     }
 
@@ -226,7 +226,7 @@ class ApiAuthController extends Controller
             return $token;
         }
         catch(Exception $e){
-        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 6',$e);
         }
         
     }
@@ -252,7 +252,7 @@ class ApiAuthController extends Controller
             return $response;
     	}
     	catch(Exception $e){
-    		return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+    		return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 7',$e);
     	}
     }
 
@@ -280,7 +280,7 @@ class ApiAuthController extends Controller
     	else{
     		//
     	}
-    }
+	}
 
     public function login($provider){
     	try{
@@ -294,7 +294,7 @@ class ApiAuthController extends Controller
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
 	    	}
 			$user = $provider_obj->stateless()->user();
-    		$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'], "email"=>$user->email, "avatar"=>$user->avatar);
+			$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'], "email"=>$user->email, "avatar"=>$user->avatar);
 			
 			return $this->apiResponse->sendResponse(200,'Success', $data);
 //    		dd($user);
