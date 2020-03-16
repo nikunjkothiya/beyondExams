@@ -195,45 +195,49 @@ class PreciselyController extends Controller
     }
 
     public function save_user_language(Request $request) {
-        //try{
-            
-
-                //try{
-                    //$user = User::find(Auth::user()->id);
-                    //$pcheck = UserDetail::where('user_id',$user->id)->first();
-                    //$pcheck->language_id = $request->id;
-                    //$check->save();
-                    //return $this->apiResponse->sendResponse(200, 'Saved user language', null);
-                //}
-                //catch(Exception $e){
-                //    return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-                //}
-            
-            //$check = UserDetail::where('user_id', $user_id)->first();
-            //$check->language_id = $request->id;
-            //$check->save();
-            //return $this->apiResponse->sendResponse(500, 'Failed', null);}
-        
-        $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:languages',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
         try {
-            //if (Auth::check()) {
+
+            $validator = Validator::make($request->all(), [
+                'id' => 'required|exists:languages',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+
+            //$user = $request->user();
+            if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                $pcheck = UserDetail::where('user_id',$user->id)->first();
-                $pcheck->language_id = $request->id;
+                $user_id = $user->id;}
+            else{return $this->apiResponse->sendResponse(500, 'UnAuthorized', null);}
+
+            $check = UserDetail::where('user_id', $user_id)->first();
+            //$check->user_id = $user_id;
+            //$check->language_id = $request->language_id;
+            
+            if (is_null($check)) {
+                $record = new UserDetail;
+
+                $record->user_id = $user_id;
+                $record->language_id = $request->language_id;
+                $record->save();
+                if ($record) {
+                    return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                } else {
+                    return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
+                }
+            } else {
+                $check->language_id = $request->language_id;
                 $check->save();
-                return $this->apiResponse->sendResponse(200, 'Saved user language', null);               
-                
-            //};
-             
+                if ($check) {
+                    return $this->apiResponse->sendResponse(200, 'User details saved.', $check);
+                } else {
+                    return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
+                }
+            }
         } catch (Exception $e) {
-            //abort(404);
-            return $this->apiResponse->sendResponse(500,'Internal Server Error',null);
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
         
     }

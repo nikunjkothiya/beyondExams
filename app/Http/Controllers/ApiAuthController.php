@@ -10,6 +10,7 @@ use App\Http\Controllers\ApiResponse;
 use Validator;
 use App\User;
 use App\UserSocial;
+use App\UserDetail;
 use GuzzleHttp\Client; 
 use Illuminate\Foundation\Application;
 use Carbon\Carbon;
@@ -57,7 +58,13 @@ class ApiAuthController extends Controller
 //    		Check account in own database
     		$check_account = UserSocial::where('provider_id', $user->id)->first();
     		if($check_account){
-    			$email = $check_account->user->email; 
+				$email = $check_account->user->email;
+				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
+				$check_detail = UserDetail::where('user_id', $user_id)->first();
+				if($check_detail){
+					$flag = 1;
+				}
+				else{$flag=1;}
     		}
     		else{
     			if($provider == 'google'){
@@ -98,7 +105,7 @@ class ApiAuthController extends Controller
 
     public function proxy($grantType, $flag, array $data = []){
 //    	Get Laravel app config
-		$details = User::where('email',$data['username'])->first();
+		//$details = User::where('email',$data['username'])->first();
  	    $config = app()->make('config');
         $data = array_merge($data, [
             'client_id'     =>  env('PASSWORD_CLIENT_ID'),
@@ -117,9 +124,6 @@ class ApiAuthController extends Controller
 	        	'access_token' => $data->access_token,
 	        	'expires_in' => $data->expires_in,
 				'refresh_token' => $data->refresh_token,
-				'name' =>$details->name,
-				'email' =>$details->email,
-				'avatar' =>$details->avatar,
 	        ];
             return $this->apiResponse->sendResponse(200,'Login Successful',$token_data);
         }
@@ -260,7 +264,7 @@ class ApiAuthController extends Controller
     }
 
     public function proxyRefresh($refreshToken,$email){
-    	return $this->proxy('refresh_token', [
+    	return $this->proxy('refresh_token', 0,[
             'refresh_token' => $refreshToken,
             'username' => $email
         ]);

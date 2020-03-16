@@ -18,14 +18,14 @@ class CreateUserDetailsTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('language_id')->default(3);
             $table->string('email')->nullable();
-            $table->string('firstname');
-            $table->string('lastname');
-            $table->string('college');
-            $table->string('city');
-            $table->unsignedDecimal('gpa', 4, 2);
-            $table->unsignedBigInteger('country_id');
-            $table->unsignedBigInteger('discipline_id');
-            $table->unsignedBigInteger('qualification_id');
+            $table->string('firstname')->nullable();
+            $table->string('lastname')->nullable();
+            $table->string('college')->nullable();
+            $table->string('city')->nullable();
+            $table->unsignedDecimal('gpa', 4, 2)->nullable();
+            $table->unsignedBigInteger('country_id')->nullable();
+            $table->unsignedBigInteger('discipline_id')->nullable();
+            $table->unsignedBigInteger('qualification_id')->nullable();
             $table->timestamps();
         });
         Schema::table('user_details',function($table){
