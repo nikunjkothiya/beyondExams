@@ -33,7 +33,6 @@ class ApiAuthController extends Controller
  	
  	public function verifyAccessToken(Request $request,$provider){
     	try{
-			$is_new = 0;
     		$validator = Validator::make($request->all(), [
 	            'access_token' => 'required',
 	        ]);
@@ -42,7 +41,8 @@ class ApiAuthController extends Controller
 	        	return $this->apiResponse->sendResponse(400,'Parameters missing.',$validator->errors());
 	        }
 
-	        $email = "";
+			$email = "";
+			$flag = 0;
 //	        Provider instance. To extract user details
 	        $provider_obj=NULL;
     		if($provider=='google'){
@@ -61,7 +61,7 @@ class ApiAuthController extends Controller
     		}
     		else{
     			if($provider == 'google'){
-					$is_new = 1;
+					$flag = 1;
     				$new_user = new User();
             		$new_user->name = $user->name;
             		$new_user->email = $user->email;
@@ -87,7 +87,7 @@ class ApiAuthController extends Controller
 
     			$email = $user->email;
     		}
-	        $response = $this->proxyLogin($email, 'password', $is_new);
+	        $response = $this->proxyLogin($email, 'password', $flag);
 			return $response;
 
     	}
@@ -96,7 +96,7 @@ class ApiAuthController extends Controller
     	}
     }
 
-    public function proxy($grantType, array $data = []){
+    public function proxy($grantType, $flag, array $data = []){
 //    	Get Laravel app config
 		$details = User::where('email',$data['username'])->first();
  	    $config = app()->make('config');
@@ -113,10 +113,13 @@ class ApiAuthController extends Controller
             $data = json_decode($response->getBody());
 
 	        $token_data = [
+				'new' =>$flag,
 	        	'access_token' => $data->access_token,
 	        	'expires_in' => $data->expires_in,
 				'refresh_token' => $data->refresh_token,
-				'is_new' =>$is_new,
+				'name' =>$details->name,
+				'email' =>$details->email,
+				'avatar' =>$details->avatar,
 	        ];
             return $this->apiResponse->sendResponse(200,'Login Successful',$token_data);
         }
@@ -131,7 +134,7 @@ class ApiAuthController extends Controller
         }
     }
 
-    public function proxyLogin($email,$password,$is_new){
+    public function proxyLogin($email,$password,$flag){
     	$user = User::where('email',$email)->first();
     	if (!is_null($user)) {
 //            $res = 1;
@@ -142,10 +145,10 @@ class ApiAuthController extends Controller
 //                $res = $res * $this->proxyLogout($accessToken->id);
 //            }
 
-            return $this->proxy('password', [
+            return $this->proxy('password', $flag,[
                 'username' => $email,
-                'password' => $password
-			],$is_new);
+				'password' => $password,
+			]);
         }
         else{
 
