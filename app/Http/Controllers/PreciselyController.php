@@ -196,24 +196,23 @@ class PreciselyController extends Controller
 
     public function save_user_language(Request $request) {
         try {
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                $validator = Validator::make($request->all(), [
+                    'id' => 'required|exists:languages',
+                ]);
 
-            $validator = Validator::make($request->all(), [
-                'id' => 'required|exists:languages',
-            ]);
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
 
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                $check = UserDetail::where('user_id', $user->id)->first();
+                $check->language_id = $request->id;
+                $check->save();
+                return $this->apiResponse->sendResponse(200, 'Saved user language', null);
+            } catch (Exception $e) {
+                return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
             }
-
-
-            $user_id = $request->user_id;
-
-            $check = UserDetail::where('user_id', $user_id)->first();
-            $check->language_id = $request->id;
-            $check->save();
-            return $this->apiResponse->sendResponse(200, 'Saved user language', null);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
  
