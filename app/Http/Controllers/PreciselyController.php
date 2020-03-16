@@ -195,25 +195,47 @@ class PreciselyController extends Controller
     }
 
     public function save_user_language(Request $request) {
-        try {
-            if (Auth::check()) {
-                $user = User::find(Auth::user()->id);
-                $validator = Validator::make($request->all(), [
-                    'id' => 'required|exists:languages',
-                ]);
+        //try{
+            
 
-                if ($validator->fails()) {
-                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-                }
+                //try{
+                    //$user = User::find(Auth::user()->id);
+                    //$pcheck = UserDetail::where('user_id',$user->id)->first();
+                    //$pcheck->language_id = $request->id;
+                    //$check->save();
+                    //return $this->apiResponse->sendResponse(200, 'Saved user language', null);
+                //}
+                //catch(Exception $e){
+                //    return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+                //}
+            
+            //$check = UserDetail::where('user_id', $user_id)->first();
+            //$check->language_id = $request->id;
+            //$check->save();
+            //return $this->apiResponse->sendResponse(500, 'Failed', null);}
+        
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:languages',
+        ]);
 
-                $check = UserDetail::where('user_id', $user->id)->first();
-                $check->language_id = $request->id;
-                $check->save();
-                return $this->apiResponse->sendResponse(200, 'Saved user language', null);
-            } catch (Exception $e) {
-                return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
-            }
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
+        try {
+            //if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                $pcheck = UserDetail::where('user_id',$user->id)->first();
+                $pcheck->language_id = $request->id;
+                $check->save();
+                return $this->apiResponse->sendResponse(200, 'Saved user language', null);               
+                
+            //};
+             
+        } catch (Exception $e) {
+            //abort(404);
+            return $this->apiResponse->sendResponse(500,'Internal Server Error',null);
+        }
+        
     }
  
     public function save_user_filters(Request $request){
