@@ -62,7 +62,7 @@ class ApiAuthController extends Controller
 				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
 				$check_detail = UserDetail::where('user_id', $user_id)->first();
 				if($check_detail){
-					$flag = 1;
+					$flag = 0;
 				}
 				else{$flag=1;}
     		}
@@ -251,11 +251,11 @@ class ApiAuthController extends Controller
 
 	        if(!User::where('email',$request->email)->first()){
 	        	return $this->apiResponse->sendResponse(404,'User not found.',null); 
-	        }
-
-    		$refreshToken = $request->get('refresh_token');
+			}
+			
+			$refreshToken = $request->get('refresh_token');
             $email = $request->get('email');
-            $response = $this->proxyRefresh($refreshToken,$email);
+            $response = $this->proxyRefresh($refreshToken,$email,0);
             return $response;
     	}
     	catch(Exception $e){
@@ -263,8 +263,8 @@ class ApiAuthController extends Controller
     	}
     }
 
-    public function proxyRefresh($refreshToken,$email){
-    	return $this->proxy('refresh_token', 0,[
+    public function proxyRefresh($refreshToken,$email,$flag){
+    	return $this->proxy('refresh_token', $flag,[
             'refresh_token' => $refreshToken,
             'username' => $email
         ]);
