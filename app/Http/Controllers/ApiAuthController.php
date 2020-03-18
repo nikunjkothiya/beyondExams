@@ -264,7 +264,7 @@ class ApiAuthController extends Controller
 	        	return $this->apiResponse->sendResponse(404,'User not found.',null); 
 			}
 			
-			$user_id = UserDetail::select('user_id')->where('email', $request->email)->first()->user_id;
+			$user_id = User::select('id')->where('email', $request->email)->first()->id;
 			$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
 			$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
 			$flag=0;
