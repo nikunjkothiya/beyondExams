@@ -14,6 +14,7 @@ use App\UserDetail;
 use GuzzleHttp\Client; 
 use Illuminate\Foundation\Application;
 use Carbon\Carbon;
+use DB;
 
 class ApiAuthController extends Controller
 {
@@ -61,10 +62,20 @@ class ApiAuthController extends Controller
 				$email = $check_account->user->email;
 				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
 				$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+				$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
+				
 				if($check_detail){
-					$flag = 0;
+					if($check_tag){
+						$flag =0;
+					}
+					else{
+						$flag=2;
+					}
 				}
-				else{$flag=1;}
+				else{
+					$flag=1;
+				}
+				
     		}
     		else{
     			if($provider == 'google'){
