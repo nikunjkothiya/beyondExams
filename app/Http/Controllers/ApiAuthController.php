@@ -61,12 +61,19 @@ class ApiAuthController extends Controller
     		if($check_account){
 				$email = $check_account->user->email;
 				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
-				$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+				
+				$check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+				$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
 				$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
 				
-				if($check_detail){
-					if($check_tag){
-						$flag =0;
+				if($check_lang){
+					if($check_detail){
+						if($check_tag){
+							$flag=0;
+						}
+						else{
+							$flag=3;
+						}
 					}
 					else{
 						$flag=2;
@@ -265,12 +272,19 @@ class ApiAuthController extends Controller
 			}
 			
 			$user_id = User::select('id')->where('email', $request->email)->first()->id;
-			$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+			$check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+			$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
 			$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
-			$flag=0;
-			if($check_detail){
-				if($check_tag){
-					$flag =0;
+			
+			$flag=1;
+			if($check_lang){
+				if($check_detail){
+					if($check_tag){
+						$flag=0;
+					}
+					else{
+						$flag=3;
+					}
 				}
 				else{
 					$flag=2;
