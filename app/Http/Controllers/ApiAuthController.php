@@ -264,9 +264,25 @@ class ApiAuthController extends Controller
 	        	return $this->apiResponse->sendResponse(404,'User not found.',null); 
 			}
 			
+			$user_id = UserDetail::select('user_id')->where('email', $request->email)->first()->user_id;
+			$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+			$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
+			$flag=0;
+			if($check_detail){
+				if($check_tag){
+					$flag =0;
+				}
+				else{
+					$flag=2;
+				}
+			}
+			else{
+				$flag=1;
+			}
+
 			$refreshToken = $request->get('refresh_token');
             $email = $request->get('email');
-            $response = $this->proxyRefresh($refreshToken,$email,0);
+            $response = $this->proxyRefresh($refreshToken,$email,$flag);
             return $response;
     	}
     	catch(Exception $e){
