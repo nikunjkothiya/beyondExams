@@ -47,7 +47,7 @@ class PreciselyController extends Controller
         try {
             $filters = Tag::all();
 
-            return $this->apiResponse->sendResponse(200, 'All languages fetched successfully', $filters);
+            return $this->apiResponse->sendResponse(200, 'All Tags fetched successfully', $filters);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
@@ -235,7 +235,11 @@ class PreciselyController extends Controller
  
     public function save_user_filters(Request $request){
         try{
-            $user = User::where('id', $request->user_id)->first();
+            if (Auth::check()) {
+            $user = User::find(Auth::user()->id);}
+            else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
+            
+            $user = User::where('id', $user->id)->first();
             $tags = $request->tags;
 //            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $tags);
             if(empty($tags)){

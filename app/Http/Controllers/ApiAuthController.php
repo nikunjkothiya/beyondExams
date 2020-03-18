@@ -60,7 +60,7 @@ class ApiAuthController extends Controller
     		if($check_account){
 				$email = $check_account->user->email;
 				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
-				$check_detail = UserDetail::where('user_id', $user_id)->first();
+				$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
 				if($check_detail){
 					$flag = 0;
 				}
