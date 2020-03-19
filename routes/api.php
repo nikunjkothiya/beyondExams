@@ -68,3 +68,5 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('save_user_filters',['uses'=>'PreciselyController@save_user_filters']);
 });
 
+//AWS API
+Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
