@@ -137,6 +137,11 @@ class PreciselyController extends Controller
                 $disciplines = Discipline::all();
                 $qualifications = Qualification::all();
                 $data['user_details'] = $pcheck;
+                $avatar = DB::table('users')->select('avatar')->where('id',$user->id)->get();
+                foreach($avatar as $ava){
+                    $data['avatar'] = $ava->avatar;
+                    break;    
+                }
                 $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
@@ -305,7 +310,12 @@ class PreciselyController extends Controller
                 foreach($tags_json as $tag){
                     $tags[] = $tag;
                 }
-                return $this->apiResponse->sendResponse(200, 'Success', $tags);
+                $tags_processed = [];
+                foreach($tags as $tag){
+                    $tags_processed[] = $tag->tag_id;
+                }
+
+                return $this->apiResponse->sendResponse(200, 'Success', $tags_processed);
             }
             catch(Exception $e){
                 return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
