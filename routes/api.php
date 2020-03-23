@@ -66,6 +66,9 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 	Route::post('save_user_language',['uses'=>'PreciselyController@save_user_language']);
 	Route::post('save_user_filters',['uses'=>'PreciselyController@save_user_filters']);
+
+	Route::get('get_user_language',['uses'=>'PreciselyController@get_user_language']);
+	Route::get('get_user_filters',['uses'=>'PreciselyController@get_user_filters']);
 });
 
 //AWS API

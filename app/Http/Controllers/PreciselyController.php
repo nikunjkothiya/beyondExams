@@ -279,4 +279,37 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
+
+    public function get_user_language($id){
+        try{
+        if (Auth::check()) {
+            $user = User::find(Auth::user()->id);}
+            else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
+            
+            $lang = DB::table('user_details')->select('language_id')->where('user_id',$user->id)->get()->language_id;
+            return $this->apiResponse->sendResponse(200, 'Success', $lang);
+        }
+        catch(Exception $e){
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
+    }
+
+    public function get_user_filters($id){
+        try{
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);}
+                else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
+                
+                $tags_json = DB::table('tag_user')->select('tag_id')->where('user_id',$user->id)->get();
+                $tags = [];
+                foreach($tags_json as $tag){
+                    $tags[] = $tag;
+                }
+                return $this->apiResponse->sendResponse(200, 'Success', $tag);
+            }
+            catch(Exception $e){
+                return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+            }
+    }
+
 }
