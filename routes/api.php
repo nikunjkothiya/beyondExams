@@ -73,3 +73,4 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 //AWS API
 Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
+Route::post('search_s3_files',['uses'=>'AWSApiController@search_s3_files']);
