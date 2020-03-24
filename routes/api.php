@@ -39,11 +39,12 @@ Route::group(['middleware' => 'auth:api'], function(){
 
     Route::post('unsave_opportunity',['uses'=>'PreciselyController@unsave_opportunity']);
 	Route::post('save_opportunity',['uses'=>'PreciselyController@save_opportunity']);
+	Route::get('show_saved_opportunity',['uses'=>'PreciselyController@show_saved_opportunity']);
 
 	Route::post('comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
 	Route::get('comment/{opportunity_id}',['uses' => 'ApiRecordCommentController@show_comment']);
-	
+
 	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
 	
 

@@ -248,6 +248,20 @@ class PreciselyController extends Controller
         return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
     }
 
+    public function show_saved_opportunity(){
+        if (Auth::check()){
+            $user = User::find(Auth::user()->id);
+            $opp_ids = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
+            $opp_slug = [];
+            foreach($opp_ids as $opp_id){
+                $opp_slug[] = array('slug'=>DB::table('opportunities')->select('slug')->where('id', $opp_id->opportunity_id)->get()[0]->slug,'id'=>$opp_id->opportunity_id);
+            }
+            return $this->apiResponse->sendResponse(200, 'Success', $opp_slug);
+        }else{
+            return $this->apiResponse->sendResponse(500, 'Unauthorized', null);
+        }
+    }
+
     public function save_user_language(Request $request) {
 
             $validator = Validator::make($request->all(), [
