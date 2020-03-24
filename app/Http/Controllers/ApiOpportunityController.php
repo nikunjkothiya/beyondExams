@@ -59,7 +59,7 @@ class ApiOpportunityController extends Controller
             $flag = 0;
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                $tag_id_query = DB::table('tag_user')->select('tag_id')->where('user_id',$user->id)->get();
+                $tag_id_query = DB::table('tag_user')->select('tag_id')->where('user_id',$user->id)->orderBy('tag_id')->get();
                 $tag_id_json_array = json_decode($tag_id_query, true);
                 $tag_ids = array();
                 foreach ($tag_id_json_array as $tag){
@@ -74,8 +74,9 @@ class ApiOpportunityController extends Controller
                 $opp_slug_json = DB::table('opportunities')->select('slug')->whereIn('id',$opp_ids)->get();
                 $opp_slug_json_array = json_decode($opp_slug_json, true);
                 $opp_slugs = array();
+                $i=0;
                 foreach ($opp_slug_json_array as $opp_slug){
-                    $opp_slugs[]=$opp_slug['slug'];}
+                    $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i]);$i=$i+1;}
                 
                 return $this->apiResponse->sendResponse(200,'Success',$opp_slugs);               
                 

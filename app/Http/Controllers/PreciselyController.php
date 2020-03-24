@@ -162,16 +162,39 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
+            
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                try{
+                    $opp_id = $request->id;
+                    $user = UserDetail::where('user_id',$user->id)->first();
+                    $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
+                    if($check==null){
+                        DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
+                    }
+                    else{
+                        $flag = 0;
+                        foreach($check as $c)
+                        {
+                            if($c->opportunity_id == $opp_id){
+                                $flag = 1;
+                                break;
+                            }
+                        }
+                        if($flag==0){
+                            DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
+                        }
+                    }
+                    
+                }
+                catch(Exception $e){
+                    return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+                }
 
-            try{
-                $id = $request->id;
-                $user = UserDetail::where('user_id',$request->user_id)->first();
-                $user->saved_opportunities()->detach($id);
-                $user->saved_opportunities()->attach($id);
+            }else{
+                $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
-            catch(Exception $e){
-                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-            }
+
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -188,15 +211,41 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
+            
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                try{
+                    $opp_id = $request->id;
+                    $user = UserDetail::where('user_id',$user->id)->first();
+                    $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
+                    if($check==null){
+                        return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
+                    }
+                    else{
+                        foreach($check as $c)
+                        {
+                            if($c->opportunity_id == $opp_id){
+                                DB::table('opportunity_user')->where([['user_id', $user->id],['opportunity_id',$opp_id]])->delete();
+                                return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
+                                break;
 
-            $id = $request->id;
-            $user = UserDetail::where('user_id',$request->user_id)->first();
-            $user->saved_opportunities()->detach($id);
+                            }
+                        }
+                    }
+                    
+                }
+                catch(Exception $e){
+                    return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+                }
+
+            }else{
+                $this->apiResponse->sendResponse(400, 'Not Authorized', null);
+            }
+
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
-
-        return $this->apiResponse->sendResponse(200, 'Opportunity removed from saved', null);
+        return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
     }
 
     public function save_user_language(Request $request) {
