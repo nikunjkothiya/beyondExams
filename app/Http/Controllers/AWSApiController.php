@@ -62,6 +62,10 @@ class AWSApiController extends Controller
             }
         }
         
+        if (empty($req_files)) {
+            $req_files[] = "Not Found";
+       }
+
         return $this->apiResponse->sendResponse(200, 'Success', $req_files);
         }catch(Exception $e){
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
