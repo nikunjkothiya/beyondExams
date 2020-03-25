@@ -58,7 +58,7 @@ class AWSApiController extends Controller
         foreach($splited as $spl){
             $exists = strpos($spl, $keyword);
             if ($exists !== false) {
-                $req_files[] = str_replace(' ', '+','precisely-test1.s3.ap-south-1.amazonaws.com/' . $spl);
+                $req_files[] = str_replace(' ', '+','precisely-test1.s3.ap-south-1.amazonaws.com/video/' . $spl);
             }
         }
         
