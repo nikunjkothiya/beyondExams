@@ -49,14 +49,14 @@ class AWSApiController extends Controller
 
         $splited = [];
         foreach($urls as $url){
-            $splited[] = strtolower(explode ("video/", $url)[1]);
+            $splited[] = explode ("video/", $url)[1];
         }
 
         $req_files = [];
         $keyword = strtolower($request->keyword);
 
         foreach($splited as $spl){
-            $exists = strpos($spl, $keyword);
+            $exists = strpos(strtolower($spl), $keyword);
             if ($exists !== false) {
                 $req_files[] = str_replace(' ', '+','precisely-test1.s3.ap-south-1.amazonaws.com/video/' . $spl);
             }
