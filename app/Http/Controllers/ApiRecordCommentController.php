@@ -72,8 +72,6 @@ class ApiRecordCommentController extends Controller
             $flag = 0;
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                $flag = $this->txnflag->check_subscription(Auth::user()->id);
-                $plus_status = PlusTransaction::where('user_id', $user->id)->where('opportunity_id', $opportunity->id)->select('status');
                 
                 $check = Validator::make($request->all(), [
                     'content' => 'required|string',
@@ -91,7 +89,7 @@ class ApiRecordCommentController extends Controller
                 $data->user_id = $user->id;
                 $data->user_name = $request->user_name;
                 $data->save();
-                $response_data["message"] = "Comment recorded";
+                $response_data["message"] = "Reply recorded";
                 return $this->apiResponse->sendResponse(200,'Success',$response_data);
             };
             
@@ -102,29 +100,46 @@ class ApiRecordCommentController extends Controller
 
     }
 
-    public function show_comment($opportunity_id)
-    {   try{
-        $comment_id = DB::table('opportunity_comments')->select('comment_id')->where("opportunity_id",$opportunity_id)->get();
+    public function show_comment(Request $request)
+    {   
+        $comment_id = DB::table('opportunity_comments')->select('comment_id')->where("opportunity_id",$request->opportunity_id)->orderby('updated_at')->get();
         $comm_ids = array();
         foreach ($comment_id as $id){$comm_ids[] = $id->comment_id;}
+        if(empty($comm_ids)){return $this->apiResponse->sendResponse(500,'No Comment',null);}
 
         $comments = DB::table('list_comments')->select('message')->where("id",$comm_ids)->get();
-        $comm_message = [];
-        foreach ($comments as $comm){$comm_message[] = $comm->message;}
-
-        $replies  = DB::table('reply')->select('content')->where("comment_id",$comm_ids)->get();
-        $reply_message = [];
-        foreach ($replies as $reply){$reply_message[] = $reply->content;}
-
-        $data = [];
-        $i = 0;
-        foreach($comm_ids as $id){$data[] = array($id, $comm_message[$i], $reply_message[$i]); $i++;}        
-        return $this->apiResponse->sendResponse(200,'Success',$data);
+        $replies  = DB::table('reply')->select('content')->where("comment_id",$comm_ids)->first();
         
-        } 
-        catch(Exception $e) {
-            return $this->apiResponse->sendResponse(500,'Internal Server Error',null);
+        //$reply_message = [];
+        //foreach ($replies as $reply){$reply_message[] = $reply->content;}
+        $reply_flag = 0;
+
+        //if(empty($reply_message)){$reply_flag=1;}
+
+        if($replies==null){$reply_flag==1;}
+
+        if($reply_flag==1){
+            $data = [];
+            foreach ($comments as $comm){
+                $data[] = $comm->message;
+             }
         }
+        else{
+            $data=[];
+            $i = 0;
+            foreach ($comments as $comm){
+                $flag = 0;
+                $rep = DB::table('reply')->select('content')->where("comment_id",$comm_ids[$i])->first();
+                if($rep==null){$flag = 1;}
+
+                if($flag==0)
+                {$data[] = array('comment'=>$comm->message, 'reply'=>$rep->content);}
+                else{$data[] = array('comment'=>$comm->message, 'reply'=>null);}
+                $i=$i+1;
+             }
+        }
+        
+        return $this->apiResponse->sendResponse(200,'Success',$data);
 
     }
 }

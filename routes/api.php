@@ -32,6 +32,7 @@ Route::get('get_all_countries',['uses'=>'PreciselyController@get_all_countries']
 Route::get('opportunity/{slug}',['uses' => 'ApiOpportunityController@get_opp']);
 Route::get('get_location/{location_id}',['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}',['uses' => 'PreciselyController@get_funding_status']);
+Route::post('show_comments',['uses' => 'ApiRecordCommentController@show_comment']);
 
 //Protected APIs
 Route::group(['middleware' => 'auth:api'], function(){
@@ -41,9 +42,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('save_opportunity',['uses'=>'PreciselyController@save_opportunity']);
 	Route::get('show_saved_opportunity',['uses'=>'PreciselyController@show_saved_opportunity']);
 
-	Route::post('comment',['uses' => 'ApiRecordCommentController@save_comment']);
+	Route::post('save_comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
-	Route::get('comment/{opportunity_id}',['uses' => 'ApiRecordCommentController@show_comment']);
 
 	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
 	
