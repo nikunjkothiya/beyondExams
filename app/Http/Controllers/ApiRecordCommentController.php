@@ -80,7 +80,7 @@ class ApiRecordCommentController extends Controller
                     ]);
 
                 if ($check->fails()) {
-                    return $apiResponse->sendResponse(400, 'Bad Request', $check->errors());
+                    return $this->apiResponse->sendResponse(400, 'Bad Request', $check->errors());
                 }
 
                 $data = new RecordReply;
@@ -102,19 +102,23 @@ class ApiRecordCommentController extends Controller
 
     public function show_comment(Request $request)
     {   
+        $check = Validator::make($request->all(), [
+            'opportunity_id' => 'required',
+            ]);
+
+        if ($check->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Bad Request', $check->errors());
+        }
+
         $comment_id = DB::table('opportunity_comments')->select('comment_id')->where("opportunity_id",$request->opportunity_id)->orderby('updated_at')->get();
         $comm_ids = array();
         foreach ($comment_id as $id){$comm_ids[] = $id->comment_id;}
         if(empty($comm_ids)){return $this->apiResponse->sendResponse(500,'No Comment',null);}
 
-        $comments = DB::table('list_comments')->select('message')->where("id",$comm_ids)->get();
+        $comments = DB::table('list_comments')->select('message')->whereIn("id",$comm_ids)->get();
         $replies  = DB::table('reply')->select('content')->where("comment_id",$comm_ids)->first();
         
-        //$reply_message = [];
-        //foreach ($replies as $reply){$reply_message[] = $reply->content;}
         $reply_flag = 0;
-
-        //if(empty($reply_message)){$reply_flag=1;}
 
         if($replies==null){$reply_flag==1;}
 
