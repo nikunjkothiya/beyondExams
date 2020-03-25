@@ -62,18 +62,19 @@ class ApiOpportunityController extends Controller
                 $tag_id_query = DB::table('tag_user')->select('tag_id')->where('user_id',$user->id)->orderBy('tag_id')->get();
                 $tag_id_json_array = json_decode($tag_id_query, true);
                 $tag_ids = array();
-                foreach ($tag_id_json_array as $tag){
-                    $tag_ids[]=$tag['tag_id'];}
-                
-                $opp_id_json = DB::table('opportunity_tag')->select('opportunity_id')->whereIn('tag_id',$tag_ids )->take(3)->skip(($request->page)*3)->get();
+                foreach ($tag_id_json_array as $tag){$tag_ids[]=$tag['tag_id'];}
+                $tag_ids = array_unique($tag_ids);
+
+                $opp_id_json = DB::table('opportunity_tag')->select('opportunity_id')->whereIn('tag_id',$tag_ids)->orderBy('opportunity_id')->distinct()->take(3)->skip(($request->page)*3)->get();
                 $opp_id_json_array = json_decode($opp_id_json, true);
                 $opp_ids = array();
-                foreach ($opp_id_json_array as $opp){
-                    $opp_ids[]=$opp['opportunity_id'];}
+                foreach ($opp_id_json_array as $opp){$opp_ids[]=$opp['opportunity_id'];}
+                $opp_ids = array_unique($opp_ids);
                 
                 $opp_slug_json = DB::table('opportunities')->select('slug')->whereIn('id',$opp_ids)->get();
                 $opp_slug_json_array = json_decode($opp_slug_json, true);
                 $opp_slugs = array();
+
                 $i=0;
                 foreach ($opp_slug_json_array as $opp_slug){
                     $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i]);$i=$i+1;}

@@ -113,7 +113,7 @@ class ApiRecordCommentController extends Controller
         $comment_id = DB::table('opportunity_comments')->select('comment_id')->where("opportunity_id",$request->opportunity_id)->orderby('updated_at')->get();
         $comm_ids = array();
         foreach ($comment_id as $id){$comm_ids[] = $id->comment_id;}
-        if(empty($comm_ids)){return $this->apiResponse->sendResponse(500,'No Comment',null);}
+        if(empty($comm_ids)){return $this->apiResponse->sendResponse(200,'No Comment',null);}
 
         $comments = DB::table('list_comments')->select('message')->whereIn("id",$comm_ids)->get();
         $replies  = DB::table('reply')->select('content')->where("comment_id",$comm_ids)->first();
