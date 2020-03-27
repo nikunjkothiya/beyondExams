@@ -75,9 +75,18 @@ class ApiOpportunityController extends Controller
                 $opp_slug_json_array = json_decode($opp_slug_json, true);
                 $opp_slugs = array();
 
+                $saved_opp = DB::table('opportunity_user')->select('opportunity_id')->where('user_id',$user->id)->get();
+                $saved_opp_json_array = json_decode($saved_opp, true);
+                $saved_opp_ids = array();
+                foreach ($saved_opp_json_array as $sa_opp){$saved_opp_ids[]=$sa_opp['opportunity_id'];}
+                
+
                 $i=0;
                 foreach ($opp_slug_json_array as $opp_slug){
-                    $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i]);$i=$i+1;}
+                    if(in_array($opp_ids[$i],$saved_opp_ids))
+                    {$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'saved'=>1);$i=$i+1;}
+                    else{$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'saved'=>0);$i=$i+1;}
+                }
                 
                 return $this->apiResponse->sendResponse(200,'Success',$opp_slugs);               
                 
