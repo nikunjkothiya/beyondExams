@@ -167,7 +167,7 @@ class PreciselyController extends Controller
                 $user = User::find(Auth::user()->id);
                 try{
                     $opp_id = $request->id;
-                    $user = UserDetail::where('user_id',$user->id)->first();
+                    $user = User::where('id',$user->id)->first();
                     $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
                     if($check==null){
                         DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
@@ -216,7 +216,7 @@ class PreciselyController extends Controller
                 $user = User::find(Auth::user()->id);
                 try{
                     $opp_id = $request->id;
-                    $user = UserDetail::where('user_id',$user->id)->first();
+                    $user = User::where('id',$user->id)->first();
                     $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
                     if($check==null){
                         return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
