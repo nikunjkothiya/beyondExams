@@ -83,10 +83,17 @@ class ApiOpportunityController extends Controller
 
                 $i=0;
                 foreach ($opp_slug_json_array as $opp_slug){
-                    $desc = Opportunity::where('slug', $opp_slug['slug'])->firstOrFail();
                     if(in_array($opp_ids[$i],$saved_opp_ids))
-                    {$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'desc'=>$desc, 'saved'=>1);$i=$i+1;}
-                    else{$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'desc'=>$desc, 'saved'=>0);$i=$i+1;}
+                    {   
+                        $main = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
+                        $desc = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
+                        $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>1);$i=$i+1;
+                    }
+                    else{
+                        $main = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
+                        $desc = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
+                        $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>0);$i=$i+1;
+                    }
                 }
                 
                 return $this->apiResponse->sendResponse(200,'Success',$opp_slugs);               
