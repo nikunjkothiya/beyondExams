@@ -83,9 +83,10 @@ class ApiOpportunityController extends Controller
 
                 $i=0;
                 foreach ($opp_slug_json_array as $opp_slug){
+                    $desc = Opportunity::where('slug', $opp_slug['slug'])->firstOrFail();
                     if(in_array($opp_ids[$i],$saved_opp_ids))
-                    {$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'saved'=>1);$i=$i+1;}
-                    else{$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'saved'=>0);$i=$i+1;}
+                    {$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'desc'=>$desc, 'saved'=>1);$i=$i+1;}
+                    else{$opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'desc'=>$desc, 'saved'=>0);$i=$i+1;}
                 }
                 
                 return $this->apiResponse->sendResponse(200,'Success',$opp_slugs);               
