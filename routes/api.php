@@ -48,7 +48,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
 	
 
-	Route::get('dashboard/subscription',['uses'=>'SubscriptionController@subscription']);
+	Route::get('subscription',['uses'=>'SubscriptionController@subscription']);
 	Route::post('checkout', ['uses'=>'SubscriptionController@checkout']);
 	Route::post('success',['uses'=>'SubscriptionController@success']);
 	Route::post('failure',['uses'=>'SubscriptionController@failure']);

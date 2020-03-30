@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Http\Controllers\ApiResponse;
 use Illuminate\Http\Request;
 
 use Auth;
@@ -21,11 +21,12 @@ class SubscriptionController extends Controller
     protected $hashSequence = "key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10";
     protected $data = array();
 
-    public function __construct(){
+    public function __construct(ApiResponse $apiResponse){
         try{
             $this->languages = Language::all();
             $this->key = env('PAYU_MERCHANT_KEY');
             $this->salt = env('PAYU_MERCHANT_SALT');
+            $this->apiResponse=$apiResponse;
             if(env('APP_DEBUG') == 'true'){
                 $this->url = env('PAYU_TEST_URL');
             }
@@ -83,9 +84,8 @@ class SubscriptionController extends Controller
             return $this->apiResponse->sendResponse(500,'Internal Server Error',$e);
         }
         $data = ['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
-        return view('pages.subscription',$data);
-        #return $this->apiResponse->sendResponse(200,'Success',$data);
-        #return view('pages.subscription',['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email]);
+        #return view('pages.subscription',$data);
+        return $this->apiResponse->sendResponse(200,'Success',$data);
     }
 
     public function checkout(Request $request){
