@@ -143,7 +143,7 @@ class PreciselyController extends Controller
                     $data['avatar'] = $ava->avatar;
                     break;    
                 }
-                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+                #$data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
             }
