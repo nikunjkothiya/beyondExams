@@ -86,14 +86,14 @@ class ApiOpportunityController extends Controller
                     if(in_array($opp_ids[$i],$saved_opp_ids))
                     {   
                         $desc = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
-                        $cont = DB::table('countries')->select('name')->where('id', $desc->opportunity_location_id)->first();
+                        $cont = DB::table('opportunity_locations')->select('name')->where('id', $desc->opportunity_location_id)->first();
                         $desc->opportunity_location = $cont;
                         $main = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
                         $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>1);$i=$i+1;
                     }
                     else{
                         $desc = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
-                        $cont = DB::table('countries')->select('name')->where('id', $desc->opportunity_location_id)->first();
+                        $cont = DB::table('opportunity_locations')->select('name')->where('id', $desc->opportunity_location_id)->first();
                         $desc->opportunity_location = $cont;
                         $main = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
                         $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>0);$i=$i+1;

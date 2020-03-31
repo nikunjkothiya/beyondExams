@@ -14,6 +14,8 @@ use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\ApiResponse;
 use Auth;
 
 /**
@@ -27,7 +29,7 @@ class PreciselyController extends Controller
     {
         $this->msg = "";
         $this->apiResponse = $apiResponse;
-        $this->txnflag = new SubscriptionController;
+        #$this->txnflag = new SubscriptionController;
     }
 
     public function get_language(Request $request)
