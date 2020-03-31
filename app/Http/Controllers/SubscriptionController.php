@@ -83,7 +83,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
             return $this->apiResponse->sendResponse(500,'Internal Server Error',$e);
         }
-        $data = ['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
+        #'languages'=>$this->languages,'pcheck'=>$pcheck,
+        $data = ['plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
         #return view('pages.subscription',$data);
         return $this->apiResponse->sendResponse(200,'Success',$data);
     }
