@@ -18,4 +18,4 @@ composer.lock
 resources/views/pages/filter.blade.php
 database/migrations/2020_02_21_152514_rollback.php
 database/migrations/2020_02_21_161432_migrate.php
-
+.env.*
