@@ -26,17 +26,10 @@ class ApiOpportunityController extends Controller
 
     public function get_opp($slug)
     {
-        try { 
-            //$flag = 0;
-            //if (Auth::check()) {
-            //    $user = User::find(Auth::user()->id);
-                // $flag = $this->txnflag->check_subscription(Auth::user()->id);
-                // $plus_status = PlusTransaction::where('user_id', $user->id)->where('opportunity_id', $opportunity->id)->select('status');
+        try {
                 $opportunity = Opportunity::where('slug', $slug)->firstOrFail();
-                $data = array('opportunity' => $opportunity, 'languages' => $this->languages);//, 'txnflag' => $flag, 'plus_status' => $plus_status);
+                $data = array('opportunity' => $opportunity, 'languages' => $this->languages);
                 return $this->apiResponse->sendResponse(200,'Success',$data);
-            //};
-             
         } catch (Exception $e) {
             //abort(404);
             return $this->apiResponse->sendResponse(500,'Internal Server Error',null);
@@ -86,14 +79,14 @@ class ApiOpportunityController extends Controller
                     if(in_array($opp_ids[$i],$saved_opp_ids))
                     {   
                         $desc = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
-                        $cont = DB::table('opportunity_locations')->select('name')->where('id', $desc->opportunity_location_id)->first();
+                        $cont = DB::table('countries')->select('name')->where('id', $desc->opportunity_location_id)->first();
                         $desc->opportunity_location = $cont;
                         $main = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
                         $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>1);$i=$i+1;
                     }
                     else{
                         $desc = DB::table('opportunities')->select('*')->where('slug', $opp_slug['slug'])->first();
-                        $cont = DB::table('opportunity_locations')->select('name')->where('id', $desc->opportunity_location_id)->first();
+                        $cont = DB::table('countries')->select('name')->where('id', $desc->opportunity_location_id)->first();
                         $desc->opportunity_location = $cont;
                         $main = DB::table('opportunity_translations')->select('*')->where([['opportunity_id', $opp_ids[$i]],['locale', 'en']])->first();
                         $opp_slugs[]=array('slug'=>$opp_slug['slug'], 'id'=>$opp_ids[$i], 'main'=>$main, 'desc'=>$desc, 'saved'=>0);$i=$i+1;
