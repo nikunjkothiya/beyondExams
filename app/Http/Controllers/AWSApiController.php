@@ -20,7 +20,7 @@ class AWSApiController extends Controller
         $urls = [];
         
         foreach($all_files as $file){
-            $urls[] = 'precisely-test1.s3.ap-south-1.amazonaws.com/' . $file;
+            $urls[] = 'http://precisely-test1.s3.ap-south-1.amazonaws.com/' . $file;
         }
         $processed =[];
         foreach($urls as $url){
@@ -58,7 +58,7 @@ class AWSApiController extends Controller
         foreach($splited as $spl){
             $exists = strpos(strtolower($spl), $keyword);
             if ($exists !== false) {
-                $req_files[] = str_replace(' ', '+','precisely-test1.s3.ap-south-1.amazonaws.com/video/' . $spl);
+                $req_files[] = str_replace(' ', '+','http://precisely-test1.s3.ap-south-1.amazonaws.com/video/' . $spl);
             }
         }
         
