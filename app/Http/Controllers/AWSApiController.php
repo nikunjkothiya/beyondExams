@@ -71,4 +71,25 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
             }
     }
+
+    public function store_s3_file(Request $request)
+   {    
+        $validator = Validator::make($request->all(), [
+            'path' => 'required',
+            'name' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $file = $request->path;
+        $name = $request->name;
+        $filePath = 'video/' . $name;
+        Storage::disk('s3')->put($filePath, file_get_contents($file));
+       
+       return $this->apiResponse->sendResponse(200, 'Success', null);
+
+   }
+
 }

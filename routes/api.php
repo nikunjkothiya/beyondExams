@@ -73,3 +73,4 @@ Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
 //AWS API
 Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
 Route::post('search_s3_files',['uses'=>'AWSApiController@search_s3_files']);
+Route::post('store_s3_file',['uses'=>'AWSApiController@store_s3_file']);
