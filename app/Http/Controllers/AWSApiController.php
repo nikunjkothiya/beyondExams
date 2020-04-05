@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
+use Illuminate\Support\Facades\Validator;
 use Storage;
 
 class AWSApiController extends Controller
@@ -75,16 +76,15 @@ class AWSApiController extends Controller
     public function store_s3_file(Request $request)
    {    
         $validator = Validator::make($request->all(), [
-            'path' => 'required',
-            'name' => 'required',
+            'file' => 'required',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        $file = $request->path;
-        $name = $request->name;
+        $file = $request->file('file');
+        $name = 'abc';
         $filePath = 'video/' . $name;
         Storage::disk('s3')->put($filePath, file_get_contents($file));
        
