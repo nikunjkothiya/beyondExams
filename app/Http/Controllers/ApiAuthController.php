@@ -10,9 +10,11 @@ use App\Http\Controllers\ApiResponse;
 use Validator;
 use App\User;
 use App\UserSocial;
+use App\UserDetail;
 use GuzzleHttp\Client; 
 use Illuminate\Foundation\Application;
 use Carbon\Carbon;
+use DB;
 
 class ApiAuthController extends Controller
 {
@@ -41,7 +43,8 @@ class ApiAuthController extends Controller
 	        	return $this->apiResponse->sendResponse(400,'Parameters missing.',$validator->errors());
 	        }
 
-	        $email = "";
+			$email = "";
+			$flag = 0;
 //	        Provider instance. To extract user details
 	        $provider_obj=NULL;
     		if($provider=='google'){
@@ -56,10 +59,36 @@ class ApiAuthController extends Controller
 //    		Check account in own database
     		$check_account = UserSocial::where('provider_id', $user->id)->first();
     		if($check_account){
-    			$email = $check_account->user->email; 
+				$email = $check_account->user->email;
+				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
+				
+				$check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+				if($check_lang){$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;}
+				else{$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();}
+				
+				$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
+				
+				if($check_lang){
+					if($check_detail){
+						if($check_tag){
+							$flag=0;
+						}
+						else{
+							$flag=3;
+						}
+					}
+					else{
+						$flag=2;
+					}
+				}
+				else{
+					$flag=1;
+				}
+				
     		}
     		else{
     			if($provider == 'google'){
+					$flag = 1;
     				$new_user = new User();
             		$new_user->name = $user->name;
             		$new_user->email = $user->email;
@@ -80,26 +109,27 @@ class ApiAuthController extends Controller
 		            );
     			}
     			else{
-    				return $this->apiResponse->sendResponse(500,'Internal server error','Provider error');
+    				return $this->apiResponse->sendResponse(500,'Internal server error 1',null);
     			}
 
     			$email = $user->email;
     		}
-	        $response = $this->proxyLogin($email, 'password');
+	        $response = $this->proxyLogin($email, 'password', $flag);
 			return $response;
 
     	}
     	catch(\GuzzleHttp\Exception\BadResponseException $e){
-    		return $this->apiResponse->sendResponse($e->getCode(),'Invalid Access Tokens','');
+    		return $this->apiResponse->sendResponse($e->getCode(),'Invalid Access Tokens',null);
     	}
     }
 
-    public function proxy($grantType, array $data = []){
+    public function proxy($grantType, $flag, array $data = []){
 //    	Get Laravel app config
+		//$details = User::where('email',$data['username'])->first();
  	    $config = app()->make('config');
         $data = array_merge($data, [
-            'client_id'     => env('PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
+            'client_id'     =>  env('PASSWORD_CLIENT_ID'),
+            'client_secret' =>  env('PASSWORD_CLIENT_SECRET'),
             'grant_type'    => $grantType
         ]);
         try{
@@ -110,9 +140,10 @@ class ApiAuthController extends Controller
             $data = json_decode($response->getBody());
 
 	        $token_data = [
+				'new' =>$flag,
 	        	'access_token' => $data->access_token,
 	        	'expires_in' => $data->expires_in,
-	            'refresh_token' => $data->refresh_token,
+				'refresh_token' => $data->refresh_token,
 	        ];
             return $this->apiResponse->sendResponse(200,'Login Successful',$token_data);
         }
@@ -123,11 +154,11 @@ class ApiAuthController extends Controller
                 'expires_in' => '',
                 'refresh_token' => '',
             ];
-            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error',$response);
+            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error 2',$response);
         }
     }
 
-    public function proxyLogin($email,$password){
+    public function proxyLogin($email,$password,$flag){
     	$user = User::where('email',$email)->first();
     	if (!is_null($user)) {
 //            $res = 1;
@@ -138,10 +169,10 @@ class ApiAuthController extends Controller
 //                $res = $res * $this->proxyLogout($accessToken->id);
 //            }
 
-            return $this->proxy('password', [
+            return $this->proxy('password', $flag,[
                 'username' => $email,
-                'password' => $password
-            ]);
+				'password' => $password,
+			]);
         }
         else{
 
@@ -185,11 +216,12 @@ class ApiAuthController extends Controller
             }
             if($response){
                 return $this->apiResponse->sendResponse(200,'Token successfully destroyed',$this->json_data);
-            }
-            return $this->apiResponse->sendResponse(500,'Internal server error','logout error');
+			}
+			$response_data["message"] = "Logout Error";
+            return $this->apiResponse->sendResponse(500,'Internal server error 3',$response_data);
         }
         catch(Exception $e){
-            return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+            return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 4',$e);
         }
     }
 
@@ -207,7 +239,7 @@ class ApiAuthController extends Controller
             return 0;
         }
         catch(Exception $e){
-        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 5',$e);
         }
     }
 
@@ -221,7 +253,7 @@ class ApiAuthController extends Controller
             return $token;
         }
         catch(Exception $e){
-        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+        	return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 6',$e);
         }
         
     }
@@ -234,25 +266,50 @@ class ApiAuthController extends Controller
 	        ]);
 
 	        if($validator->fails()){
-	        	return $this->apiResponse->sendResponse(400,$validator->errors(),'');
+	        	return $this->apiResponse->sendResponse(400,$validator->errors(),null);
 	        }
 
 	        if(!User::where('email',$request->email)->first()){
-	        	return $this->apiResponse->sendResponse(404,'User not found.',''); 
-	        }
+	        	return $this->apiResponse->sendResponse(404,'User not found.',null); 
+			}
+			
+			$user_id = User::select('id')->where('email', $request->email)->first()->id;
+			$check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+			if($check_lang){$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;}
+			else{$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();}
+			
+			$check_tag = DB::table('tag_user')->select('tag_id')->where('user_id',$user_id)->first();
+			
+			$flag=1;
+			if($check_lang){
+				if($check_detail){
+					if($check_tag){
+						$flag=0;
+					}
+					else{
+						$flag=3;
+					}
+				}
+				else{
+					$flag=2;
+				}
+			}
+			else{
+				$flag=1;
+			}
 
-    		$refreshToken = $request->get('refresh_token');
+			$refreshToken = $request->get('refresh_token');
             $email = $request->get('email');
-            $response = $this->proxyRefresh($refreshToken,$email);
+            $response = $this->proxyRefresh($refreshToken,$email,$flag);
             return $response;
     	}
     	catch(Exception $e){
-    		return $this->apiResponse->sendResponse($e->getCode(),'Internal server error',$e);
+    		return $this->apiResponse->sendResponse($e->getCode(),'Internal server error 7',$e);
     	}
     }
 
-    public function proxyRefresh($refreshToken,$email){
-    	return $this->proxy('refresh_token', [
+    public function proxyRefresh($refreshToken,$email,$flag){
+    	return $this->proxy('refresh_token', $flag,[
             'refresh_token' => $refreshToken,
             'username' => $email
         ]);
@@ -275,7 +332,7 @@ class ApiAuthController extends Controller
     	else{
     		//
     	}
-    }
+	}
 
     public function login($provider){
     	try{
@@ -288,9 +345,10 @@ class ApiAuthController extends Controller
 				];
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
 	    	}
-    		$user = $provider_obj->stateless()->user();
-    		$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'],"email"=>$user->email, "avatar"=>$user->avatar);
-            return $this->apiResponse->sendResponse(200,'Success', $data);
+			$user = $provider_obj->stateless()->user();
+			$data = array("token"=>$user->token, "first_name"=>$user->user['given_name'], "last_name"=>$user->user['family_name'], "email"=>$user->email, "avatar"=>$user->avatar);
+			
+			return $this->apiResponse->sendResponse(200,'Success', $data);
 //    		dd($user);
     	}
     	catch(Exception $e){

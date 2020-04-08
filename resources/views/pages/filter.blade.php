@@ -135,7 +135,7 @@
 			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
-  			if($check == 'checked')
+  			if($check === 'checked')
   				$(this).find('input').attr('checked',false);
   			else	
   				$(this).find('input').attr('checked',true);
@@ -144,7 +144,7 @@
 			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
-  			if($check == 'checked')
+  			if($check === 'checked')
   				$(this).find('input').attr('checked',false);
   			else	
   				$(this).find('input').attr('checked',true);
@@ -153,7 +153,7 @@
 			e.preventDefault();
   			$(this).find('.overlay').toggleClass('overlay-selected');
   			$check = $(this).find('input').attr('checked');
-  			if($check == 'checked')
+  			if($check === 'checked')
   				$(this).find('input').attr('checked',false);
   			else	
   				$(this).find('input').attr('checked',true);

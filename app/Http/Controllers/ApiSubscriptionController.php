@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Controllers\ApiResponse;
+
 use Illuminate\Http\Request;
+use App\Http\Controllers\ApiResponse;
 
 use Auth;
 
@@ -12,7 +13,7 @@ use App\Product;
 use App\Transaction;
 use Carbon\Carbon;
 
-class SubscriptionController extends Controller
+class ApiSubscriptionController extends Controller
 {
     protected $languages;
     protected $key;
@@ -83,10 +84,10 @@ class SubscriptionController extends Controller
         catch(Exception $e){
             return $this->apiResponse->sendResponse(500,'Internal Server Error',$e);
         }
-        #'languages'=>$this->languages,'pcheck'=>$pcheck,
-        $data = ['plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
+        $data = ['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email];
         #return view('pages.subscription',$data);
         return $this->apiResponse->sendResponse(200,'Success',$data);
+        #return view('pages.subscription',['languages'=>$this->languages,'pcheck'=>$pcheck,'plans'=>$plans,'txnflag'=>$txnflag,'firstname'=>$firstname,'email'=>$email]);
     }
 
     public function checkout(Request $request){
@@ -109,12 +110,12 @@ class SubscriptionController extends Controller
                     $buy->valid = 1;
                     $buy->save();
 
-                    return redirect('/dashboard/subscription');
-                    #return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
+                    #return redirect('/dashboard/subscription');
+                    return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
                 }
                 else{
-                    return redirect()->back()->withErrors(['Free Trial Exhausted!']);
-                    #return $this->apiResponse->sendResponse(401,'Unauthorized','Free Trial Exhausted!');
+                    #return redirect()->back()->withErrors(['Free Trial Exhausted!']);
+                    return $this->apiResponse->sendResponse(401,'Unauthorized','Free Trial Exhausted!');
                 }
             }
             else{
@@ -144,8 +145,8 @@ class SubscriptionController extends Controller
 
         }
         $data = ['endPoint'=>$this->url,'hash'=>$hash,'parameters'=>$this->data];
-        return view('pages.payumoney',$data);
-        #return $this->apiResponse->sendResponse(200,'to payumoney',$data);
+        #return view('pages.payumoney',$data);
+        return $this->apiResponse->sendResponse(200,'to payumoney',$data);
     }
 
     public function success(Request $request){
@@ -157,8 +158,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
 
         }
-        return redirect('/dashboard/subscription');
-        #return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
+        #return redirect('/dashboard/subscription');
+        return $this->apiResponse->sendResponse(200,'Success','redirect to /dashboard/subscription');
     }
 
     public function failure(Request $request){
@@ -170,8 +171,8 @@ class SubscriptionController extends Controller
         catch(Exception $e){
 
         }
-        return redirect('/dashboard/subscription');
-        #return $this->apiResponse->sendResponse(500,'Failed','redirect to /dashboard/subscription');
+        #return redirect('/dashboard/subscription');
+        return $this->apiResponse->sendResponse(500,'Failed','redirect to /dashboard/subscription');
     }
 
     public function generateTransactionID(){

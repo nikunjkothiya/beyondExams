@@ -45,7 +45,7 @@ class AuthController extends Controller
 
     public function callback($provider){
     	try{
-    		$user = Socialite::driver($provider)->user();
+    		$user = Socialite::driver($provider)->stateless()->user();
     	}
     	catch(Exception $e){
     		return redirect('login');
