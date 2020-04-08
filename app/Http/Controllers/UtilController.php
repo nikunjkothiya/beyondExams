@@ -205,53 +205,6 @@ class UtilController extends Controller
 //                Replace null with online
                 'opportunity_location' => 'required|integer|min:1|max:' . OpportunityLocation::count(),
 
-                'bn.title' => 'string',
-                'bn.description' => 'string',
-                'de.title' => 'string',
-                'de.description' => 'string',
-                'en.title' => 'string',
-                'en.description' => 'string',
-                'es.title' => 'string',
-                'es.description' => 'string',
-                'fr.title' => 'string',
-                'fr.description' => 'string',
-                'hi.title' => 'string',
-                'hi.description' => 'string',
-                'id.title' => 'string',
-                'id.description' => 'string',
-                'it.title' => 'string',
-                'it.description' => 'string',
-                'ja.title' => 'string',
-                'ja.description' => 'string',
-                'km.title' => 'string',
-                'km.description' => 'string',
-                'ko.title' => 'string',
-                'ko.description' => 'string',
-                'lo.title' => 'string',
-                'lo.description' => 'string',
-                'ms.title' => 'string',
-                'ms.description' => 'string',
-                'my.title' => 'string',
-                'my.description' => 'string',
-                'ne.title' => 'string',
-                'ne.description' => 'string',
-                'ro.title' => 'string',
-                'ro.description' => 'string',
-                'ru.title' => 'string',
-                'ru.description' => 'string',
-                'si.title' => 'string',
-                'si.description' => 'string',
-                'ta.title' => 'string',
-                'ta.description' => 'string',
-                'th.title' => 'string',
-                'th.description' => 'string',
-                'tl.title' => 'string',
-                'tl.description' => 'string',
-                'vi.title' => 'string',
-                'vi.description' => 'string',
-                'zh.title' => 'string',
-                'zh.description' => 'string',
-
                 'tags' => 'required|array|min:1',
                 'tags.*' => 'integer|min:1|max:' . Tag::count(),
                 'eligible_regions' => 'required|array|min:1',
@@ -275,108 +228,139 @@ class UtilController extends Controller
                 'slug' => $slug,
                 'opportunity_location_id' => $data->opportunity_location,
             );
-            if(isset($data->id)){
-                $opportunity['id'] = [
-                    'title' => $data->id->title,
-                    'description' => $data->id->description,
-                ];
-            }
-            if(isset($data->it)){
-                $opportunity['it'] = [
-                    'title' => $data->it->title,
-                    'description' => $data->it->description,
-                ];
-            }
-            if(isset($data->ja)){
-                $opportunity['ja'] = [
-                    'title' => $data->ja->title,
-                    'description' => $data->ja->description,
-                ];
-            }
-            if(isset($data->km)){
-                $opportunity['km'] = [
-                    'title' => $data->km->title,
-                    'description' => $data->km->description,
-                ];
-            }
-            if(isset($data->ko)){
-                $opportunity['ko'] = [
-                    'title' => $data->ko->title,
-                    'description' => $data->ko->description,
-                ];
-            }
-            if(isset($data->lo)){
-                $opportunity['lo'] = [
-                    'title' => $data->lo->title,
-                    'description' => $data->lo->description,
-                ];
-            }
-            if(isset($data->ms)){
-                $opportunity['ms'] = [
-                    'title' => $data->ms->title,
-                    'description' => $data->ms->description,
-                ];
-            }
-            if(isset($data->my)){
-                $opportunity['my'] = [
-                    'title' => $data->my->title,
-                    'description' => $data->my->description,
-                ];
-            }
-            if(isset($data->ne)){
-                $opportunity['ne'] = [
-                    'title' => $data->ne->title,
-                    'description' => $data->ne->description,
-                ];
-            }
-            if(isset($data->ro)){
-                $opportunity['ro'] = [
-                    'title' => $data->ro->title,
-                    'description' => $data->ro->description,
-                ];
-            }
-            if(isset($data->ru)){
-                $opportunity['ru'] = [
-                    'title' => $data->ru->title,
-                    'description' => $data->ru->description,
-                ];
-            }
-            if(isset($data->si)){
-                $opportunity['si'] = [
-                    'title' => $data->si->title,
-                    'description' => $data->si->description,
-                ];
-            }
-            if(isset($data->ta)){
-                $opportunity['ta'] = [
-                    'title' => $data->ta->title,
-                    'description' => $data->ta->description,
-                ];
-            }
-            if(isset($data->th)){
-                $opportunity['th'] = [
-                    'title' => $data->th->title,
-                    'description' => $data->th->description,
-                ];
-            }
-            if(isset($data->tl)){
-                $opportunity['tl'] = [
-                    'title' => $data->tl->title,
-                    'description' => $data->tl->description,
-                ];
-            }
-            if(isset($data->vi)){
-                $opportunity['vi'] = [
-                    'title' => $data->vi->title,
-                    'description' => $data->vi->description,
-                ];
-            }
-            if(isset($data->zh)){
-                $opportunity['zh'] = [
-                    'title' => $data->zh->title,
-                    'description' => $data->zh->description,
-                ];
-            }
+
+		if (isset($data->bn)){
+                    $opportunity['bn'] = [
+                        'title' =>$data->bn->title,
+                        'description' => $data->bn->description
+                    ];
+                }
+                if (isset($data->my)){
+                    $opportunity['my'] = [
+                        'title' =>$data->my->title,
+                        'description' => $data->my->description
+                    ];
+                }
+                if (isset($data->en)){
+                    $opportunity['en'] = [
+                        'title' =>$data->en->title,
+                        'description' => $data->en->description
+                    ];
+                }
+                if (isset($data->tl)){
+                    $opportunity['tl'] = [
+                        'title' =>$data->tl->title,
+                        'description' => $data->tl->description
+                    ];
+                }
+                if (isset($data->fr)){
+                    $opportunity['fr'] = [
+                        'title' =>$data->fr->title,
+                        'description' => $data->fr->description
+                    ];
+                }
+                if (isset($data->de)){
+                    $opportunity['de'] = [
+                        'title' =>$data->de->title,
+                        'description' => $data->de->description
+                    ];
+                }
+                if (isset($data->hi)){
+                    $opportunity['hi'] = [
+                        'title' =>$data->hi->title,
+                        'description' => $data->hi->description
+                    ];
+                }
+                if (isset($data->id)){
+                    $opportunity['id'] = [
+                        'title' =>$data->id->title,
+                        'description' => $data->id->description
+                    ];
+                }
+                if (isset($data->it)){
+                    $opportunity['it'] = [
+                        'title' =>$data->it->title,
+                        'description' => $data->it->description
+                    ];
+                }
+                if (isset($data->ja)){
+                    $opportunity['ja'] = [
+                        'title' =>$data->ja->title,
+                        'description' => $data->ja->description
+                    ];
+                }
+                if (isset($data->km)){
+                    $opportunity['km'] = [
+                        'title' =>$data->km->title,
+                        'description' => $data->km->description
+                    ];
+                }
+                if (isset($data->ko)){
+                    $opportunity['ko'] = [
+                        'title' =>$data->ko->title,
+                        'description' => $data->ko->description
+                    ];
+                }
+                if (isset($data->lo)){
+                    $opportunity['lo'] = [
+                        'title' =>$data->lo->title,
+                        'description' => $data->lo->description
+                    ];
+                }
+                if (isset($data->ms)){
+                    $opportunity['ms'] = [
+                        'title' =>$data->ms->title,
+                        'description' => $data->ms->description
+                    ];
+                }
+                if (isset($data->ne)){
+                    $opportunity['ne'] = [
+                        'title' =>$data->ne->title,
+                        'description' => $data->ne->description
+                    ];
+                }
+                if (isset($data->ro)){
+                    $opportunity['ro'] = [
+                        'title' =>$data->ro->title,
+                        'description' => $data->ro->description
+                    ];
+                }
+                if (isset($data->ru)){
+                    $opportunity['ru'] = [
+                        'title' =>$data->ru->title,
+                        'description' => $data->ru->description
+                    ];
+                }
+                if (isset($data->si)){
+                    $opportunity['si'] = [
+                        'title' =>$data->si->title,
+                        'description' => $data->si->description
+                    ];
+                }
+                if (isset($data->es)){
+                    $opportunity['es'] = [
+                        'title' =>$data->es->title,
+                        'description' => $data->es->description
+                    ];
+                }
+                if (isset($data->ta)){
+                    $opportunity['ta'] = [
+                        'title' =>$data->ta->title,
+                        'description' => $data->ta->description
+                    ];
+                }
+                if (isset($data->th)){
+                    $opportunity['th'] = [
+                        'title' =>$data->th->title,
+                        'description' => $data->th->description
+                    ];
+                }
+                if (isset($data->vi)){
+                    $opportunity['vi'] = [
+                        'title' =>$data->vi->title,
+                        'description' => $data->vi->description
+                    ];
+                }
 
 
             $r = Opportunity::create($opportunity);
