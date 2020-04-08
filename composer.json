@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.2",
+        "ext-json": "*",
         "astrotomic/laravel-translatable": "^11.5",
         "fideloper/proxy": "^4.0",
         "laravel/framework": "^6.0",
