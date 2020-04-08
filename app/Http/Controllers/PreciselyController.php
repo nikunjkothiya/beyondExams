@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Country;
-use App\DeveloperDetail;
 use App\Discipline;
 use App\Language;
 use App\Qualification;
 use App\Tag;
+use App\User;
 use App\UserDetail;
 use Config;
 use Illuminate\Http\Request;
@@ -19,16 +19,19 @@ use Illuminate\Support\Facades\Validator;
  */
 class PreciselyController extends Controller
 {
+    protected $txnflag;
+
     public function __construct(ApiResponse $apiResponse)
     {
         $this->msg = "";
         $this->apiResponse = $apiResponse;
+        $this->txnflag = new SubscriptionController;
     }
 
     public function get_language(Request $request)
     {
         try {
-            $languages = DB::table('languages')->select('code', 'language', 'language_example')->get();
+            $languages = DB::table('languages')->select('id', 'code', 'language', 'language_example')->get();
 
             return $this->apiResponse->sendResponse(200, 'All languages fetched successfully', $languages);
         } catch (Exception $e) {
@@ -68,14 +71,14 @@ class PreciselyController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $user_id = $request->user()->id;
+            $user_id = $request->user_id;
 
             $check = UserDetail::where('user_id', $user_id)->first();
 
             if (is_null($check)) {
                 $record = new UserDetail;
                 $record->user_id = $user_id;
-                $record->language_id = $request->language_code;
+                $record->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $record->email = $request->email;
                 $record->firstname = $request->firstname;
                 $record->lastname = $request->lastname;
@@ -116,7 +119,7 @@ class PreciselyController extends Controller
 //    TODO: CORRECT RETURN TYPE
     public function get_profile(Request $request){
         try{
-            $pcheck = UserDetail::where('user_id',$request->user()->id)->first();
+            $pcheck = UserDetail::where('user_id',$request->user_id)->first();
         }
         catch(Exception $e){
             return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
@@ -126,9 +129,12 @@ class PreciselyController extends Controller
             $countries = Country::all();
             $disciplines = Discipline::all();
             $qualifications = Qualification::all();
-            return view('pages.profile',['languages'=>$this->languages,'pcheck'=>$pcheck,'countries'=>$countries,'disciplines'=>$disciplines,'qualifications'=>$qualifications,'txnflag'=>$this->txnflag->check_subscription(Auth::user()->id)]);
+            $data['user_details'] = $pcheck;
+            $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
         }
-        return redirect('/setup/2');
+        return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
 
     }
 
@@ -143,10 +149,15 @@ class PreciselyController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $id = $request->id;
-            $user = $request->user();
-            $user->saved_opportunities()->detach($id);
-            $user->saved_opportunities()->attach($id);
+            try{
+                $id = $request->id;
+                $user = UserDetail::where('user_id',$request->user_id)->first();
+                $user->saved_opportunities()->detach($id);
+                $user->saved_opportunities()->attach($id);
+            }
+            catch(Exception $e){
+                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+            }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -165,7 +176,7 @@ class PreciselyController extends Controller
             }
 
             $id = $request->id;
-            $user = $request->user();
+            $user = UserDetail::where('user_id',$request->user_id)->first();
             $user->saved_opportunities()->detach($id);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
@@ -178,7 +189,7 @@ class PreciselyController extends Controller
         try {
 
             $validator = Validator::make($request->all(), [
-                'language_id' => 'required|exists:languages',
+                'id' => 'required|exists:languages',
             ]);
 
             if ($validator->fails()) {
@@ -186,28 +197,35 @@ class PreciselyController extends Controller
             }
 
 
-            $user = $request->user();
-            $check = UserDetail::where('user_id', $user->id)->first();
-            $check->language_id = $request->language_id;
+            $user_id = $request->user_id;
 
-
+            $check = UserDetail::where('user_id', $user_id)->first();
+            $check->language_id = $request->id;
+            $check->save();
+            return $this->apiResponse->sendResponse(200, 'Saved user language', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
 
-    public function save_user_filter(Request $request){
+    public function save_user_filters(Request $request){
         try{
-            $user = $request->user();
+            $user = User::where('id', $request->user_id)->first();
             $tags = $request->tags;
+//            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $tags);
             if(empty($tags)){
                 return $this->apiResponse->sendResponse(400, 'Select at least one filter', null);
             }
-            $user->tags()->sync($tags);
+            $user->tags()->sync(json_decode($tags));
             return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
         }
         catch(Exception $e){
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
+    }
+
+    public function get_all_countries(Request $request){
+        $countries = Country::all();
+        return $this->apiResponse->sendResponse(200, 'All countries fetched.', $countries);
     }
 }
