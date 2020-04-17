@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Country;
-use App\DeveloperDetail;
 use App\Discipline;
 use App\Language;
 use App\Qualification;
@@ -28,7 +27,7 @@ class PreciselyController extends Controller
     {
         $this->msg = "";
         $this->apiResponse = $apiResponse;
-        #$this->txnflag = new SubscriptionController;
+        $this->txnflag = new SubscriptionController;
     }
 
     public function get_language(Request $request)
@@ -196,6 +195,15 @@ class PreciselyController extends Controller
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
+//            try{
+//                $id = $request->id;
+//                $user = UserDetail::where('user_id',$request->user_id)->first();
+//                $user->saved_opportunities()->detach($id);
+//                $user->saved_opportunities()->attach($id);
+//            }
+//            catch(Exception $e){
+//                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+//            }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -243,6 +251,9 @@ class PreciselyController extends Controller
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
+//            $id = $request->id;
+//            $user = UserDetail::where('user_id',$request->user_id)->first();
+//            $user->saved_opportunities()->detach($id);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -272,7 +283,6 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-
 
 
             if (Auth::check()) {
@@ -314,7 +324,7 @@ class PreciselyController extends Controller
             if(empty($tags)){
                 return $this->apiResponse->sendResponse(400, 'Select at least one filter', null);
             }
-            // dd(json_decode($tags));
+
             // Read $tags as json
             $user->tags()->sync(json_decode($tags));
             return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
@@ -385,5 +395,4 @@ class PreciselyController extends Controller
                 return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
             }
     }
-
 }
