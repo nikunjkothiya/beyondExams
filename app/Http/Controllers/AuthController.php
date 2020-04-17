@@ -59,9 +59,12 @@ class AuthController extends Controller
             return redirect('/login')->with('email', 'User email already registered!');
         }
         else{
+//            dd($user);
             $new_user = new User();
             $new_user->name = $user->name;
-            $new_user->email = $user->email;
+            $new_user->unique_id = $user->id;
+            if (isset($user->email))
+                $new_user->email = $user->email;
             $new_user->avatar = $user->avatar;
             $new_user->save();
             $new_user->social_accounts()->create(

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Auth;
-use Socialite;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ApiResponse;
@@ -42,8 +42,9 @@ class ApiAuthController extends Controller
 	        if($validator->fails()){
 	        	return $this->apiResponse->sendResponse(400,'Parameters missing.',$validator->errors());
 	        }
+            $global_user_id = "";
+	        $email = "";
 
-			$email = "";
 			$flag = 0;
 //	        Provider instance. To extract user details
 	        $provider_obj=NULL;
@@ -54,13 +55,20 @@ class ApiAuthController extends Controller
 	    			'redirect' => env('GOOGLE_API_REDIRECT')
 				];
 				$provider_obj = Socialite::buildProvider(\Laravel\Socialite\Two\GoogleProvider::class, $config);
-	    	}
+	    	} else if ($provider=='facebook'){
+                $config = [
+                    'client_id' => env('FACEBOOK_ID'),
+                    'client_secret' => env('FACEBOOK_SECRET'),
+                    'redirect' => env('FACEBOOK_REDIRECT')
+                ];
+            }
     		$user = $provider_obj->userFromToken($request->access_token);
+    		$email = $user->email;
 //    		Check account in own database
     		$check_account = UserSocial::where('provider_id', $user->id)->first();
     		if($check_account){
-				$email = $check_account->user->email;
 				$user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
+                $global_user_id = $user_id;
 				
 				$check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
 				if($check_lang){$check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;}
@@ -91,6 +99,7 @@ class ApiAuthController extends Controller
 					$flag = 1;
     				$new_user = new User();
             		$new_user->name = $user->name;
+                    $new_user->unique_id = $user->id;
             		$new_user->email = $user->email;
             		$new_user->avatar = $user->avatar;
             		$new_user->save();
@@ -101,9 +110,12 @@ class ApiAuthController extends Controller
     			elseif ($provider == 'facebook') {
     				$new_user = new User();
 		            $new_user->name = $user->name;
-		            $new_user->email = $user->email;
+                    $new_user->unique_id = $user->id;
+                    if (isset($user->email))
+                        $new_user->email = $user->email;
 		            $new_user->avatar = $user->avatar;
 		            $new_user->save();
+                    $global_user_id = $new_user->id;
 		            $new_user->social_accounts()->create(
 		                ['provider_id' => $user->id, 'provider' => $provider]
 		            );
@@ -111,7 +123,6 @@ class ApiAuthController extends Controller
     			else{
     				return $this->apiResponse->sendResponse(500,'Internal server error 1',null);
     			}
-
     			$email = $user->email;
     		}
 	        $response = $this->proxyLogin($email, 'password', $flag);
@@ -137,6 +148,7 @@ class ApiAuthController extends Controller
         	$response = $this->apiConsumer->post(sprintf('%s/oauth/token', $config->get('app.url')), [
                 'form_params' => $data
             ]);
+
             $data = json_decode($response->getBody());
 
 	        $token_data = [
@@ -154,29 +166,22 @@ class ApiAuthController extends Controller
                 'expires_in' => '',
                 'refresh_token' => '',
             ];
-            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error 2',$response);
+            return $this->apiResponse->sendResponse($e->getCode(),'Internal Server Error 2',$e->getMessage());
         }
     }
 
-    public function proxyLogin($email,$password,$flag){
-    	$user = User::where('email',$email)->first();
+    public function proxyLogin($unique_id,$password,$flag){
+    	$user = User::where('email',$unique_id)->first();
     	if (!is_null($user)) {
-//            $res = 1;
-////          Returns all existing tokens (Active devices
-//            $accessTokens = $this->token($user->id);
-////          Logout everyone who is logged in with this account
-//            foreach ($accessTokens as $accessToken) {
-//                $res = $res * $this->proxyLogout($accessToken->id);
-//            }
-
             return $this->proxy('password', $flag,[
-                'username' => $email,
+                'username' => $unique_id,
 				'password' => $password,
 			]);
         }
         else{
 
         	$data = [
+        	    'email' => $unique_id,
         		'access_token' => '',
             	'expires_in' => '',
             	'refresh_token' => '',

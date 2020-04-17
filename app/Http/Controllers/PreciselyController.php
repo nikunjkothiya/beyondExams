@@ -27,7 +27,7 @@ class PreciselyController extends Controller
     {
         $this->msg = "";
         $this->apiResponse = $apiResponse;
-        $this->txnflag = new SubscriptionController;
+        $this->txnflag = new SubscriptionController($apiResponse);
     }
 
     public function get_language(Request $request)
