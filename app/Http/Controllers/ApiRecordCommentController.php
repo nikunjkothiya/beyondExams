@@ -127,7 +127,7 @@ class ApiRecordCommentController extends Controller
             foreach ($comments as $comm){
                 $user_id  = DB::table('user_comments')->select('user_id')->where("comment_id",$comm->id)->first();
                 $comment_user = DB::table('users')->select('name')->where("id",$user_id->user_id)->first();
-                $data[] = array('user'=>$comment_user->name, 'comment'=>$comm->message);
+                $data[] = array('id'=>$comm->id, 'user'=>$comment_user->name, 'comment'=>$comm->message, 'comment_date'=>$comm->created_at, 'reply'=>null);
              }
         }
         else{
@@ -142,9 +142,9 @@ class ApiRecordCommentController extends Controller
 
                 if($flag==0)
                 {   $user = DB::table('users')->select('name')->where("id",$rep->user_id)->first();
-                    $data[] = array('comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'comment_date'=>$comm->created_at, 'reply'=>$rep->content, 'reply_date'=>$rep->created_at, 'reply_user'=>$user->name);}
+                    $data[] = array('id'=>$comm->id, 'comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'comment_date'=>$comm->created_at, 'reply'=>$rep->content, 'reply_date'=>$rep->created_at, 'reply_user'=>$user->name);}
                 else{
-                    $data[] = array('comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'reply'=>null);}
+                    $data[] = array('id'=>$comm->id, 'comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'reply'=>null);}
                 $i=$i+1;
              }
         }
