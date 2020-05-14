@@ -15,9 +15,11 @@ class AuthController extends Controller
 {
     protected $languages;
     protected $providers = ['facebook','google'];
+    private $apiResponse;
 
-    public function __construct(){
+    public function __construct(ApiResponse $apiResponse){
         $this->languages = Language::all();
+        $this->apiResponse=$apiResponse;
     }
 
     public function login(){
@@ -48,7 +50,7 @@ class AuthController extends Controller
     		$user = Socialite::driver($provider)->stateless()->user();
     	}
     	catch(Exception $e){
-    		return redirect('login');
+    		return $this->apiResponse->sendResponse(200,'Failed', $e->getMessage());
     	}
     	if ($authUser = UserSocial::where('provider_id', $user->id)->first()) {
             $temp_user = User::where('email',$user->email)->first();
@@ -59,6 +61,7 @@ class AuthController extends Controller
             return redirect('/login')->with('email', 'User email already registered!');
         }
         else{
+            return $this->apiResponse->sendResponse(200,'Failed', "else");
 //            dd($user);
             $new_user = new User();
             $new_user->name = $user->name;
