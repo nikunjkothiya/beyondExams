@@ -76,4 +76,9 @@ class User extends Authenticatable
         //return Hash::check($password, $this->password);
         return true;
     }
+
+    public function findForPassport($username)
+    {
+        return $this->where('unique_id', $username)->first();
+    }
 }
