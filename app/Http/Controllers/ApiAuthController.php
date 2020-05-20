@@ -321,6 +321,7 @@ class ApiAuthController extends Controller
                 }
 
             } else {
+
                 if ($provider == 'google') {
                     $flag = 1;
                     $new_user = new User();
@@ -329,6 +330,7 @@ class ApiAuthController extends Controller
                     $new_user->unique_id = $user->id;
                     $new_user->avatar = $user->avatar;
                     $new_user->save();
+
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
@@ -351,7 +353,23 @@ class ApiAuthController extends Controller
                 $global_user_id = $user->id;
                 $email = $user->email;
             }
+
+            $phoenix_user = User::where('unique_id', $global_user_id)->first();
+            $client = new Client();
+            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
+                'form_params' => [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'source'=>$provider
+                ]
+            ]);
+
+            $result = $res->getBody()->getContents();
+            DB::table('legacy_users')->insert(array('phoenix_user_id'=>$phoenix_user->id, 'legacy_user_id'=>$result));
+
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
+            $response["data"]["legacy_user_id"] = $result;
+            $response["data"]["user_name"] = $user->name;
             return $response;
 
         } catch (BadResponseException $e) {
