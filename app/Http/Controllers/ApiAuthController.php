@@ -365,12 +365,13 @@ class ApiAuthController extends Controller
             ]);
 
             $result = $res->getBody()->getContents();
-            DB::table('legacy_users')->insert(array('phoenix_user_id'=>$phoenix_user->id, 'legacy_user_id'=>$result));
+            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id'=>$phoenix_user->id, 'legacy_user_id'=>$result));
 
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
-            $response["data"]["legacy_user_id"] = $result;
-            $response["data"]["user_name"] = $user->name;
-            return $response;
+	    $data = json_decode($response->getContent(), true)["data"];
+	    $data["legacy_user_id"] = $result;
+	    $data["user_name"] = $user->name;
+            return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
         } catch (BadResponseException $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Invalid Access Tokens', null);
