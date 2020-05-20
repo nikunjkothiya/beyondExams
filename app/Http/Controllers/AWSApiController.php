@@ -103,15 +103,20 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
         }
 
-        $file = $request->file('file');
-        $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+        if ($request->type != 1) {
+            $file = $request->file('file');
+            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
-        $name = time() . uniqid() . $ext;
+            $name = time() . uniqid() . $ext;
 
 
-        $contents = file_get_contents($file);
+            $contents = file_get_contents($file);
 
-        $filePath = $this->file_types[$request->type] . $name;
+            $filePath = $this->file_types[$request->type] . $name;
+        } else {
+            $contents = $request->file;
+            $filePath = "";
+        }
 
         if ($request->type == 1) {
 //            ARTICLES
@@ -119,9 +124,17 @@ class AWSApiController extends Controller
             $word = str_word_count(strip_tags($contents));
             $m = floor($word / 200);
             $s = floor($word % 200 / (200 / 60));
-            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
+            $duration = $s + $m*60;
+//            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-            Storage::disk('s3')->put($filePath, $contents);
+            $new_resource = new Resource();
+            $new_resource->file_url = $contents;
+            $new_resource->file_type_id = $request->type;
+            $new_resource->title = $request->title;
+            $new_resource->author_id = $user->id;
+            $new_resource->duration = $duration;
+            $new_resource->save();
+
         } else if ($request->type == 2) {
 //            IMAGE
             Storage::disk('s3')->put($filePath, $contents);
@@ -173,14 +186,15 @@ class AWSApiController extends Controller
         }
 
 //        return $this->apiResponse->sendResponse(200, 'Success', $filePath);
-
-        $new_resource = new Resource();
-        $new_resource->file_url = $filePath;
-        $new_resource->file_type_id = $request->type;
-        $new_resource->title = $request->title;
-        $new_resource->author_id = $user->id;
-        $new_resource->duration = $duration;
-        $new_resource->save();
+        if ($request->type != 1) {
+            $new_resource = new Resource();
+            $new_resource->file_url = $filePath;
+            $new_resource->file_type_id = $request->type;
+            $new_resource->title = $request->title;
+            $new_resource->author_id = $user->id;
+            $new_resource->duration = $duration;
+            $new_resource->save();
+        }
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
 
