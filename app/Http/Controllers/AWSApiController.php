@@ -58,43 +58,7 @@ class AWSApiController extends Controller
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
-                $urls = [];
 
-                foreach ($all_files as $file) {
-                    $urls[] = $this->base_url . $file;
-                }
-                $processed = [];
-                foreach ($urls as $url) {
-                    $processed[] = str_replace(' ', '+', $url);
-                }
-
-                $data = [];
-                foreach ($processed as $pro) {
-                    $data[] = array('url' => $pro, 'thumbnail' => null, 'type' => null, 'length' => null,
-                        'title' => null, 'author' => null, 'designation' => null, 'profile_pic' => null);
-                }
-
-                return $this->apiResponse->sendResponse(200, 'Success', $data);
-//            }
-
-            $all_files = Storage::disk('s3')->files($this->file_types[$request->type]);
-            $urls = [];
-
-            foreach ($all_files as $file) {
-                $urls[] = $this->base_url . $file;
-            }
-            $processed = [];
-            foreach ($urls as $url) {
-                $processed[] = str_replace(' ', '+', $url);
-            }
-
-            $data = [];
-            foreach ($processed as $pro) {
-                $data[] = array('url' => $pro, 'thumbnail' => null, 'type' => null, 'length' => null,
-                    'title' => null, 'author' => null, 'designation' => null, 'profile_pic' => null);
-            }
-
-            return $this->apiResponse->sendResponse(200, 'Success', $data);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
@@ -102,34 +66,17 @@ class AWSApiController extends Controller
 
     public function search_s3_files(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'keyword' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
         try {
-            $all_files = Storage::disk('s3')->files("/video");
-            $urls = [];
-
-            foreach ($all_files as $file) {
-                $urls[] = 'precisely-test1.s3.ap-south-1.amazonaws.com/' . $file;
-            }
-
-            $splited = [];
-            foreach ($urls as $url) {
-                $splited[] = explode("video/", $url)[1];
-            }
-
-            $req_files = [];
-            $keyword = strtolower($request->keyword);
-
-            foreach ($splited as $spl) {
-                $exists = strpos(strtolower($spl), $keyword);
-                if ($exists !== false) {
-                    $req_files[] = str_replace(' ', '+', $this->base_url . 'video/' . $spl);
-                }
-            }
-
-            if (empty($req_files)) {
-                $req_files[] = "Not Found";
-            }
-
-            return $this->apiResponse->sendResponse(200, 'Success', $req_files);
+            $all_files = Resource::with('user:id,name,avatar')->where(DB::raw('SOUNDEX(title) LIKE CONCAT("%", SOUNDEX({$request->keyword}), "%")'))->get();
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
@@ -164,20 +111,26 @@ class AWSApiController extends Controller
 
         $contents = file_get_contents($file);
 
+        $filePath = $this->file_types[$request->type] . $name;
 
         if ($request->type == 1) {
-//            TEXT
+//            ARTICLES
 
             $word = str_word_count(strip_tags($contents));
             $m = floor($word / 200);
             $s = floor($word % 200 / (200 / 60));
             $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-            $filePath = 'articles/' . $name;
             Storage::disk('s3')->put($filePath, $contents);
-        } else  if ($request->type == 2) {
-//            VIDEO
-            $filePath = 'videos/' . $name;
+        } else if ($request->type == 2) {
+//            IMAGE
+            Storage::disk('s3')->put($filePath, $contents);
+            $duration = null;
+        } else if ($request->type == 3) {
+//            AUDIO
+            Storage::putFileAs(
+                'public/', $file,  $filePath
+            );
 
             Storage::putFileAs(
                 'public/', $file,  $filePath
@@ -195,22 +148,26 @@ class AWSApiController extends Controller
                 ->videos()
                 ->first()
                 ->get('duration');
-
-        } else if ($request->type == 3) {
-//            IMAGE
-            $filePath = 'images/' . $name;
-            Storage::disk('s3')->put($filePath, $contents);
             $duration = null;
-        } else if ($request->type == 4) {
-//            AUDIO
-            $filePath = 'audios/' . $name;
-
+        } else  if ($request->type == 4) {
+//            VIDEO
             Storage::putFileAs(
                 'public/', $file,  $filePath
             );
 
             Storage::disk('s3')->put($filePath, $contents);
-            $duration = null;
+
+            $ffprobe = FFMpeg\FFProbe::create(array(
+                'ffmpeg.binaries'  => '/usr/local/bin/ffmpeg',
+                'ffprobe.binaries' => '/usr/local/bin/ffprobe'
+            ));
+
+            $duration = $ffprobe
+                ->streams(storage_path('app/public/' . $filePath))
+                ->videos()
+                ->first()
+                ->get('duration');
+
         } else {
             return $this->apiResponse->sendResponse(400, 'File type not supported', null);
         }
@@ -228,5 +185,4 @@ class AWSApiController extends Controller
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
 
     }
-
 }
