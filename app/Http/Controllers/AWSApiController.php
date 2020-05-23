@@ -37,6 +37,8 @@ try{
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
         $resource = Resource::find($request->resource_id);
+	$filePath = "";
+
         if ($resource) {
             $file = $request->file('file');
 
@@ -51,7 +53,8 @@ try{
 
             Storage::disk('s3')->put($filePath, $contents);
 
-	    $resource->thumbnail = $filePath;
+
+	    $resource->thumbnail_url = $filePath;
             $resource->save();
         } else {
             return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
@@ -59,7 +62,7 @@ try{
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (Exception $e) {
-            return $apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
 
@@ -83,6 +86,8 @@ try{
             }
 
             foreach ($all_files as $file) {
+	        if (!is_null($file["thumbnail_url"]))
+	 	    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
                 if ($file["file_type_id"]==3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
