@@ -77,7 +77,14 @@ class AWSApiController extends Controller
         }
 
         try {
-            $all_files = Resource::with('user:id,name,avatar')->where(DB::raw('SOUNDEX(title) LIKE CONCAT("%", SOUNDEX({$request->keyword}), "%")'))->get();
+            $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
+
+            foreach ($all_files as $file) {
+                if ($file["file_type_id"]==3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Success', $all_files);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
