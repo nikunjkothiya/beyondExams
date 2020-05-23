@@ -26,6 +26,7 @@ class AWSApiController extends Controller
     }
 
     public function save_thumbnail(Request $request){
+try{
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
             'file' => 'required',
@@ -35,7 +36,6 @@ class AWSApiController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-
         $resource = Resource::find($request->resource_id);
         if ($resource) {
             $file = $request->file('file');
@@ -50,11 +50,17 @@ class AWSApiController extends Controller
             $filePath = "thumbnails/" . $name;
 
             Storage::disk('s3')->put($filePath, $contents);
+
+	    $resource->thumbnail = $filePath;
+            $resource->save();
         } else {
             return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
         }
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+        } catch (Exception $e) {
+            return $apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+        }
     }
 
     public function list_s3_files(Request $request)
