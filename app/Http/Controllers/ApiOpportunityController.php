@@ -58,7 +58,7 @@ class ApiOpportunityController extends Controller
                 foreach ($tag_id_json_array as $tag){$tag_ids[]=$tag['tag_id'];}
                 $tag_ids = array_unique($tag_ids);
 
-                $opp_id_json = DB::table('opportunity_tag')->select('opportunity_id')->whereIn('tag_id',$tag_ids)->orderBy('opportunity_id')->distinct()->take(3)->skip(($request->page)*3)->get();
+                $opp_id_json = DB::table('opportunity_tag')->select('opportunity_id')->whereIn('tag_id',$tag_ids)->orderBy('opportunity_id')->distinct()->take(10)->skip(($request->page)*10)->get();
                 $opp_id_json_array = json_decode($opp_id_json, true);
                 $opp_ids = array();
                 foreach ($opp_id_json_array as $opp){$opp_ids[]=$opp['opportunity_id'];}
