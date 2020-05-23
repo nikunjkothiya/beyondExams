@@ -135,14 +135,21 @@ class ApiRecordCommentController extends Controller
             $i = 0;
             foreach ($comments as $comm){
                 $flag = 0;
-                $rep = DB::table('reply')->select('content', 'created_at', 'user_id')->where("comment_id",$comm_ids[$i])->first();
+                $rep = DB::table('reply')->select('content', 'created_at', 'user_id')->where("comment_id",$comm_ids[$i])->get();
                 $user_id  = DB::table('user_comments')->select('user_id')->where("comment_id",$comm_ids[$i])->first();
                 $comment_user = DB::table('users')->select('name')->where("id",$user_id->user_id)->first();
                 if($rep==null){$flag = 1;}
 
                 if($flag==0)
-                {   $user = DB::table('users')->select('name')->where("id",$rep->user_id)->first();
-                    $data[] = array('id'=>$comm->id, 'comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'comment_date'=>$comm->created_at, 'reply'=>$rep->content, 'reply_date'=>$rep->created_at, 'reply_user'=>$user->name);}
+                {   $data_json = array('id'=>$comm->id, 'comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'comment_date'=>$comm->created_at, 'reply_data'=> null);
+                    $reply_json = [];
+                    foreach($rep as $r){
+                        $user = DB::table('users')->select('name')->where("id",$r->user_id)->first();
+                        $reply_json[] = array('reply'=>$r->content, 'reply_date'=>$r->created_at, 'reply_user'=>$user->name);    
+                    }
+                    $data_json['reply_data'] = $reply_json;
+                    $data[] = $data_json;
+                }
                 else{
                     $data[] = array('id'=>$comm->id, 'comment_user'=>$comment_user->name, 'comment'=>$comm->message, 'reply'=>null);}
                 $i=$i+1;
