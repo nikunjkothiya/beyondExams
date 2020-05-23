@@ -18,7 +18,7 @@ class AWSApiController extends Controller
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
     private $base_url = 'http://precisely-test1.s3.ap-south-1.amazonaws.com/';
-    private $file_types = ["all", "articles/", "images/", "audios/", "videos/"];
+    private $file_types = ["all", "blogs/", "articles/", "videos/"];
 
     public function __construct(ApiResponse $apiResponse)
     {
@@ -48,13 +48,14 @@ class AWSApiController extends Controller
 
         try {
             if ($request->type == 0) {
-                $all_files = Resource::all();
+                $all_files = Resource::with('user:id,name,avatar')->get();
             } else {
                 $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->get();
             }
 
             foreach ($all_files as $file) {
-                $file["file_url"] = $this->base_url . $file["file_url"];
+                if ($file["file_type_id"]==3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
@@ -103,7 +104,7 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
         }
 
-        if ($request->type != 1) {
+        if ($request->type == 3) {
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -115,11 +116,16 @@ class AWSApiController extends Controller
             $filePath = $this->file_types[$request->type] . $name;
         } else {
             $contents = $request->file;
-            $filePath = "";
+            $filePath = null;
         }
 
+        $new_resource = new Resource();
+        $new_resource->file_type_id = $request->type;
+        $new_resource->title = $request->title;
+        $new_resource->author_id = $user->id;
+
         if ($request->type == 1) {
-//            ARTICLES
+//            BLOGS
 
             $word = str_word_count(strip_tags($contents));
             $m = floor($word / 200);
@@ -127,73 +133,45 @@ class AWSApiController extends Controller
             $duration = $s + $m*60;
 //            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-            $new_resource = new Resource();
             $new_resource->file_url = $contents;
-            $new_resource->file_type_id = $request->type;
-            $new_resource->title = $request->title;
-            $new_resource->author_id = $user->id;
             $new_resource->duration = $duration;
             $new_resource->save();
 
         } else if ($request->type == 2) {
-//            IMAGE
-            Storage::disk('s3')->put($filePath, $contents);
-            $duration = null;
-        } else if ($request->type == 3) {
-//            AUDIO
-            Storage::putFileAs(
-                'public/', $file,  $filePath
-            );
+//            ARTICLES
+            $word = str_word_count(strip_tags($contents));
+            $m = floor($word / 200);
+            $s = floor($word % 200 / (200 / 60));
+            $duration = $s + $m*60;
 
-            Storage::putFileAs(
-                'public/', $file,  $filePath
-            );
-
-            Storage::disk('s3')->put($filePath, $contents);
-
-            $ffprobe = FFMpeg\FFProbe::create(array(
-                'ffmpeg.binaries'  => '/usr/local/bin/ffmpeg',
-                'ffprobe.binaries' => '/usr/local/bin/ffprobe'
-            ));
-
-            $duration = $ffprobe
-                ->streams(storage_path('app/public/' . $filePath))
-                ->videos()
-                ->first()
-                ->get('duration');
-            $duration = null;
-        } else  if ($request->type == 4) {
-//            VIDEO
-            Storage::putFileAs(
-                'public/', $file,  $filePath
-            );
-
-            Storage::disk('s3')->put($filePath, $contents);
-
-            $ffprobe = FFMpeg\FFProbe::create(array(
-                'ffmpeg.binaries'  => '/usr/local/bin/ffmpeg',
-                'ffprobe.binaries' => '/usr/local/bin/ffprobe'
-            ));
-
-            $duration = $ffprobe
-                ->streams(storage_path('app/public/' . $filePath))
-                ->videos()
-                ->first()
-                ->get('duration');
-
-        } else {
-            return $this->apiResponse->sendResponse(400, 'File type not supported', null);
-        }
-
-//        return $this->apiResponse->sendResponse(200, 'Success', $filePath);
-        if ($request->type != 1) {
-            $new_resource = new Resource();
-            $new_resource->file_url = $filePath;
-            $new_resource->file_type_id = $request->type;
-            $new_resource->title = $request->title;
-            $new_resource->author_id = $user->id;
+            $new_resource->file_url = $contents;
             $new_resource->duration = $duration;
             $new_resource->save();
+        } else if ($request->type == 3) {
+            //            VIDEO
+            Storage::putFileAs(
+                'public/', $file, $filePath
+            );
+
+            Storage::disk('s3')->put($filePath, $contents);
+
+            $ffprobe = FFMpeg\FFProbe::create(array(
+                'ffmpeg.binaries' => '/usr/local/bin/ffmpeg',
+                'ffprobe.binaries' => '/usr/local/bin/ffprobe'
+            ));
+
+            $duration = $ffprobe
+                ->streams(storage_path('app/public/' . $filePath))
+                ->videos()
+                ->first()
+                ->get('duration');
+
+            $new_resource->file_url = $filePath;
+            $new_resource->duration = $duration;
+            $new_resource->save();
+        }
+        else {
+            return $this->apiResponse->sendResponse(400, 'File type not supported', null);
         }
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);

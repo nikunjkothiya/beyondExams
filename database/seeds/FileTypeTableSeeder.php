@@ -12,10 +12,9 @@ class FileTypeTableSeeder extends Seeder
     public function run()
     {
         $types = array(
-            array('type' => 'video'),
-            array('type' => 'document'),
-            array('type' => 'audio'),
-            array('type' => 'image'),
+            array('type' => 'blogs'),
+            array('type' => 'articles'),
+            array('type' => 'videos'),
         );
         DB::table('file_types')->insert($types);
     }
