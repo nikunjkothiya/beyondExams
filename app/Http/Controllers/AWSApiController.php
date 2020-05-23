@@ -29,9 +29,32 @@ class AWSApiController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
             'file' => 'required',
-            'title' => 'required|string',
-            'type' => 'required|integer|min:1|max:' . FileType::count(),
+            'resource_id' => 'required|integer'
         ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $resource = Resource::find($request->resource_id);
+        if ($resource) {
+            $file = $request->file('file');
+
+            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+
+            $name = time() . uniqid() . $ext;
+
+
+            $contents = file_get_contents($file);
+
+            $filePath = "thumbnails/" . $name;
+
+            Storage::disk('s3')->put($filePath, $contents);
+        } else {
+            return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
+        }
+
+        return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
     }
 
     public function list_s3_files(Request $request)
