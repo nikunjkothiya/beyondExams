@@ -67,6 +67,7 @@ class AWSApiController extends Controller
 
     public function get_resource_from_slug(Request $request)
     {
+	try{
         $validator = Validator::make($request->all(), [
             'slug' => 'required|string'
         ]);
@@ -75,11 +76,14 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        try {
             $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
 
-            if ($file["file_type_id"] == 3)
-                $file["file_url"] = $this->base_url . $file["file_url"];
+	    if (!is_null($file[0]["thumbnail_url"]))
+                $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
+
+
+            if ($file[0]["file_type_id"] == 3)
+                $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
@@ -124,6 +128,7 @@ class AWSApiController extends Controller
 
     public function search_s3_files(Request $request)
     {
+try{
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
             'keyword' => 'required|string'
@@ -133,7 +138,6 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        try {
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
@@ -143,12 +147,13 @@ class AWSApiController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
 
     public function store_s3_file(Request $request)
     {
+try{
         $file_parameters = ["url", "thumbnail", "type", "length", "title", "author"];
 
         $validator = Validator::make($request->all(), [
@@ -189,7 +194,7 @@ class AWSApiController extends Controller
         $new_resource->file_type_id = $request->type;
         $new_resource->title = $request->title;
         $new_resource->author_id = $user->id;
-        $new_resource->author_id = $slug;
+        $new_resource->slug = $slug;
 
         if ($request->type == 1) {
 //            BLOGS
@@ -241,6 +246,10 @@ class AWSApiController extends Controller
         }
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+     } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+        }
+
 
     }
 }
