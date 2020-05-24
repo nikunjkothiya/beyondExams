@@ -6,6 +6,7 @@ use Auth;
 use App\User;
 use App\FileType;
 use App\Resource;
+use Exception;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use Illuminate\Support\Facades\Validator;
@@ -67,18 +68,18 @@ class AWSApiController extends Controller
 
     public function get_resource_from_slug(Request $request)
     {
-	try{
-        $validator = Validator::make($request->all(), [
-            'slug' => 'required|string'
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'slug' => 'required|string'
+            ]);
 
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
 
             $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
 
-	    if (!is_null($file[0]["thumbnail_url"]))
+            if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
@@ -111,33 +112,34 @@ class AWSApiController extends Controller
             }
 
             foreach ($all_files as $file) {
-	        if (!is_null($file["thumbnail_url"]))
-	 	        $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+                if (!is_null($file["thumbnail_url"]))
+                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
                 $file["file_url"] = $this->base_url . $file["file_url"];
+            }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
 
     public function search_s3_files(Request $request)
     {
-try{
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'keyword' => 'required|string'
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|integer',
+                'keyword' => 'required|string'
+            ]);
 
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
 
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
-                    $file["file_url"] = $this->base_url . $file["file_url"];
+                $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
@@ -148,25 +150,25 @@ try{
 
     public function store_s3_file(Request $request)
     {
-try{
-        $file_parameters = ["url", "thumbnail", "type", "length", "title", "author"];
+        try {
+            $file_parameters = ["url", "thumbnail", "type", "length", "title", "author"];
 
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'file' => 'required',
-            'title' => 'required|string',
-            'type' => 'required|integer|min:1|max:' . FileType::count(),
-        ]);
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|integer',
+                'file' => 'required',
+                'title' => 'required|string',
+                'type' => 'required|integer|min:1|max:' . FileType::count(),
+            ]);
 
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
 
-        $user = User::find($request->user_id);
+            $user = User::find($request->user_id);
 
-        if ($user->role_id != 3) {
-            return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
-        }
+            if ($user->role_id != 3) {
+                return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
+            }
 
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
@@ -180,64 +182,64 @@ try{
 
             Storage::disk('s3')->put($filePath, $contents);
 
-        $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+            $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
 
-        $new_resource = new Resource();
-        $new_resource->file_type_id = $request->type;
-        $new_resource->title = $request->title;
-        $new_resource->author_id = $user->id;
-        $new_resource->slug = $slug;
-	$new_resource->file_url = $filePath;
+            $new_resource = new Resource();
+            $new_resource->file_type_id = $request->type;
+            $new_resource->title = $request->title;
+            $new_resource->author_id = $user->id;
+            $new_resource->slug = $slug;
+            $new_resource->file_url = $filePath;
 
-        if ($request->type == 1) {
+            if ($request->type == 1) {
 //            BLOGS
 
-            $word = str_word_count(strip_tags($contents));
-            $m = floor($word / 200);
-            $s = floor($word % 200 / (200 / 60));
-            $duration = $s + $m * 60;
+                $word = str_word_count(strip_tags($contents));
+                $m = floor($word / 200);
+                $s = floor($word % 200 / (200 / 60));
+                $duration = $s + $m * 60;
 //            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-            $new_resource->duration = $duration;
-            $new_resource->save();
+                $new_resource->duration = $duration;
+                $new_resource->save();
 
-        } else if ($request->type == 2) {
+            } else if ($request->type == 2) {
 //            ARTICLES
-            $word = str_word_count(strip_tags($contents));
-            $m = floor($word / 200);
-            $s = floor($word % 200 / (200 / 60));
-            $duration = $s + $m * 60;
+                $word = str_word_count(strip_tags($contents));
+                $m = floor($word / 200);
+                $s = floor($word % 200 / (200 / 60));
+                $duration = $s + $m * 60;
 
-            $new_resource->duration = $duration;
-            $new_resource->save();
+                $new_resource->duration = $duration;
+                $new_resource->save();
 
-        } else if ($request->type == 3) {
-            //            VIDEO
-            Storage::putFileAs(
-                'public/', $file, $filePath
-            );
+            } else if ($request->type == 3) {
+                //            VIDEO
+                Storage::putFileAs(
+                    'public/', $file, $filePath
+                );
 
-            Storage::disk('s3')->put($filePath, $contents);
+                Storage::disk('s3')->put($filePath, $contents);
 
-            $ffprobe = FFMpeg\FFProbe::create(array(
-                'ffmpeg.binaries' => '/usr/local/bin/ffmpeg',
-                'ffprobe.binaries' => '/usr/local/bin/ffprobe'
-            ));
+                $ffprobe = FFMpeg\FFProbe::create(array(
+                    'ffmpeg.binaries' => '/usr/local/bin/ffmpeg',
+                    'ffprobe.binaries' => '/usr/local/bin/ffprobe'
+                ));
 
-            $duration = $ffprobe
-                ->streams(storage_path('app/public/' . $filePath))
-                ->videos()
-                ->first()
-                ->get('duration');
+                $duration = $ffprobe
+                    ->streams(storage_path('app/public/' . $filePath))
+                    ->videos()
+                    ->first()
+                    ->get('duration');
 
-            $new_resource->duration = $duration;
-            $new_resource->save();
-        } else {
-            return $this->apiResponse->sendResponse(400, 'File type not supported', null);
-        }
+                $new_resource->duration = $duration;
+                $new_resource->save();
+            } else {
+                return $this->apiResponse->sendResponse(400, 'File type not supported', null);
+            }
 
-        return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
-     } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+        } catch (Exception $e) {
 
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
