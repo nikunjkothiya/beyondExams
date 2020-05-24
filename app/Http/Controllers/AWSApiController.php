@@ -43,6 +43,7 @@ class AWSApiController extends Controller
 
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
+
                 $name = time() . uniqid() . $ext;
 
 
@@ -83,7 +84,7 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
 
@@ -107,8 +108,11 @@ class AWSApiController extends Controller
             }
 
             foreach ($all_files as $file) {
-                if ($file["file_type_id"] == 3)
-                    $file["file_url"] = $this->base_url . $file["file_url"];
+
+	        if (!is_null($file["thumbnail_url"]))
+	 	        $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+            if ($file["file_type_id"]==3)
+                $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
