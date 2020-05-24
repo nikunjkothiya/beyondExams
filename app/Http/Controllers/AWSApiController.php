@@ -79,11 +79,12 @@ class AWSApiController extends Controller
 
             $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
 
-            if (!is_null($file[0]["thumbnail_url"]))
+	    if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
-            $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
+            if ($file[0]["file_type_id"] == 3)
+                $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
@@ -114,7 +115,8 @@ class AWSApiController extends Controller
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
                     $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                $file["file_url"] = $this->base_url . $file["file_url"];
+                if ($file["file_type_id"]==3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
@@ -139,7 +141,8 @@ class AWSApiController extends Controller
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
-                $file["file_url"] = $this->base_url . $file["file_url"];
+                if ($file["file_type_id"] == 3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
@@ -155,8 +158,8 @@ class AWSApiController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'user_id' => 'required|integer',
-                'file' => 'required',
                 'title' => 'required|string',
+                'description' => 'required|string',
                 'type' => 'required|integer|min:1|max:' . FileType::count(),
             ]);
 
@@ -170,17 +173,17 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
             }
 
+            $contents = $request->description;
+            if ($request->type == 3) {
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
             $name = time() . uniqid() . $ext;
 
-
-            $contents = file_get_contents($file);
-
             $filePath = $this->file_types[$request->type] . $name;
-
-            Storage::disk('s3')->put($filePath, $contents);
+        } else {
+            $filePath = null;
+        }
 
             $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
 
@@ -190,6 +193,7 @@ class AWSApiController extends Controller
             $new_resource->author_id = $user->id;
             $new_resource->slug = $slug;
             $new_resource->file_url = $filePath;
+            $new_resource->description = $contents;
 
             if ($request->type == 1) {
 //            BLOGS
@@ -200,8 +204,8 @@ class AWSApiController extends Controller
                 $duration = $s + $m * 60;
 //            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-                $new_resource->duration = $duration;
-                $new_resource->save();
+            $new_resource->duration = $duration;
+            $new_resource->save();
 
             } else if ($request->type == 2) {
 //            ARTICLES
