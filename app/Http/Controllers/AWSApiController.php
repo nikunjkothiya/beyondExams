@@ -82,8 +82,7 @@ class AWSApiController extends Controller
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
-            if ($file[0]["file_type_id"] == 3)
-                $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
+            $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
@@ -112,17 +111,14 @@ class AWSApiController extends Controller
             }
 
             foreach ($all_files as $file) {
-
 	        if (!is_null($file["thumbnail_url"]))
 	 	        $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-            if ($file["file_type_id"]==3)
                 $file["file_url"] = $this->base_url . $file["file_url"];
-            }
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
 
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
 
@@ -141,7 +137,6 @@ try{
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
-                if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
@@ -173,7 +168,6 @@ try{
             return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
         }
 
-        if ($request->type == 3) {
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -183,10 +177,8 @@ try{
             $contents = file_get_contents($file);
 
             $filePath = $this->file_types[$request->type] . $name;
-        } else {
-            $contents = $request->file;
-            $filePath = null;
-        }
+
+            Storage::disk('s3')->put($filePath, $contents);
 
         $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
 
@@ -195,6 +187,7 @@ try{
         $new_resource->title = $request->title;
         $new_resource->author_id = $user->id;
         $new_resource->slug = $slug;
+	$new_resource->file_url = $filePath;
 
         if ($request->type == 1) {
 //            BLOGS
@@ -205,7 +198,6 @@ try{
             $duration = $s + $m * 60;
 //            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-            $new_resource->file_url = $contents;
             $new_resource->duration = $duration;
             $new_resource->save();
 
@@ -216,9 +208,9 @@ try{
             $s = floor($word % 200 / (200 / 60));
             $duration = $s + $m * 60;
 
-            $new_resource->file_url = $contents;
             $new_resource->duration = $duration;
             $new_resource->save();
+
         } else if ($request->type == 3) {
             //            VIDEO
             Storage::putFileAs(
@@ -238,7 +230,6 @@ try{
                 ->first()
                 ->get('duration');
 
-            $new_resource->file_url = $filePath;
             $new_resource->duration = $duration;
             $new_resource->save();
         } else {
@@ -246,8 +237,9 @@ try{
         }
 
         return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
-     } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+     } catch (\Exception $e) {
+
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
 
 
