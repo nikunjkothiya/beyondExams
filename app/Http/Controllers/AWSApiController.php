@@ -18,7 +18,7 @@ class AWSApiController extends Controller
 {
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
-    private $base_url = 'http://precisely-test1.s3.ap-south-1.amazonaws.com/';
+    private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/"];
 
     public function __construct(ApiResponse $apiResponse)
