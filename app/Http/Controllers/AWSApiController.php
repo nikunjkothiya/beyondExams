@@ -25,41 +25,65 @@ class AWSApiController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function save_thumbnail(Request $request){
-try{
+    public function save_thumbnail(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|integer',
+                'file' => 'required',
+                'resource_id' => 'required|integer'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+            $resource = Resource::find($request->resource_id);
+            if ($resource) {
+                $file = $request->file('file');
+
+                $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+
+                $name = time() . uniqid() . $ext;
+
+
+                $contents = file_get_contents($file);
+
+                $filePath = "thumbnails/" . $name;
+
+                Storage::disk('s3')->put($filePath, $contents);
+
+                $resource->thumbnail = $filePath;
+                $resource->save();
+            } else {
+                return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+        }
+    }
+
+    public function get_resource_from_slug(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'file' => 'required',
-            'resource_id' => 'required|integer'
+            'slug' => 'required|string'
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        $resource = Resource::find($request->resource_id);
-        if ($resource) {
-            $file = $request->file('file');
 
-            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+        try {
+            $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
 
-            $name = time() . uniqid() . $ext;
+            if ($file["file_type_id"] == 3)
+                $file["file_url"] = $this->base_url . $file["file_url"];
 
+            return $this->apiResponse->sendResponse(200, 'Success', $file);
 
-            $contents = file_get_contents($file);
-
-            $filePath = "thumbnails/" . $name;
-
-            Storage::disk('s3')->put($filePath, $contents);
-
-	    $resource->thumbnail = $filePath;
-            $resource->save();
-        } else {
-            return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
-        }
-
-        return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (Exception $e) {
-            return $apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
     }
 
@@ -83,7 +107,7 @@ try{
             }
 
             foreach ($all_files as $file) {
-                if ($file["file_type_id"]==3)
+                if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
@@ -109,7 +133,7 @@ try{
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
-                if ($file["file_type_id"]==3)
+                if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
 
@@ -155,10 +179,13 @@ try{
             $filePath = null;
         }
 
+        $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+
         $new_resource = new Resource();
         $new_resource->file_type_id = $request->type;
         $new_resource->title = $request->title;
         $new_resource->author_id = $user->id;
+        $new_resource->author_id = $slug;
 
         if ($request->type == 1) {
 //            BLOGS
@@ -166,7 +193,7 @@ try{
             $word = str_word_count(strip_tags($contents));
             $m = floor($word / 200);
             $s = floor($word % 200 / (200 / 60));
-            $duration = $s + $m*60;
+            $duration = $s + $m * 60;
 //            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
             $new_resource->file_url = $contents;
@@ -178,7 +205,7 @@ try{
             $word = str_word_count(strip_tags($contents));
             $m = floor($word / 200);
             $s = floor($word % 200 / (200 / 60));
-            $duration = $s + $m*60;
+            $duration = $s + $m * 60;
 
             $new_resource->file_url = $contents;
             $new_resource->duration = $duration;
@@ -205,8 +232,7 @@ try{
             $new_resource->file_url = $filePath;
             $new_resource->duration = $duration;
             $new_resource->save();
-        }
-        else {
+        } else {
             return $this->apiResponse->sendResponse(400, 'File type not supported', null);
         }
 

@@ -22,6 +22,7 @@ class CreateResourcesTable extends Migration
             $table->integer('duration')->nullable();
             $table->string('title');
             $table->unsignedBigInteger('author_id');
+            $table->string('slug');
             $table->timestamps();
         });
 
