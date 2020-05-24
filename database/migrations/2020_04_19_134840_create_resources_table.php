@@ -16,13 +16,14 @@ class CreateResourcesTable extends Migration
 //        private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
         Schema::create('resources', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('file_url');
-            $table->string('thumbnail_url')->nullable();
             $table->unsignedInteger('file_type_id');
+            $table->string('file_url')->nullable();
+            $table->string('thumbnail_url')->nullable();
             $table->integer('duration')->nullable();
             $table->string('title');
-            $table->unsignedBigInteger('author_id');
+            $table->string('description', 65535);
             $table->string('slug');
+            $table->unsignedBigInteger('author_id');
             $table->timestamps();
         });
 
