@@ -20,8 +20,7 @@ return [
         'allow_credentials' => false,
 
         'allow_origins' => [
-            'http://localhost:3000',
-            'http://app.precisely.co.in'
+            '*'
         ],
 
         'allow_methods' => [
