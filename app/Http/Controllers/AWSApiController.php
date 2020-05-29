@@ -54,7 +54,7 @@ class AWSApiController extends Controller
 
                 Storage::disk('s3')->put($filePath, $contents);
 
-                $resource->thumbnail = $filePath;
+                $resource->thumbnail_url = $filePath;
                 $resource->save();
             } else {
                 return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
@@ -62,7 +62,7 @@ class AWSApiController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
