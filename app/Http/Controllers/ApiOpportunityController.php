@@ -41,7 +41,21 @@ class ApiOpportunityController extends Controller
     {
         if (Auth::check) {
             $user = Auth::user();
-            Opportunity::with('countries')
+            $tags = $user->tags;
+            $opportunities = Opportunity::with(['location', 'opportunity_translations' => function($query){
+                $query->where('locale', 'en');
+            }])->whereHas('tags', function ($query) use ($user) {
+                $query->whereIn('tags.id', $user->tags);
+            })->paginate(15);
+
+            foreach ($opportunities as $opportunity) {
+                if (in_array($opportunity->id, $user->saved_opportunities))
+                    $opportunity['saved'] = 1;
+                else
+                    $opportunity['saved'] = 0;
+            }
+
+            return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
         }
@@ -51,7 +65,12 @@ class ApiOpportunityController extends Controller
     {
         /*
          * Get tag_ids saved by user
-         * 
+         * Select opp_id with tags in tag_ids
+         * Get slug for opp_ids
+         * Get save status of opp_ids
+         * Get description and heading of locale_english
+         * Get country from country_code
+         *
          */
         try {
 
