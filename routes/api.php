@@ -48,7 +48,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('save_comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
-	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
+	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
 
 	Route::get('subscription',['uses'=>'SubscriptionController@subscription']);
@@ -64,6 +64,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 	Route::get('get_user_language',['uses'=>'PreciselyController@get_user_language']);
 	Route::get('get_user_filters',['uses'=>'PreciselyController@get_user_filters']);
+
+//	Route::get('get')
 
 });
 
