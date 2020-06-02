@@ -41,7 +41,7 @@ class ApiOpportunityController extends Controller
     {
         try {
             $user_id = $request->user_id;
-//        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", User::find);
+//        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", User::find($user_id)->id);
 
             if (!is_null(User::find($user_id)->id)) {
 //        if (Auth::check) {
@@ -54,11 +54,17 @@ class ApiOpportunityController extends Controller
                     $query->whereIn('tags.id', $user->tags);
                 })->paginate(1);
 
-                foreach ($opportunities as $opportunity) {
-                    if (in_array($opportunity->id, $user->saved_opportunities))
-                        $opportunity['saved'] = 1;
-                    else
+                if (count($user->saved_opportunities) > 0) {
+                    foreach ($opportunities as $opportunity) {
+                        if (in_array($opportunity->id, $user->saved_opportunities))
+                            $opportunity['saved'] = 1;
+                        else
+                            $opportunity['saved'] = 0;
+                    }
+                } else {
+                    foreach ($opportunities as $opportunity) {
                         $opportunity['saved'] = 0;
+                    }
                 }
 
                 return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
