@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Organisation;
 use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +39,7 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+        $this->middleware('guest:organisation');
     }
 
     /**
@@ -64,6 +66,15 @@ class RegisterController extends Controller
     protected function create(array $data)
     {
         return User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+    }
+
+    protected function createOrganisation(array $data)
+    {
+        return Organisation::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),

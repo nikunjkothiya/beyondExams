@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TagTypeTableSeeder::class);
         $this->call(TagTableSeeder::class);
         $this->call(OpportunitiesTableSeeder::class);
+        $this->call(OrganisationTableSeeder::class);
         $this->call(UserTableSeeder::class);
     }
 }
