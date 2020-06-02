@@ -23,6 +23,9 @@ Route::post('post/opportunity','UtilController@post_opportunity');
 //Public APIs
 Route::post('{provider}/verifyAccessToken',['uses'=>'ApiAuthController@verifyAccessToken']);
 Route::post('refresh',['uses'=>'ApiAuthController@refresh']);
+Route::post('organisation/{provider}/verifyAccessToken',['uses'=>'ApiAuthOrganisationController@verifyAccessToken']);
+Route::post('organisation/refresh',['uses'=>'ApiAuthOrganisationController@refresh']);
+
 Route::get('get_all_languages',['uses'=>'PreciselyController@get_language']);
 Route::get('get_filters',['uses'=>'PreciselyController@get_filters']);
 
@@ -46,7 +49,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
 	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opp_by_tags']);
-	
+
 
 	Route::get('subscription',['uses'=>'SubscriptionController@subscription']);
 	Route::post('checkout', ['uses'=>'SubscriptionController@checkout']);
@@ -61,14 +64,21 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 	Route::get('get_user_language',['uses'=>'PreciselyController@get_user_language']);
 	Route::get('get_user_filters',['uses'=>'PreciselyController@get_user_filters']);
+
 });
 
+//Route::group(['middleware'=>'auth:organisation'], function (){
+    Route::post('organisation/post/opportunity', ['uses'=>'OrganisationController@post_opportunity']);
+//});
 /*
 	Testing APIs
 */
 //Public APIs
 Route::get('{provider}/authorize',['uses'=>'ApiAuthController@auth']);
 Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
+
+Route::get('organisation/{provider}/authorize',['uses'=>'ApiAuthOrganisationController@auth']);
+Route::get('organisation/{provider}/login',['uses'=>'ApiAuthOrganisationController@login']);
 
 //AWS API
 Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
