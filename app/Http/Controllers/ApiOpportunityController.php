@@ -39,31 +39,34 @@ class ApiOpportunityController extends Controller
 
     public function get_opportunities(Request $request)
     {
-try{
-        $user_id = $request->user_id;
-	if (!is_null(User::find($user_id))){
+        try {
+            $user_id = $request->user_id;
+//        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", User::find);
+
+            if (!is_null(User::find($user_id)->id)) {
 //        if (Auth::check) {
 //            $user = Auth::user();
-	    $user = User::find($user_id);
-            $tags = $user->tags;
-            $opportunities = Opportunity::with(['location', 'opportunity_translations' => function($query){
-                $query->where('locale', 'en');
-            }])->whereHas('tags', function ($query) use ($user) {
-                $query->whereIn('tags.id', $user->tags);
-            })->paginate(15);
+                $user = User::find($user_id);
+//            $tags = $user->tags;
+                $opportunities = Opportunity::with(['location', 'opportunity_translations' => function ($query) {
+                    $query->where('locale', 'en');
+                }])->whereHas('tags', function ($query) use ($user) {
+                    $query->whereIn('tags.id', $user->tags);
+                })->paginate(1);
 
-            foreach ($opportunities as $opportunity) {
-                if (in_array($opportunity->id, $user->saved_opportunities))
-                    $opportunity['saved'] = 1;
-                else
-                    $opportunity['saved'] = 0;
+                foreach ($opportunities as $opportunity) {
+                    if (in_array($opportunity->id, $user->saved_opportunities))
+                        $opportunity['saved'] = 1;
+                    else
+                        $opportunity['saved'] = 0;
+                }
+
+                return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+            } else {
+                return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
             }
-
-            return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
-        } else {
-            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
-        }
-	} catch (Exception $e) {
+        } catch (Exception $e) {
+//    return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
             //abort(404);
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
