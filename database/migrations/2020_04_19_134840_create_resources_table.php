@@ -21,7 +21,7 @@ class CreateResourcesTable extends Migration
             $table->string('thumbnail_url')->nullable();
             $table->integer('duration')->nullable();
             $table->string('title');
-            $table->string('description', 65535);
+            $table->text('description', 65535);
             $table->string('slug');
             $table->unsignedBigInteger('author_id');
             $table->timestamps();
