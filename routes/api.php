@@ -36,6 +36,7 @@ Route::get('opportunity/{slug}',['uses' => 'ApiOpportunityController@get_opp']);
 Route::get('get_location/{location_id}',['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}',['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments',['uses' => 'ApiRecordCommentController@show_comment']);
+Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
 //Protected APIs
 Route::group(['middleware' => 'auth:api'], function(){
@@ -48,7 +49,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('save_comment',['uses' => 'ApiRecordCommentController@save_comment']);
 	Route::post('comment_reply',['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
-	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
+//	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
 
 	Route::get('subscription',['uses'=>'SubscriptionController@subscription']);

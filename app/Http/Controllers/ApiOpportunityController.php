@@ -39,8 +39,12 @@ class ApiOpportunityController extends Controller
 
     public function get_opportunities(Request $request)
     {
-        if (Auth::check) {
-            $user = Auth::user();
+try{
+        $user_id = $request->user_id;
+	if (!is_null(User::find($user_id))){
+//        if (Auth::check) {
+//            $user = Auth::user();
+	    $user = User::find($user_id);
             $tags = $user->tags;
             $opportunities = Opportunity::with(['location', 'opportunity_translations' => function($query){
                 $query->where('locale', 'en');
@@ -58,6 +62,10 @@ class ApiOpportunityController extends Controller
             return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
+        }
+	} catch (Exception $e) {
+            //abort(404);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
 
