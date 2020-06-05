@@ -61,6 +61,11 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 	Route::get('get_user_language',['uses'=>'PreciselyController@get_user_language']);
 	Route::get('get_user_filters',['uses'=>'PreciselyController@get_user_filters']);
+	
+	//AWS API
+	Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
+	Route::post('search_s3_files',['uses'=>'AWSApiController@search_s3_files']);
+	Route::post('store_s3_file',['uses'=>'AWSApiController@store_s3_file']);
 });
 
 /*
@@ -69,8 +74,3 @@ Route::group(['middleware' => 'auth:api'], function(){
 //Public APIs
 Route::get('{provider}/authorize',['uses'=>'ApiAuthController@auth']);
 Route::get('{provider}/login',['uses'=>'ApiAuthController@login']);
-
-//AWS API
-Route::get('list_s3_files',['uses'=>'AWSApiController@list_s3_files']);
-Route::post('search_s3_files',['uses'=>'AWSApiController@search_s3_files']);
-Route::post('store_s3_file',['uses'=>'AWSApiController@store_s3_file']);

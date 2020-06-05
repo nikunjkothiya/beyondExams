@@ -291,6 +291,7 @@ class ApiAuthController extends Controller
 			$flag = 1;
 
 			if ($check_lang) {
+				// If language filled
 				if ($check_detail) {
 					if ($check_tag) {
 						// If Category is filled
