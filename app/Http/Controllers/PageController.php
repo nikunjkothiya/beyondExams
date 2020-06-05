@@ -25,7 +25,7 @@ class PageController extends Controller
     public function __construct(){
         try{
             $this->languages = Language::all();
-            $this->txnflag = new SubscriptionController;
+//            $this->txnflag = new SubscriptionController();
         }
         catch(Exception $e){
 
