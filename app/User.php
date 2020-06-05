@@ -17,7 +17,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'role_id'
+        'name', 'email', 'password', 'role_id', 'unique_id'
     ];
 
     /**
@@ -53,7 +53,6 @@ class User extends Authenticatable
     public function premium_subscription(){
         return $this->hasOne('App\Transaction');
     }
-
     public function plus_subscription(){
         return $this->hasMany('App\PlusTransaction');
     }
@@ -75,5 +74,10 @@ class User extends Authenticatable
         //$owerridedPassword = 'password';
         //return Hash::check($password, $this->password);
         return true;
+    }
+
+    public function findForPassport($username)
+    {
+        return $this->where('unique_id', $username)->first();
     }
 }

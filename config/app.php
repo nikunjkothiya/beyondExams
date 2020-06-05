@@ -1,5 +1,7 @@
 <?php
 
+use SocialiteProviders\Manager\ServiceProvider;
+
 return [
 
     /*
