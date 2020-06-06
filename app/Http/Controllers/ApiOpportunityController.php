@@ -31,6 +31,9 @@ class ApiOpportunityController extends Controller
                 $query->where('locale', 'en');
             }])->where('slug', $slug)->firstOrFail();
 
+            $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
+            $opportunity["next_slug"] = $opportunity_next["slug"];
+
             return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
         } catch (Exception $e) {
             //abort(404);
@@ -50,6 +53,9 @@ class ApiOpportunityController extends Controller
                     }])->where('id', '<', $current_opp_id["id"])->whereHas('tags', function ($query) use ($user) {
                         $query->whereIn('tags.id', $user->tags);
                     })->orderByDesc('id')->first();
+
+                    $opportunity_next = Opportunity::where('id', '<', $opportunity["id"])->select('slug')->orderByDesc('id')->first();
+                    $opportunity["next_slug"] = $opportunity_next["slug"];
 
                     return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
                 }
@@ -76,6 +82,9 @@ class ApiOpportunityController extends Controller
                     }])->where('id', '>', $current_opp_id["id"])->whereHas('tags', function ($query) use ($user) {
                         $query->whereIn('tags.id', $user->tags);
                     })->first();
+
+                    $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
+                    $opportunity["next_slug"] = $opportunity_next["slug"];
 
                     return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
                 }
