@@ -71,6 +71,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 });
 
 Route::get('next_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_next_opportunity']);
+Route::get('previous_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_previous_opportunity']);
 
 //Route::group(['middleware'=>'auth:organisation'], function (){
 Route::post('organisation/post/opportunity', ['uses' => 'OrganisationController@post_opportunity']);
