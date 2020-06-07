@@ -275,6 +275,7 @@ class ApiAuthController extends Controller
 
             $global_user_id = "";
             $email = "";
+            $phoenix_user_id = 1;
 
             $flag = 0;
 //	        Provider instance. To extract user details
@@ -295,6 +296,7 @@ class ApiAuthController extends Controller
             $check_account = UserSocial::where('provider_id', $user->id)->first();
             if ($check_account) {
                 $user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
+                $phoenix_user_id = $user_id;
                 $global_user_id = $user->id;
 
                 $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
@@ -334,6 +336,8 @@ class ApiAuthController extends Controller
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
+
+                    $phoenix_user_id = $new_user->id;
                 } elseif ($provider == 'facebook') {
                     $new_user = new User();
                     $new_user->name = $user->name;
@@ -346,6 +350,7 @@ class ApiAuthController extends Controller
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
+                    $phoenix_user_id = $new_user->id;
                 } else {
                     return $this->apiResponse->sendResponse(500, 'Internal server error 1', null);
                 }
@@ -369,6 +374,7 @@ class ApiAuthController extends Controller
 
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
 	    $data = json_decode($response->getContent(), true)["data"];
+	    $data["phoenix_user_id"] = $phoenix_user_id;
 	    $data["email"] = $email;
 	    $data["legacy_user_id"] = $result;
 	    $data["user_name"] = $user->name;
