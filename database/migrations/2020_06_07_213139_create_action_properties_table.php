@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateActionPropertyTable extends Migration
+class CreateActionPropertiesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateActionPropertyTable extends Migration
      */
     public function up()
     {
-        Schema::create('action_property', function (Blueprint $table) {
+        Schema::create('action_properties', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('act_id');
             $table->string('key');
@@ -21,8 +21,8 @@ class CreateActionPropertyTable extends Migration
             $table->timestamps();
         });
 
-        Schema::table('action_property',function($table) {
-            $table->foreign('act_id')->references('id')->on('action_user');
+        Schema::table('action_properties',function($table) {
+            $table->foreign('act_id')->references('id')->on('action_users');
         });
     }
 
@@ -33,6 +33,6 @@ class CreateActionPropertyTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('action_property');
+        Schema::dropIfExists('action_properties');
     }
 }
