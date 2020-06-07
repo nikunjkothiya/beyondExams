@@ -15,7 +15,7 @@ class CreateActionPropertyTable extends Migration
     {
         Schema::create('action_property', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigIncrements('act_id');
+            $table->unsignedBigInteger('act_id');
             $table->string('key');
             $table->integer('value');
             $table->timestamps();

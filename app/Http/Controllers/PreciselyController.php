@@ -435,7 +435,7 @@ class PreciselyController extends Controller
             $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
             $action_user->save();
 
-            foreach($request->properties->entries as $row) {
+            foreach($request->properties as $row) {
                 foreach($row as $key => $val) {
                     $action_property = new ActionProperty;
                     $action_property->act_id = $action_user->id;
@@ -447,7 +447,8 @@ class PreciselyController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
