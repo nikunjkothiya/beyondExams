@@ -369,6 +369,7 @@ class ApiAuthController extends Controller
 
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
 	    $data = json_decode($response->getContent(), true)["data"];
+	    $data["email"] = $email;
 	    $data["legacy_user_id"] = $result;
 	    $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
