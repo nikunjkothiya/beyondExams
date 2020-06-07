@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Action;
+use App\ActionProperty;
+use App\ActionUser;
 use App\Country;
 use App\Discipline;
 use App\Language;
@@ -53,12 +56,12 @@ class PreciselyController extends Controller
         }
     }
 
-    public function submit_profile(Request $request) 
+    public function submit_profile(Request $request)
     {
         try {
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                $user_id=$user->id;
+                $user_id = $user->id;
                 $validator = Validator::make($request->all(), [
                     'firstname' => 'required|string|max:255',
                     'lastname' => 'required|string|max:255',
@@ -76,7 +79,7 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-            //$user_id = $request->user_id;
+                //$user_id = $request->user_id;
 
                 $check = UserDetail::where('user_id', $user_id)->first();
 
@@ -115,41 +118,42 @@ class PreciselyController extends Controller
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
-                }}
+                }
+            }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
         }
     }
 
 //    TODO: CORRECT RETURN TYPE
-    public function get_profile(Request $request){
+    public function get_profile(Request $request)
+    {
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
-            try{
-                $pcheck = UserDetail::where('user_id',$user->id)->first();
-            }
-            catch(Exception $e){
+            try {
+                $pcheck = UserDetail::where('user_id', $user->id)->first();
+            } catch (Exception $e) {
                 return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
             }
 
-            if($pcheck){
+            if ($pcheck) {
                 $countries = Country::all();
                 $disciplines = Discipline::all();
                 $qualifications = Qualification::all();
                 $data['user_details'] = $pcheck;
-                $avatar = DB::table('users')->select('avatar')->where('id',$user->id)->get();
-                foreach($avatar as $ava){
+                $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
+                foreach ($avatar as $ava) {
                     $data['avatar'] = $ava->avatar;
-                    break;    
+                    break;
                 }
                 #$data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
             }
+        } else {
+            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
         }
-        else{
-        return $this->apiResponse->sendResponse(500, 'Users not logged in', null);}         
-            
+
     }
 
     public function save_opportunity(Request $request)
@@ -162,36 +166,33 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-            
+
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                try{
+                try {
                     $opp_id = $request->id;
-                    $user = User::where('id',$user->id)->first();
+                    $user = User::where('id', $user->id)->first();
                     $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
-                    if($check==null){
+                    if ($check == null) {
                         DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
-                    }
-                    else{
+                    } else {
                         $flag = 0;
-                        foreach($check as $c)
-                        {
-                            if($c->opportunity_id == $opp_id){
+                        foreach ($check as $c) {
+                            if ($c->opportunity_id == $opp_id) {
                                 $flag = 1;
                                 break;
                             }
                         }
-                        if($flag==0){
+                        if ($flag == 0) {
                             DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
                         }
                     }
-                    
-                }
-                catch(Exception $e){
+
+                } catch (Exception $e) {
                     return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
                 }
 
-            }else{
+            } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
@@ -220,34 +221,31 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-            
+
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-                try{
+                try {
                     $opp_id = $request->id;
-                    $user = User::where('id',$user->id)->first();
+                    $user = User::where('id', $user->id)->first();
                     $check = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
-                    if($check==null){
+                    if ($check == null) {
                         return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
-                    }
-                    else{
-                        foreach($check as $c)
-                        {
-                            if($c->opportunity_id == $opp_id){
-                                DB::table('opportunity_user')->where([['user_id', $user->id],['opportunity_id',$opp_id]])->delete();
+                    } else {
+                        foreach ($check as $c) {
+                            if ($c->opportunity_id == $opp_id) {
+                                DB::table('opportunity_user')->where([['user_id', $user->id], ['opportunity_id', $opp_id]])->delete();
                                 return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
                                 break;
 
                             }
                         }
                     }
-                    
-                }
-                catch(Exception $e){
+
+                } catch (Exception $e) {
                     return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
                 }
 
-            }else{
+            } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
@@ -260,139 +258,197 @@ class PreciselyController extends Controller
         return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
     }
 
-    public function show_saved_opportunity(){
-        if (Auth::check()){
+    public function show_saved_opportunity()
+    {
+        if (Auth::check()) {
             $user = User::find(Auth::user()->id);
             $opp_ids = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
             $opp_slug = [];
-            foreach($opp_ids as $opp_id){
-                $opp_slug[] = array('title'=> DB::table('opportunity_translations')->select('title')->where([['opportunity_id', $opp_id->opportunity_id],['locale', 'en']])->first(),'desc'=>DB::table('opportunities')->select('*')->where('id', $opp_id->opportunity_id)->get());
+            foreach ($opp_ids as $opp_id) {
+                $opp_slug[] = array('title' => DB::table('opportunity_translations')->select('title')->where([['opportunity_id', $opp_id->opportunity_id], ['locale', 'en']])->first(), 'desc' => DB::table('opportunities')->select('*')->where('id', $opp_id->opportunity_id)->get());
             }
             return $this->apiResponse->sendResponse(200, 'Success', $opp_slug);
-        }else{
+        } else {
             return $this->apiResponse->sendResponse(500, 'Unauthorized', null);
         }
     }
 
-    public function save_user_language(Request $request) {
+    public function save_user_language(Request $request)
+    {
 
-            $validator = Validator::make($request->all(), [
-                'id' => 'required|exists:languages',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:languages',
+        ]);
 
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+
+        if (Auth::check()) {
+            $user = User::find(Auth::user()->id);
+
+            try {
+                $pcheck = UserDetail::where('user_id', $user->id)->first();
+            } catch (Exception $e) {
+                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
             }
 
+            if (!$pcheck) {
+                $record = new UserDetail;
+                $record->user_id = $user->id;
+                $record->language_id = $request->id;
+                $record->save();
+                return $this->apiResponse->sendResponse(200, 'Success', null);
+            } else {
+                $pcheck->language_id = $request->id;
+                $pcheck->save();
+                return $this->apiResponse->sendResponse(200, 'Success', null);
+            }
+        } else {
+            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
+        }
+    }
 
+    public function save_user_filters(Request $request)
+    {
+        try {
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
-
-                try{
-                    $pcheck = UserDetail::where('user_id',$user->id)->first();
-                }
-                catch(Exception $e){
-                    return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-                }
-    
-                if(!$pcheck){
-                    $record = new UserDetail;
-                    $record->user_id = $user->id;
-                    $record->language_id = $request->id;
-                    $record->save();
-                    return $this->apiResponse->sendResponse(200, 'Success', null);
-                }
-                else{
-                    $pcheck->language_id = $request->id;
-                    $pcheck->save();
-                    return $this->apiResponse->sendResponse(200, 'Success', null);
-                }
+            } else {
+                return $this->apiResponse->sendResponse(500, 'Un Authorized', null);
             }
-            else{
-            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);}
-    }
- 
-    public function save_user_filters(Request $request){
-        try{
-            if (Auth::check()) {
-            $user = User::find(Auth::user()->id);}
-            else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
-            
+
             $user = User::where('id', $user->id)->first();
             $tags = $request->tags;
 //            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $tags);
-            if(empty($tags)){
+            if (empty($tags)) {
                 return $this->apiResponse->sendResponse(400, 'Select at least one filter', null);
             }
 
             // Read $tags as json
             $user->tags()->sync(json_decode($tags));
             return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
 
-    public function get_all_countries(Request $request){
+    public function get_all_countries(Request $request)
+    {
         $countries = Country::all();
         return $this->apiResponse->sendResponse(200, 'All countries fetched.', $countries);
     }
 
-    public function get_location($location_id){
-        try{
-        $country = DB::table('opportunity_locations')->select('location')->where('id',$location_id)->get();
-        return $this->apiResponse->sendResponse(200, 'Success', $country);
-        }
-        catch(Exception $e){
+    public function get_location($location_id)
+    {
+        try {
+            $country = DB::table('opportunity_locations')->select('location')->where('id', $location_id)->get();
+            return $this->apiResponse->sendResponse(200, 'Success', $country);
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
 
-    public function get_funding_status($id){
-        try{
-        $fund_status = DB::table('fund_types')->select('type')->where('id',$id)->get();
-        return $this->apiResponse->sendResponse(200, 'Success', $fund_status);
-        }
-        catch(Exception $e){
+    public function get_funding_status($id)
+    {
+        try {
+            $fund_status = DB::table('fund_types')->select('type')->where('id', $id)->get();
+            return $this->apiResponse->sendResponse(200, 'Success', $fund_status);
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
     }
 
-    public function get_user_language(){
-        try{
-        if (Auth::check()) {
-            $user = User::find(Auth::user()->id);}
-            else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
-            
-            $lang = DB::table('user_details')->select('language_id')->where('user_id',$user->id)->get();
-            return $this->apiResponse->sendResponse(200, 'Success', $lang);
-        }
-        catch(Exception $e){
-            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
-        }
-    }
-
-    public function get_user_filters(){
-        try{
+    public function get_user_language()
+    {
+        try {
             if (Auth::check()) {
-                $user = User::find(Auth::user()->id);}
-                else{return $this->apiResponse->sendResponse(500, 'Un Authorized', null);}
-                
-                $tags_json = DB::table('tag_user')->select('tag_id')->where('user_id',$user->id)->get();
-                $tags = [];
-                foreach($tags_json as $tag){
-                    $tags[] = $tag;
-                }
-                $tags_processed = [];
-                foreach($tags as $tag){
-                    $tags_processed[] = $tag->tag_id;
-                }
+                $user = User::find(Auth::user()->id);
+            } else {
+                return $this->apiResponse->sendResponse(500, 'Un Authorized', null);
+            }
 
-                return $this->apiResponse->sendResponse(200, 'Success', $tags_processed);
+            $lang = DB::table('user_details')->select('language_id')->where('user_id', $user->id)->get();
+            return $this->apiResponse->sendResponse(200, 'Success', $lang);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
+    }
+
+    public function get_user_filters()
+    {
+        try {
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
             }
-            catch(Exception $e){
-                return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+
+            $tags_json = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->get();
+            $tags = [];
+            foreach ($tags_json as $tag) {
+                $tags[] = $tag;
             }
+            $tags_processed = [];
+            foreach ($tags as $tag) {
+                $tags_processed[] = $tag->tag_id;
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Success', $tags_processed);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
+    }
+
+    public function save_user_action(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user_id = Auth::user()->id;
+                $action_user = new ActionUser;
+                $action_user->user_id = $user_id;
+                $action_user->action_id = $request->action_id;
+                $action_user->duration = $request->duration;
+                $action_user->save();
+                return $this->apiResponse->sendResponse(200, 'Success', null);
+            } else if (isset($request->user_id)){
+                $action_user = new ActionUser;
+                $action_user->user_id = $request->user_id;
+                $action_user->action_id = $request->action_id;
+                $action_user->duration = $request->duration;
+                $action_user->save();
+                return $this->apiResponse->sendResponse(200, 'Success', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
+    }
+
+    public function segment_analytics(Request $request){
+        try {
+            $action_user = new ActionUser;
+
+            $action_user->user_id = $request->userId;
+            $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
+            $action_user->save();
+
+            foreach($request->properties->entries as $row) {
+                foreach($row as $key => $val) {
+                    $action_property = new ActionProperty;
+                    $action_property->act_id = $action_user->id;
+                    $action_property->key = $key;
+                    $action_property->value = $val;
+                    $action_property->save();
+                }
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
+
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+        }
     }
 }

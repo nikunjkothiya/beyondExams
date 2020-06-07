@@ -80,4 +80,8 @@ class User extends Authenticatable
     {
         return $this->where('unique_id', $username)->first();
     }
+
+    public function actions(){
+        return $this->hasMany('App\ActionUser');
+    }
 }

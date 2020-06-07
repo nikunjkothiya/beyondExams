@@ -92,3 +92,5 @@ Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
 Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
 Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
+
+Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analytics']);
