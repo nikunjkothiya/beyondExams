@@ -8,6 +8,7 @@ use App\ActionUser;
 use App\Country;
 use App\Discipline;
 use App\Language;
+use App\Opportunity;
 use App\Qualification;
 use App\Tag;
 use App\User;
@@ -429,19 +430,61 @@ class PreciselyController extends Controller
 
     public function segment_analytics(Request $request){
         try {
-            $action_user = new ActionUser;
 
-            $action_user->user_id = $request->userId;
-            $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
-            $action_user->save();
+            $view_action = strcmp($request->event, "Views");
+
+
+            if ($view_action != 0) {
+                $action_user = new ActionUser;
+
+                $action_user->user_id = $request->userId;
+                $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
+                $action_user->save();
+            }
+
+            $opp_id = -1;
+            $duration = 0;
 
             foreach($request->properties as $key=>$val) {
+                if ($view_action == 0) {
+
+                    if (strcmp($key, "duration") == 0) {
+                        $duration = $val;
+                    } else if (strcmp($key, "opp_id") ==0) {
+                        $opp_id = $val;
+                    }
+                } else {
                     $action_property = new ActionProperty;
                     $action_property->act_id = $action_user->id;
                     $action_property->key = $key;
                     $action_property->value = $val;
                     $action_property->save();
+                }
             }
+
+            if ($view_action == 0) {
+                if ($duration > 5000) {
+                    $action_user = new ActionUser;
+
+                    $action_user->user_id = $request->userId;
+                    $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
+                    $action_user->save();
+
+                    $action_property = new ActionProperty;
+                    $action_property->act_id = $action_user->id;
+                    $action_property->key = $key;
+                    $action_property->value = $val;
+                    $action_property->save();
+                }
+                $opportunity = Opportunity::find($opp_id);
+                if ($opportunity->views()->exists())
+                    $opportunity->views()->increment('views');
+                else
+                    $opportunity->views()->create([0]);
+                $opportunity->save();
+            }
+
+
 
             return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
 
