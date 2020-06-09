@@ -46,6 +46,10 @@ class Opportunity extends Model implements TranslatableContract
     }
 
     public function views(){
-        return $this->hasOne('App\OpportunityView');
+        return $this->hasMany('App\OpportunityView');
+    }
+
+    public function analytics(){
+        return $this->hasMany('App\Analytics');
     }
 }

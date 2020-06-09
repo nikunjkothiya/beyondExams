@@ -94,3 +94,5 @@ Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbna
 Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 
 Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analytics']);
+
+Route::get('analytics', ['uses' => 'OrganisationController@analytics']);

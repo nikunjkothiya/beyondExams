@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateActionUsersTable extends Migration
+class CreateAnalyticsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,18 +13,21 @@ class CreateActionUsersTable extends Migration
      */
     public function up()
     {
-        Schema::create('action_users', function (Blueprint $table) {
+        Schema::create('analytics', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_id');
+            $table->string('key')->nullable();
+            $table->integer('value')->nullable();
             $table->unsignedBigInteger('action_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('opportunity_id')->nullable();
             $table->timestamps();
         });
 
-        Schema::table('action_users',function($table) {
-            $table->foreign('user_id')->references('id')->on('users');
+        Schema::table('analytics',function($table){
             $table->foreign('action_id')->references('id')->on('actions');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('opportunity_id')->references('id')->on('opportunities');
         });
-
     }
 
     /**
@@ -34,6 +37,6 @@ class CreateActionUsersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('action_user');
+        Schema::dropIfExists('analytics');
     }
 }

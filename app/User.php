@@ -66,7 +66,7 @@ class User extends Authenticatable
     }
 
     public function opportunities(){
-
+        return $this->belongsToMany('App\Opportunity');
     }
 
     public function validateForPassportPasswordGrant($password)
@@ -81,7 +81,7 @@ class User extends Authenticatable
         return $this->where('unique_id', $username)->first();
     }
 
-    public function actions(){
-        return $this->hasMany('App\ActionUser');
+    public function analytics(){
+        return $this->hasMany('App\Analytics');
     }
 }

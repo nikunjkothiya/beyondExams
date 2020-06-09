@@ -4,9 +4,9 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ActionUser extends Model
+class Analytics extends Model
 {
-    protected $fillable = ['user_id', 'action_id'];
+    protected $fillable = ['key', 'value'];
 
     public function action(){
         return $this->belongsTo('App\Action');
@@ -16,7 +16,7 @@ class ActionUser extends Model
         return $this->belongsTo('App\User');
     }
 
-    public function properties(){
-        return $this->hasMany('App\ActionProperty');
+    public function opportunity(){
+        return $this->belongsTo('App\Opportunity');
     }
 }

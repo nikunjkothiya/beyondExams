@@ -8,7 +8,7 @@ class Action extends Model
 {
     protected $fillable = ['event'];
 
-    public function action_user(){
-        return $this->hasMany('App\ActionUser');
+    public function analytics(){
+        return $this->hasMany('App\Analytics');
     }
 }

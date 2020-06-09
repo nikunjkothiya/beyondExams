@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Action;
 use App\ActionProperty;
 use App\ActionUser;
+use App\ActionUserOpportunity;
+use App\Analytics;
 use App\Country;
 use App\Discipline;
 use App\Language;
@@ -13,6 +15,7 @@ use App\Qualification;
 use App\Tag;
 use App\User;
 use App\UserDetail;
+use Carbon\Carbon;
 use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -402,95 +405,68 @@ class PreciselyController extends Controller
         }
     }
 
-    public function save_user_action(Request $request)
+    public function segment_analytics(Request $request)
     {
         try {
-            if (Auth::check()) {
-                $user_id = Auth::user()->id;
-                $action_user = new ActionUser;
-                $action_user->user_id = $user_id;
-                $action_user->action_id = $request->action_id;
-                $action_user->duration = $request->duration;
-                $action_user->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
-            } else if (isset($request->user_id)){
-                $action_user = new ActionUser;
-                $action_user->user_id = $request->user_id;
-                $action_user->action_id = $request->action_id;
-                $action_user->duration = $request->duration;
-                $action_user->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
-            }
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
-        }
-    }
+//            Create new Analytics, connect it to user, connect it to opportunity
+            $user = User::find($request->userId);
+            $is_view_action = strcmp($request->event, "Views");
 
-    public function segment_analytics(Request $request){
-        try {
-
-            $view_action = strcmp($request->event, "Views");
-
-
-            if ($view_action != 0) {
-                $action_user = new ActionUser;
-
-                $action_user->user_id = $request->userId;
-                $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
-                $action_user->save();
+            $opportunity = null;
+            if (array_key_exists("opp_id", $request->properties)) {
+                $opportunity = Opportunity::find($request->properties["opp_id"]);
             }
 
-            $opp_id = -1;
-            $duration = 0;
+            $action = Action::where('event', $request->event)->first();
 
-            foreach($request->properties as $key=>$val) {
-                if ($view_action == 0) {
-
-                    if (strcmp($key, "duration") == 0) {
-                        $duration = $val;
-                    } else if (strcmp($key, "opp_id") ==0) {
-                        $opp_id = $val;
-                    }
-                } else {
-                    $action_property = new ActionProperty;
-                    $action_property->act_id = $action_user->id;
-                    $action_property->key = $key;
-                    $action_property->value = $val;
-                    $action_property->save();
-                }
-            }
-
-            if ($view_action == 0) {
-                if ($duration > 5000) {
-                    $action_user = new ActionUser;
-
-                    $action_user->user_id = $request->userId;
-                    $action_user->action_id = Action::where('event', $request->event)->pluck('id')[0];
-                    $action_user->save();
-
-                    $action_property = new ActionProperty;
-                    $action_property->act_id = $action_user->id;
-                    $action_property->key = $key;
-                    $action_property->value = $val;
-                    $action_property->save();
-                }
-                $opportunity = Opportunity::find($opp_id);
-                if ($opportunity->views()->exists())
-                    $opportunity->views()->increment('views');
+            if ($is_view_action == 0) {
+                if ($opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->exists())
+                    $opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->increment('views');
                 else
-                    $opportunity->views()->create([0]);
+                    $opportunity->views()->create([1]);
                 $opportunity->save();
+
+                if ($request->properties["duration"] > 5000) {
+                    $analytics = new Analytics;
+                    $analytics->key = "duration";
+                    $analytics->value = $request->properties["duration"];
+                    $analytics->action()->associate($action);
+                    $analytics->user()->associate($user);
+                    $analytics->opportunity()->associate($opportunity);
+
+                    $analytics->save();
+                }
+            } else {
+
+                foreach ($request->properties as $key => $val) {
+                    if (strcmp($key, "opp_id") == 0) {
+                        if (count($request->properties) == 1) {
+                            $analytics = new Analytics;
+                            $analytics->action()->associate($action);
+                            $analytics->user()->associate($user);
+                            if (!is_null($opportunity))
+                                $analytics->opportunity()->associate($opportunity);
+
+                            $analytics->save();
+                        }
+                        continue;
+                    }
+
+                    $analytics = new Analytics;
+                    $analytics->key = $key;
+                    $analytics->value = $val;
+                    $analytics->action()->associate($action);
+                    $analytics->user()->associate($user);
+                    if (!is_null($opportunity))
+                        $analytics->opportunity()->associate($opportunity);
+
+                    $analytics->save();
+                }
             }
-
-
-
             return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
-
         } catch (\Exception $e) {
 
-            return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 }
