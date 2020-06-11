@@ -44,4 +44,12 @@ class Opportunity extends Model implements TranslatableContract
     public function eligible_regions(){
     	return $this->belongsToMany('App\EligibleRegion', 'eligible_region_opportunity', 'opportunity_id', 'eligible_region_id');
     }
+
+    public function views(){
+        return $this->hasMany('App\OpportunityView');
+    }
+
+    public function analytics(){
+        return $this->hasMany('App\Analytics');
+    }
 }
