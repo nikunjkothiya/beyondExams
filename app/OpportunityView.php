@@ -4,10 +4,9 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class OpportunityTranslations extends Model
+class OpportunityView extends Model
 {
-    public $timestamps = false;
-    protected $fillable = ['title', 'description'];
+    protected $fillable = ['views'];
 
     public function opportunity(){
         return $this->belongsTo('App\Opportunity');

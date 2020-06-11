@@ -2,23 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Auth;
-use GuzzleHttp\Exception\BadResponseException;
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\ApiResponse;
-use Laravel\Socialite\Two\GoogleProvider;
-use Validator;
-use App\User;
-use App\UserSocial;
-use App\UserDetail;
-use GuzzleHttp\Client;
-use Illuminate\Foundation\Application;
-use Carbon\Carbon;
-use DB;
+use App\Organisation;
+use App\OrganisationDetail;
 
-class ApiAuthController extends Controller
+use App\OrganisationSocial;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
+
+class ApiAuthOrganisationController extends Controller
 {
     private $msg;
     private $apiResponse;
@@ -40,8 +35,8 @@ class ApiAuthController extends Controller
     {
         try {
             $response = 1;
-            $user_id = $request->user()->id;
-            $accessTokens = $this->token($user_id);
+            $organisation_id = $request->user()->id;
+            $accessTokens = $this->token($organisation_id);
             foreach ($accessTokens as $accessToken) {
                 $response = $response * $this->proxyLogout($accessToken->id);
             }
@@ -55,12 +50,12 @@ class ApiAuthController extends Controller
         }
     }
 
-    public function token($user_id)
+    public function token($organisation_id)
     {
         try {
             $token = $this->db
                 ->table('oauth_access_tokens')
-                ->where('user_id', $user_id)
+                ->where('user_id', $organisation_id)
                 ->where('revoked', 0)
                 ->get(['id']);
             return $token;
@@ -120,44 +115,19 @@ class ApiAuthController extends Controller
                 return $this->apiResponse->sendResponse(400, $validator->errors(), null);
             }
 
-            if (!User::where('unique_id', $request->unique_id)->first()) {
+            if (!Organisation::where('unique_id', $request->unique_id)->first()) {
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
             }
 
-            $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
-            $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
-            if ($check_lang) {
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
-            } else {
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
-            }
-
-            $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+            $organisation_id = Organisation::select('id')->where('unique_id', $request->unique_id)->first()->id;
+            $check_detail = OrganisationDetail::select('email')->where('organisation_id', $organisation_id)->first()->email;
 
             $flag = 1;
-            if ($check_lang) {
-				if ($check_detail) {
-					if ($check_tag) {
-						// If Category is filled
-						$flag = 0;
-					} else {
-						// If Category is not filled
-						$flag = 3;
-					}
-				} else {
-					if ($check_tag) {
-						// Details fill but Profile is Not Filled
-						$flag = 4;
-					} else {
-						// Details & Profile both Not Filled
-						$flag = 2;
-					}
-				}
-			} else {
-				// No Language Selected
-				$flag = 1;
-			}
-
+            if ($check_detail) {
+                $flag = 0;
+            } else {
+                $flag = 2;
+            }
             $refreshToken = $request->get('refresh_token');
             $unique_id = $request->get('unique_id');
             $response = $this->proxyRefresh($refreshToken, $unique_id, $flag);
@@ -202,14 +172,12 @@ class ApiAuthController extends Controller
             ];
             return $this->apiResponse->sendResponse(200, 'Login Successful', $token_data);
         } catch (BadResponseException $e) {
-            $response = json_decode($e->getResponse()->getBody());
             $data = [
                 'access_token' => '',
                 'expires_in' => '',
                 'refresh_token' => '',
             ];
 
-            dd($e);
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal Server Error 2', $e->getMessage());
         }
     }
@@ -227,6 +195,7 @@ class ApiAuthController extends Controller
         } elseif ($provider == 'facebook') {
             return Socialite::driver($provider)->redirectUrl(env('FACEBOOK_REDIRECT'))->stateless()->redirect();
         } else {
+            return null;
             //
         }
     }
@@ -282,9 +251,8 @@ class ApiAuthController extends Controller
                 return $this->apiResponse->sendResponse(400,'Parameters missing.',$validator->errors());
             }
 
-            $global_user_id = "";
+            $global_organisation_id = "";
             $email = "";
-            $phoenix_user_id = 1;
 
             $flag = 0;
 //	        Provider instance. To extract user details
@@ -299,103 +267,66 @@ class ApiAuthController extends Controller
             } else if ($provider == 'facebook') {
                 $provider_obj = Socialite::driver($provider);
             }
-            $user = $provider_obj->userFromToken($request->access_token);
-            $email = $user->email;
+            $organisation = $provider_obj->userFromToken($request->access_token);
+            $email = $organisation->email;
 //    		Check account in own database
-            $check_account = UserSocial::where('provider_id', $user->id)->first();
+            $check_account = OrganisationSocial::where('provider_id', $organisation->id)->first();
             if ($check_account) {
-                $user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
-                $phoenix_user_id = $user_id;
-                $global_user_id = $user->id;
+                $organisation_id = OrganisationSocial::where('provider_id', $organisation->id)->select('organisation_id')->first()->organisation_id;
+                $global_organisation_id = $organisation->id;
 
-                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+                $check_lang = OrganisationDetail::select('language_id')->where('organisation_id', $organisation_id)->first();
                 if ($check_lang) {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                    $check_detail = OrganisationDetail::select('email')->where('organisation_id', $organisation_id)->first()->email;
                 } else {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                    $check_detail = OrganisationDetail::select('email')->where('organisation_id', $organisation_id)->first();
                 }
 
-                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
 
-                if ($check_lang) {
-					if ($check_detail) {
-						if ($check_tag) {
-							// If Category is filled
-							$flag = 0;
-						} else {
-							// If Category is not filled
-							$flag = 3;
-						}
-					} else {
-						if ($check_tag) {
-							// Details fill but Profile is Not Filled
-							$flag = 4;
-						} else {
-							// Details & Profile both Not Filled
-							$flag = 2;
-						}
-					}
-				} else {
-					// No Language Selected
-					$flag = 1;
-				}
+                if ($check_detail) {
+                    $flag = 0;
+                } else {
+                    $flag = 2;
+                }
+
 
             } else {
 
                 if ($provider == 'google') {
                     $flag = 1;
-                    $new_user = new User();
-                    $new_user->name = $user->name;
-                    $new_user->email = $user->email;
-                    $new_user->unique_id = $user->id;
-                    $new_user->avatar = $user->avatar;
-                    $new_user->save();
+                    $new_organisation = new Organisation();
+                    $new_organisation->name = $organisation->name;
+                    $new_organisation->email = $organisation->email;
+                    $new_organisation->unique_id = $organisation->id;
+                    $new_organisation->avatar = $organisation->avatar;
+                    $new_organisation->save();
 
-                    $new_user->social_accounts()->create(
-                        ['provider_id' => $user->id, 'provider' => $provider]
+                    $new_organisation->social_accounts()->create(
+                        ['provider_id' => $organisation->id, 'provider' => $provider]
                     );
-
-                    $phoenix_user_id = $new_user->id;
                 } elseif ($provider == 'facebook') {
-                    $new_user = new User();
-                    $new_user->name = $user->name;
-                    $new_user->unique_id = $user->id;
+                    $new_organisation = new Organisation();
+                    $new_organisation->name = $organisation->name;
+                    $new_organisation->unique_id = $organisation->id;
 
-                    if (isset($user->email))
-                        $new_user->email = $user->email;
-                    $new_user->avatar = $user->avatar;
-                    $new_user->save();
-                    $new_user->social_accounts()->create(
-                        ['provider_id' => $user->id, 'provider' => $provider]
+                    if (isset($organisation->email))
+                        $new_organisation->email = $organisation->email;
+                    $new_organisation->avatar = $organisation->avatar;
+                    $new_organisation->save();
+                    $new_organisation->social_accounts()->create(
+                        ['provider_id' => $organisation->id, 'provider' => $provider]
                     );
-                    $phoenix_user_id = $new_user->id;
                 } else {
                     return $this->apiResponse->sendResponse(500, 'Internal server error 1', null);
                 }
 
-                $global_user_id = $user->id;
-                $email = $user->email;
+                $global_organisation_id = $organisation->id;
+                $email = $organisation->email;
             }
 
-            $phoenix_user = User::where('unique_id', $global_user_id)->first();
-            $client = new Client();
-            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
-                'form_params' => [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'source'=>$provider
-                ]
-            ]);
+            $response = $this->proxyLogin($global_organisation_id, 'password', $flag);
+            $data = json_decode($response->getContent(), true)["data"];
 
-            $result = $res->getBody()->getContents();
-            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id'=>$phoenix_user->id, 'legacy_user_id'=>$result));
-
-            $response = $this->proxyLogin($global_user_id, 'password', $flag);
-	    $data = json_decode($response->getContent(), true)["data"];
-	    $data["phoenix_user_id"] = $phoenix_user_id;
-	    $data["email"] = $email;
-	    $data["legacy_user_id"] = $result;
-	    $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
         } catch (BadResponseException $e) {
@@ -405,11 +336,11 @@ class ApiAuthController extends Controller
 
     public function proxyLogin($unique_id, $password, $flag)
     {
-        $user = User::where('unique_id', $unique_id)->first();
+        $organisation = Organisation::where('unique_id', $unique_id)->first();
 
 //    	dd([$unique_id, $user]);
 
-        if (!is_null($user)) {
+        if (!is_null($organisation)) {
             return $this->proxy('password', $flag, [
                 'username' => $unique_id,
                 'password' => $password,

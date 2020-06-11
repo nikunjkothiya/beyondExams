@@ -21,12 +21,12 @@ class SubscriptionController extends Controller
     protected $hashSequence = "key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5|udf6|udf7|udf8|udf9|udf10";
     protected $data = array();
 
-    public function __construct(ApiResponse $apiResponse){
+    public function __construct(ApiResponse $apo){
         try{
             $this->languages = Language::all();
             $this->key = env('PAYU_MERCHANT_KEY');
             $this->salt = env('PAYU_MERCHANT_SALT');
-            $this->apiResponse=$apiResponse;
+            $this->apiResponse=$apo;
             if(env('APP_DEBUG') == 'true'){
                 $this->url = env('PAYU_TEST_URL');
             }
