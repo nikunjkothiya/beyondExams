@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\ActionUser;
+use App\Analytics;
 use App\EligibleRegion;
 use App\FundType;
 use App\Opportunity;
@@ -88,22 +90,63 @@ class OrganisationController extends Controller
                 ];
                 DB::table('opportunity_organisation')->insert(['opportunity_id' => $r->id, 'organisation_id' => $check->id]);
 
-//                $r->organisation()->associate($check->id);
-//                $r->save();
-//                $r->organisation()->attach($check->id);
-
-//                $check->opportunities()->detach($r->id);
-//                $check->opportunities()->attach($r->id);
-
-
                 return $this->apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
 
             } else {
                 return $this->apiResponse->sendResponse(500, 'User unauthenticated', null);
             }
 
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
+    }
+
+    /*
+Total Views [int]
+Total time spent [int][in seconds]
+    SUM(rows with key = duration & Organization opp)
+Total Shares[int]
+    SUM(rows with action_id = Share & Organization opp)
+Total official link clicks [int]
+    SUM(rows with action_id = official link & Organization opp)
+Relevant not relevant [int : relevant]
+    SUM(rows with action_id = Share & Organization opp)
+
+Opportunity views on between two dates [array of ints]
+    OpportunityView::where('create_at', >
+Past log [15, paginated, events with timestamp, name of user]
+    Analytics::where(opp in org)->paginate(15)
+User country views [percentage, top 5]
+Official link clicks per day
+Read more clicks per day
+
+Forum [list of questions]
+
+Trending opportunities
+     */
+
+    public function analytics(Request $request){
+        $total_views = DB::table('opportunity_views')->where('opportunity_id', $request->opp_id)->sum('views');
+        $total_shares = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('action_id', '=', 2)->count();
+        $total_time_spent = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('key', "duration")->sum('value');
+        $total_official_link = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('action_id', 3)->count();
+        $relevant = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('action_id', 6)->select('value', DB::raw('count(*) as total'))->groupBy('value')->get();
+        $total_views_bw_dates = DB::table('opportunity_views')->where('opportunity_id', $request->opp_id)->select('created_at', DB::raw('SUM(views) as total'))->groupBy('created_at')->get();
+        $last_few = Analytics::with('action')->where('opportunity_id', $request->opp_id)->paginate(15);
+
+        $data = ["total_time_spent"=> $total_time_spent, "total_share"=>$total_shares, "total_official_link"=>$total_official_link];
+        $data["relevant"] = $relevant;
+        $data["total_views"] = $total_views;
+        $data["total_views_bw_dates"] = $total_views_bw_dates;
+        $data["last_few"] = $last_few;
+
+        return $this->apiResponse->sendResponse(200, 'Analytics generated', $data);
+
+
+        $opportunity = Opportunity::with(['actions', 'views', 'organisation' => function ($query) use ($request) {
+            $query->where('id', $request->organisation_id);
+        }])->get();
+
+        return $this->apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $opportunity);
     }
 }

@@ -27,32 +27,92 @@ class ApiOpportunityController extends Controller
     public function get_opp($slug)
     {
         try {
-            $opportunity = Opportunity::where('slug', $slug)->firstOrFail();
-            $data = array('opportunity' => $opportunity, 'languages' => $this->languages);
-            return $this->apiResponse->sendResponse(200, 'Success', $data);
+            $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            }])->where('slug', $slug)->firstOrFail();
+
+            $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
+            $opportunity["next_slug"] = $opportunity_next["slug"];
+
+            return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
         } catch (Exception $e) {
             //abort(404);
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
+    }
 
+    public function get_previous_opportunity(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+                $current_opp_id = Opportunity::select('id')->where('slug', $request->slug)->first();
+                if (!is_null($current_opp_id)) {
+                    $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) use ($current_opp_id, $request) {
+                        $query->where('locale', 'en');
+                    }])->where('id', '<', $current_opp_id["id"])->whereHas('tags', function ($query) use ($user) {
+                        $query->whereIn('tags.id', $user->tags);
+                    })->orderByDesc('id')->first();
+
+                    $opportunity_next = Opportunity::where('id', '<', $opportunity["id"])->select('slug')->orderByDesc('id')->first();
+                    $opportunity["next_slug"] = $opportunity_next["slug"];
+
+                    return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
+                }
+
+                return $this->apiResponse->sendResponse(200, 'No past opportunities available', null);
+            }
+
+            return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTrace());
+        }
+    }
+
+    public function get_next_opportunity(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+//            $user = User::find($request->user_id)->get();
+                $current_opp_id = Opportunity::select('id')->where('slug', $request->slug)->first();
+                if (!is_null($current_opp_id)) {
+                    $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) use ($current_opp_id, $request) {
+                        $query->where('locale', 'en');
+                    }])->where('id', '>', $current_opp_id["id"])->whereHas('tags', function ($query) use ($user) {
+                        $query->whereIn('tags.id', $user->tags);
+                    })->first();
+
+                    $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
+                    $opportunity["next_slug"] = $opportunity_next["slug"];
+
+                    return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
+                }
+
+                return $this->apiResponse->sendResponse(200, 'No new opportunities available', null);
+            }
+
+            return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTrace());
+        }
     }
 
     public function get_opportunities(Request $request)
     {
         try {
-            $user_id = $request->user_id;
-//        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", User::find($user_id)->id);
+//            $user_id = $request->user_id;
 
-            if (!is_null(User::find($user_id)->id)) {
-//        if (Auth::check) {
-//            $user = Auth::user();
-                $user = User::find($user_id);
+//            if (!is_null(User::find($user_id)->id)) {
+            if (Auth::check()) {
+                $user = Auth::user();
+//                $user = User::find($user_id);
 //            $tags = $user->tags;
-                $opportunities = Opportunity::with(['location', 'opportunity_translations' => function ($query) {
+                $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                     $query->where('locale', 'en');
                 }])->whereHas('tags', function ($query) use ($user) {
                     $query->whereIn('tags.id', $user->tags);
-                })->paginate(1);
+                })->paginate(2);
 
                 if (count($user->saved_opportunities) > 0) {
                     foreach ($opportunities as $opportunity) {
