@@ -69,9 +69,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 //	Route::get('get')
 
 	//AWS API
-	Route::get('list_s3_files', ['uses' => 'AWSApiController@list_s3_files']);
-	Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
-	Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
+	//Route::get('list_s3_files', ['uses' => 'AWSApiController@list_s3_files']);
+	//Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
+	//Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 });
 
 Route::get('next_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_next_opportunity']);

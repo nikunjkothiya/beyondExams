@@ -243,9 +243,9 @@ class AWSApiController extends Controller
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getStackTrace());
         }
 
 
