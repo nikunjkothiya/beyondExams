@@ -222,12 +222,12 @@ class AWSApiController extends Controller
                 Storage::putFileAs(
                     'public/', $file, $filePath
                 );
-
+                
                 Storage::disk('s3')->put($filePath, $contents);
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
-                    'ffmpeg.binaries' => '/usr/local/bin/ffmpeg',
-                    'ffprobe.binaries' => '/usr/local/bin/ffprobe'
+                    'ffmpeg.binaries' => '/usr/bin/ffmpeg',
+                    'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
                 $duration = $ffprobe
@@ -238,6 +238,7 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
+
             } else {
                 return $this->apiResponse->sendResponse(400, 'File type not supported', null);
             }
