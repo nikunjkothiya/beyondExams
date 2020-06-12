@@ -15,6 +15,7 @@ use Auth;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use stdClass;
@@ -271,12 +272,12 @@ class UtilController extends Controller
                         'description' => $data->hi->description
                     ];
                 }
-                if (isset($data->id)){
-                    $opportunity['id'] = [
-                        'title' =>$data->id->title,
-                        'description' => $data->id->description
-                    ];
-                }
+//                if (isset($data->id)){
+//                    $opportunity['id'] = [
+//                        'title' =>$data->id->title,
+//                        'description' => $data->id->description
+//                    ];
+//                }
                 if (isset($data->it)){
                     $opportunity['it'] = [
                         'title' =>$data->it->title,
@@ -366,13 +367,15 @@ class UtilController extends Controller
             $r = Opportunity::create($opportunity);
             $r->tags()->sync($data->tags);
             $r->eligible_regions()->sync($data->eligible_regions);
+            if (isset($data->legacy_id))
+                DB::table('legacy_opportunity')->insertOrIgnore(array('phoenix_opportunity_id'=>$r->id, 'legacy_opportunity_id'=>$data->legacy_id));
 
             $data = [
                 "id" => $r->id,
             ];
 
             return $apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
