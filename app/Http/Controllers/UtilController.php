@@ -369,6 +369,8 @@ class UtilController extends Controller
             $r->eligible_regions()->sync($data->eligible_regions);
             if (isset($data->legacy_id))
                 DB::table('legacy_opportunity')->insertOrIgnore(array('phoenix_opportunity_id'=>$r->id, 'legacy_opportunity_id'=>$data->legacy_id));
+            else
+		return $apiResponse->sendResponse(500, "Not found legacy", $data);
 
             $data = [
                 "id" => $r->id,
@@ -376,7 +378,7 @@ class UtilController extends Controller
 
             return $apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
         } catch (\Exception $e) {
-            return $apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
