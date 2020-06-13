@@ -61,8 +61,8 @@ class AWSApiController extends Controller
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getStackTrace());
         }
     }
 
@@ -78,6 +78,8 @@ class AWSApiController extends Controller
             }
 
             $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
+	    if (count($file) == 0)
+		return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
 	    if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
@@ -88,8 +90,8 @@ class AWSApiController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
@@ -219,9 +221,11 @@ class AWSApiController extends Controller
 
             } else if ($request->type == 3) {
                 //            VIDEO
-                Storage::putFileAs(
-                    'public/', $file, $filePath
-                );
+//            return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
+		$file->move(storage_path() . '/app/public/videos/', $name);
+//                Storage::putFileAs(
+//                    'public/', $file, $filePath
+//                );
                 
                 Storage::disk('s3')->put($filePath, $contents);
 
