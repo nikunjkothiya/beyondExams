@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
-
+use Log;
 class ApiResponse extends Controller
 {
     public function sendResponse($code,$message,$data){
@@ -29,6 +29,8 @@ class ApiResponse extends Controller
     		],$code);
     	}
     	else{
+			Log::error($message);
+			Log::error($data);
     		return response([
     			'status' => 'error',
     			'status_code' => $code,
