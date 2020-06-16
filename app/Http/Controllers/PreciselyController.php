@@ -15,6 +15,7 @@ use App\Qualification;
 use App\Tag;
 use App\User;
 use App\UserDetail;
+use App\MentorDetail;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Http\Request;
@@ -60,7 +61,65 @@ class PreciselyController extends Controller
         }
     }
 
-    public function submit_profile(Request $request)
+    public function submit_mentor_profile(Request $request){
+        try{
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                $user_id = $user->id;
+                $validator = Validator::make($request->all(), [
+                    'firstname' => 'required|string|max:255',
+                    'lastname' => 'required|string|max:255',
+                    'email' => 'required|email',
+                    'designation' => 'required|string|max:255',
+                    'orgnaisation' => 'required|string|max:255',
+                    'profile_link' => 'required|string|max:1024',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                //$user_id = $request->user_id;
+
+                $check = MentorDetail::where('user_id', $user_id)->first();
+
+                if (is_null($check)) {
+                    $record = new MentorDetail;
+                    $record->user_id = $user_id;
+                    $record->firstname = $request->firstname;
+                    $record->lastname = $request->lastname;
+                    $record->email = $request->email;
+                    $record->designation = $request->designation;
+                    $record->organisation = $request->organisation;
+                    $record->profile_link = $request->profile_link;
+                    $record->save();
+                    if ($record) {
+                        return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
+                    }
+                } else {
+                    $check->user_id = $user_id;
+                    $check->firstname = $request->firstname;
+                    $check->lastname = $request->lastname;
+                    $check->email = $request->email;
+                    $check->designation = $request->designation;
+                    $check->organisation = $request->organisation;
+                    $check->profile_link = $request->profile_link;
+                    $check->save();
+                    if ($check) {
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+        }
+    }
+
+    public function submit_user_profile(Request $request)
     {
         try {
             if (Auth::check()) {
