@@ -147,13 +147,7 @@ class ApiAuthController extends Controller
                             $flag = 3;
                         }
                     } else {
-                        if ($check_tag) {
-                            // Details fill but Profile is Not Filled
-                            $flag = 4;
-                        } else {
-                            // Details & Profile both Not Filled
-                            $flag = 2;
-                        }
+                        $flag = 2;
                     }
                 } else {
                     // No Language Selected
@@ -350,13 +344,7 @@ class ApiAuthController extends Controller
                                 $flag = 3;
                             }
                         } else {
-                            if ($check_tag) {
-                                // Details fill but Profile is Not Filled
-                                $flag = 4;
-                            } else {
-                                // Details & Profile both Not Filled
-                                $flag = 2;
-                            }
+                            $flag = 2;
                         }
                     } else {
                         // No Language Selected

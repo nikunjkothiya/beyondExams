@@ -161,7 +161,18 @@ class PreciselyController extends Controller
                     $record->country_id = $request->country;
                     $record->save();
                     if ($record) {
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                        // Check if tags are filled if filled then 0 else 3
+                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                        if($check_tag){
+                            $flag = 0;
+                        } else {
+                            $flag = 3;
+                        }
+                        $responseArray = [
+                            'message' => 'User details saved.',
+                            'new' => $flag
+                        ];
+                        return $this->apiResponse->sendResponse(200, $responseArray, $record);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -362,11 +373,21 @@ class PreciselyController extends Controller
                 $record->user_id = $user->id;
                 $record->language_id = $request->id;
                 $record->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
+                // Always return 2
+                $responseArray = [
+                    'message' => 'Success',
+                    'new' => 2
+                ];
+                return $this->apiResponse->sendResponse(200, $responseArray, null);
             } else {
                 $pcheck->language_id = $request->id;
                 $pcheck->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
+                // Always return 2
+                $responseArray = [
+                    'message' => 'Success',
+                    'new' => 2
+                ];
+                return $this->apiResponse->sendResponse(200, $responseArray, null);
             }
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
@@ -391,7 +412,18 @@ class PreciselyController extends Controller
 
             // Read $tags as json
             $user->tags()->sync(json_decode($tags));
-            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
+            // Check if profile are filled if filled then 0 else 2
+            $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
+            if($check_detail){
+                $flag = 0;
+            } else {
+                $flag = 2;
+            }
+            $responseArray = [
+                'message' => 'Saved filters selected by user',
+                'new' => $flag
+            ];
+            return $this->apiResponse->sendResponse(200, $responseArray, null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
