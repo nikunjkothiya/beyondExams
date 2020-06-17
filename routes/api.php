@@ -57,7 +57,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('success', ['uses' => 'SubscriptionController@success']);
     Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 
-    Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_profile']);
+    Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
+    Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
     Route::get('get_profile', ['uses' => 'PreciselyController@get_profile']);
 
     Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);
