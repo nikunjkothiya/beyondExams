@@ -327,19 +327,13 @@ class ApiAuthController extends Controller
 
 
                 // Assign Role Entry if not existing
-                $check_user_role = UserRole::where('user_id',$user->id)->first();
+                $check_user_role = UserRole::where('user_id',$user_id)->first();
                 if(!$check_user_role){
                     $newRole = new UserRole();
-                    $newRole->user_id = $user->id;
-                    if($user->role_id == 1){
-                        $newRole->is_mentor = 0; 
-                        $newRole->is_user = 1; 
-                        $newRole->save();
-                    }elseif($user->role_id == 2){
-                        $newRole->is_mentor = 1; 
-                        $newRole->is_user = 0; 
-                        $newRole->save();
-                    }
+                    $newRole->user_id = $user_id;
+                    $newRole->is_mentor = 0; 
+                    $newRole->is_user = 1; 
+                    $newRole->save();
                 }
 
                 // Returning Flags
