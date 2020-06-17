@@ -20,7 +20,7 @@ class CreateLegacyOpportunityTable extends Migration
         });
 
         Schema::table('legacy_opportunity',function($table){
-            $table->foreign('phoenix_opportunity_id')->references('id')->on('opportunity');
+            $table->foreign('phoenix_opportunity_id')->references('id')->on('opportunities');
         });
     }
 
