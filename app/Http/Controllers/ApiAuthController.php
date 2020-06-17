@@ -327,7 +327,9 @@ class ApiAuthController extends Controller
 
 
                 // Assign Role Entry if not existing
-                $check_user_role = UserRole::where('user_id',$user->id)->first();
+                // $check_user_role = UserRole::where('user_id',$user->id)->first();
+                                $check_user_role = UserRole::where('user_id',$user->id)->select('user_id')->first()->user_id;
+
                 if(!$check_user_role){
                     $newRole = new UserRole();
                     $newRole->user_id = $user->id;

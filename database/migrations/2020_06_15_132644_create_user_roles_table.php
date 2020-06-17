@@ -24,7 +24,7 @@ class CreateUserRolesTable extends Migration
             $table->foreign('user_id')->references('id')->on('users');
         });
         Schema::table('users',function($table){
-            $table->unsignedBigInteger('user_role');
+            $table->unsignedBigInteger('user_role')->nullable();
             $table->foreign('user_role')->references('id')->on('user_roles');
         });
     }
