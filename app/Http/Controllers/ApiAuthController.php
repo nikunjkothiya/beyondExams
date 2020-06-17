@@ -15,6 +15,7 @@ use App\UserSocial;
 use App\UserDetail;
 use App\MentorDetail;
 use App\MentorVerification;
+use App\UserRole;
 use GuzzleHttp\Client;
 use Illuminate\Foundation\Application;
 use Carbon\Carbon;
@@ -324,6 +325,24 @@ class ApiAuthController extends Controller
                 $phoenix_user_id = $user_id;
                 $global_user_id = $user->id;
 
+
+                // Assign Role Entry if not existing
+                $check_user_role = UserRole::where('user_id',$user->id)->first();
+                if(!$check_user_role){
+                    $newRole = new UserRole();
+                    $newRole->user_id = $user->id;
+                    if($user->role_id == 1){
+                        $newRole->is_mentor = 0; 
+                        $newRole->is_user = 1; 
+                        $newRole->save();
+                    }elseif($user->role_id == 2){
+                        $newRole->is_mentor = 1; 
+                        $newRole->is_user = 0; 
+                        $newRole->save();
+                    }
+                }
+
+                // Returning Flags
                 if ($request->user_role == 0) {
                     $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                     if ($check_lang) {
