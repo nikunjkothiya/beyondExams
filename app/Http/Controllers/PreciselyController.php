@@ -168,9 +168,9 @@ class PreciselyController extends Controller
                         } else {
                             $flag = 3;
                         }
-                        $responseArray = array_merge($record,[
+                        $responseArray = [
                             'new' => $flag
-                        ]);
+                        ];
                         return $this->apiResponse->sendResponse(200, 'User details saved', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
@@ -194,10 +194,9 @@ class PreciselyController extends Controller
                         } else {
                             $flag = 3;
                         }
-                        $responseArray = array_merge($check,[
-                            'message' => 'User details saved.',
+                        $responseArray = [
                             'new' => $flag
-                        ]);
+                        ];
                         return $this->apiResponse->sendResponse(200, 'User details saved.', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
