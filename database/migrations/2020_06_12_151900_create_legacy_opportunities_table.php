@@ -13,13 +13,13 @@ class CreateLegacyOpportunityTable extends Migration
      */
     public function up()
     {
-        Schema::create('legacy_opportunity', function (Blueprint $table) {
+        Schema::create('legacy_opportunities', function (Blueprint $table) {
             $table->unsignedBigInteger("phoenix_opportunity_id")->unique();
             $table->bigInteger("legacy_opportunity_id")->unique();
             $table->timestamps();
         });
 
-        Schema::table('legacy_opportunity',function($table){
+        Schema::table('legacy_opportunities',function($table){
             $table->foreign('phoenix_opportunity_id')->references('id')->on('opportunities');
         });
     }
