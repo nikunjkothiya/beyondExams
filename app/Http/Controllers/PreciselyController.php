@@ -168,11 +168,10 @@ class PreciselyController extends Controller
                         } else {
                             $flag = 3;
                         }
-                        $responseArray = [
-                            'message' => 'User details saved.',
+                        $responseArray = array_merge($record,[
                             'new' => $flag
-                        ];
-                        return $this->apiResponse->sendResponse(200, $responseArray, $record);
+                        ]);
+                        return $this->apiResponse->sendResponse(200, 'User details saved', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -188,7 +187,18 @@ class PreciselyController extends Controller
                     $check->country_id = $request->country;
                     $check->save();
                     if ($check) {
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $check);
+                        // Check if tags are filled if filled then 0 else 3
+                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                        if($check_tag){
+                            $flag = 0;
+                        } else {
+                            $flag = 3;
+                        }
+                        $responseArray = array_merge($check,[
+                            'message' => 'User details saved.',
+                            'new' => $flag
+                        ]);
+                        return $this->apiResponse->sendResponse(200, 'User details saved.', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
@@ -420,10 +430,9 @@ class PreciselyController extends Controller
                 $flag = 2;
             }
             $responseArray = [
-                'message' => 'Saved filters selected by user',
                 'new' => $flag
             ];
-            return $this->apiResponse->sendResponse(200, $responseArray, null);
+            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $responseArray);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
