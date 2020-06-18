@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateLegacyOpportunityTable extends Migration
+class CreateLegacyOpportunitiesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -31,6 +31,6 @@ class CreateLegacyOpportunityTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('legacy_opportunity');
+        Schema::dropIfExists('legacy_opportunities');
     }
 }
