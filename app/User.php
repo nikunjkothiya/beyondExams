@@ -17,7 +17,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password', 'role_id', 'unique_id'
+        'name', 'email', 'password', 'role_id', 'unique_id', 'user_role'
     ];
 
     /**
@@ -39,7 +39,11 @@ class User extends Authenticatable
     ];
 
     public function role(){
-        return $this->belongsTo('App\Role');
+        return $this->hasOne('App\UserRole');
+    }
+
+    public function mentor_verification(){
+        return $this->hasOne('App\MentorVerification');
     }
 
     public function tags(){

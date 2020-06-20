@@ -15,6 +15,7 @@ use App\Qualification;
 use App\Tag;
 use App\User;
 use App\UserDetail;
+use App\MentorDetail;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Http\Request;
@@ -60,7 +61,65 @@ class PreciselyController extends Controller
         }
     }
 
-    public function submit_profile(Request $request)
+    public function submit_mentor_profile(Request $request){
+        try{
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                $user_id = $user->id;
+                $validator = Validator::make($request->all(), [
+                    'firstname' => 'required|string|max:255',
+                    'lastname' => 'required|string|max:255',
+                    'email' => 'required|email',
+                    'designation' => 'required|string|max:255',
+                    'orgnaisation' => 'required|string|max:255',
+                    'profile_link' => 'required|string|max:1024',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                //$user_id = $request->user_id;
+
+                $check = MentorDetail::where('user_id', $user_id)->first();
+
+                if (is_null($check)) {
+                    $record = new MentorDetail;
+                    $record->user_id = $user_id;
+                    $record->firstname = $request->firstname;
+                    $record->lastname = $request->lastname;
+                    $record->email = $request->email;
+                    $record->designation = $request->designation;
+                    $record->organisation = $request->organisation;
+                    $record->profile_link = $request->profile_link;
+                    $record->save();
+                    if ($record) {
+                        return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
+                    }
+                } else {
+                    $check->user_id = $user_id;
+                    $check->firstname = $request->firstname;
+                    $check->lastname = $request->lastname;
+                    $check->email = $request->email;
+                    $check->designation = $request->designation;
+                    $check->organisation = $request->organisation;
+                    $check->profile_link = $request->profile_link;
+                    $check->save();
+                    if ($check) {
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+        }
+    }
+
+    public function submit_user_profile(Request $request)
     {
         try {
             if (Auth::check()) {
@@ -102,7 +161,17 @@ class PreciselyController extends Controller
                     $record->country_id = $request->country;
                     $record->save();
                     if ($record) {
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                        // Check if tags are filled if filled then 0 else 3
+                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                        if($check_tag){
+                            $flag = 0;
+                        } else {
+                            $flag = 3;
+                        }
+                        $responseArray = [
+                            'new' => $flag
+                        ];
+                        return $this->apiResponse->sendResponse(200, 'User details saved', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -118,7 +187,17 @@ class PreciselyController extends Controller
                     $check->country_id = $request->country;
                     $check->save();
                     if ($check) {
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $check);
+                        // Check if tags are filled if filled then 0 else 3
+                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                        if($check_tag){
+                            $flag = 0;
+                        } else {
+                            $flag = 3;
+                        }
+                        $responseArray = [
+                            'new' => $flag
+                        ];
+                        return $this->apiResponse->sendResponse(200, 'User details saved.', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
@@ -303,11 +382,21 @@ class PreciselyController extends Controller
                 $record->user_id = $user->id;
                 $record->language_id = $request->id;
                 $record->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
+                // Always return 2
+                $responseArray = [
+                    'message' => 'Success',
+                    'new' => 2
+                ];
+                return $this->apiResponse->sendResponse(200, $responseArray, null);
             } else {
                 $pcheck->language_id = $request->id;
                 $pcheck->save();
-                return $this->apiResponse->sendResponse(200, 'Success', null);
+                // Always return 2
+                $responseArray = [
+                    'message' => 'Success',
+                    'new' => 2
+                ];
+                return $this->apiResponse->sendResponse(200, $responseArray, null);
             }
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
@@ -332,7 +421,17 @@ class PreciselyController extends Controller
 
             // Read $tags as json
             $user->tags()->sync(json_decode($tags));
-            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', null);
+            // Check if profile are filled if filled then 0 else 2
+            $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
+            if($check_detail){
+                $flag = 0;
+            } else {
+                $flag = 2;
+            }
+            $responseArray = [
+                'new' => $flag
+            ];
+            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $responseArray);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }

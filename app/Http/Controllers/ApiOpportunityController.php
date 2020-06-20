@@ -112,7 +112,7 @@ class ApiOpportunityController extends Controller
                     $query->where('locale', 'en');
                 }])->whereHas('tags', function ($query) use ($user) {
                     $query->whereIn('tags.id', $user->tags);
-                })->paginate(2);
+                })->paginate(10);
 
                 if (count($user->saved_opportunities) > 0) {
                     foreach ($opportunities as $opportunity) {

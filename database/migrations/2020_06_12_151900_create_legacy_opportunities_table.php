@@ -31,6 +31,6 @@ class CreateLegacyOpportunitiesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('legacy_opportunity');
+        Schema::dropIfExists('legacy_opportunities');
     }
 }

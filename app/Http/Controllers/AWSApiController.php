@@ -144,6 +144,8 @@ class AWSApiController extends Controller
             $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
 
             foreach ($all_files as $file) {
+		if (!is_null($file["thumbnail_url"]))
+                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
                 if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }

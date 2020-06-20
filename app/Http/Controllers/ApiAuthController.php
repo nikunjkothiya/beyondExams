@@ -13,6 +13,9 @@ use Validator;
 use App\User;
 use App\UserSocial;
 use App\UserDetail;
+use App\MentorDetail;
+use App\MentorVerification;
+use App\UserRole;
 use GuzzleHttp\Client;
 use Illuminate\Foundation\Application;
 use Carbon\Carbon;
@@ -67,7 +70,6 @@ class ApiAuthController extends Controller
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 6', $e);
         }
-
     }
 
     public function proxyLogout($accessToken)
@@ -86,7 +88,6 @@ class ApiAuthController extends Controller
             }
             return 0;
         } catch (Exception $e) {
-
         }
     }
 
@@ -114,6 +115,7 @@ class ApiAuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'unique_id' => 'required',
                 'refresh_token' => 'required',
+                'user_role' => 'required'
             ]);
 
             if ($validator->fails()) {
@@ -125,38 +127,52 @@ class ApiAuthController extends Controller
             }
 
             $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
-            $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
-            if ($check_lang) {
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
-            } else {
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+            
+            if ($request->user_role == 0) {
+                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+                if ($check_lang) {
+                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                } else {
+                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                }
+
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                // Flags for user
+                if ($check_lang) {
+                    if ($check_detail) {
+                        if ($check_tag) {
+                            // If Category is filled
+                            $flag = 0;
+                        } else {
+                            // If Category is not filled
+                            $flag = 3;
+                        }
+                    } else {
+                        $flag = 2;
+                    }
+                } else {
+                    // No Language Selected
+                    $flag = 1;
+                }
+            } elseif($request->user_role == 1) {
+                // Flags for Mentor
+       
+                $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                if($check_detail){
+                    // Details Filled Now Check Verification
+                    $check_verification = MentorVerification::select('is_verified')->where('user_id', $user_id)->first();
+                    if($check_verification->is_verified == 0){
+                        // Mentor Details filled but not verified
+                        $flag = 2;
+                    } else {
+                        // Mentor Verified
+                        $flag = 0;
+                    }
+                } else {
+                    // Details Not Filled ie New User 
+                    $flag = 1;
+                }
             }
-
-            $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-
-            $flag = 1;
-            if ($check_lang) {
-				if ($check_detail) {
-					if ($check_tag) {
-						// If Category is filled
-						$flag = 0;
-					} else {
-						// If Category is not filled
-						$flag = 3;
-					}
-				} else {
-					if ($check_tag) {
-						// Details fill but Profile is Not Filled
-						$flag = 4;
-					} else {
-						// Details & Profile both Not Filled
-						$flag = 2;
-					}
-				}
-			} else {
-				// No Language Selected
-				$flag = 1;
-			}
 
             $refreshToken = $request->get('refresh_token');
             $unique_id = $request->get('unique_id');
@@ -177,7 +193,7 @@ class ApiAuthController extends Controller
 
     public function proxy($grantType, $flag, array $data = [])
     {
-//    	Get Laravel app config
+        //    	Get Laravel app config
         //$details = User::where('email',$data['username'])->first();
         $config = app()->make('config');
         $data = array_merge($data, [
@@ -262,10 +278,10 @@ class ApiAuthController extends Controller
             $request = new Request();
             $request->replace(['access_token' => $user->token]);
             return $this->verifyAccessToken($request, $provider);
-//			$data = array("token"=>$user->token, "first_name"=>$name_list[0], "last_name"=>$last_name, "email"=>$email, "avatar"=>$user->avatar);
-//
-//			return $this->apiResponse->sendResponse(200,'Success', $data);
-//    		dd($user);
+            //			$data = array("token"=>$user->token, "first_name"=>$name_list[0], "last_name"=>$last_name, "email"=>$email, "avatar"=>$user->avatar);
+            //
+            //			return $this->apiResponse->sendResponse(200,'Success', $data);
+            //    		dd($user);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error', $e);
         }
@@ -276,10 +292,11 @@ class ApiAuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
+                'user_role' => 'required'
             ]);
 
-            if($validator->fails()){
-                return $this->apiResponse->sendResponse(400,'Parameters missing.',$validator->errors());
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
             }
 
             $global_user_id = "";
@@ -287,7 +304,7 @@ class ApiAuthController extends Controller
             $phoenix_user_id = 1;
 
             $flag = 0;
-//	        Provider instance. To extract user details
+            //	        Provider instance. To extract user details
             $provider_obj = NULL;
             if ($provider == 'google') {
                 $config = [
@@ -301,47 +318,72 @@ class ApiAuthController extends Controller
             }
             $user = $provider_obj->userFromToken($request->access_token);
             $email = $user->email;
-//    		Check account in own database
+            //    		Check account in own database
             $check_account = UserSocial::where('provider_id', $user->id)->first();
             if ($check_account) {
                 $user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
                 $phoenix_user_id = $user_id;
                 $global_user_id = $user->id;
 
-                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
-                if ($check_lang) {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
-                } else {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+
+                // Assign Role Entry if not existing
+                $check_user_role = UserRole::where('user_id',$user_id)->first();
+                if(!$check_user_role){
+                    $newRole = new UserRole();
+                    $newRole->user_id = $user_id;
+                    $newRole->is_mentor = 0; 
+                    $newRole->is_user = 1; 
+                    $newRole->save();
                 }
 
-                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                // Returning Flags
+                if ($request->user_role == 0) {
+                    $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+                    if ($check_lang) {
+                        $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                    } else {
+                        $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                    }
 
-                if ($check_lang) {
-					if ($check_detail) {
-						if ($check_tag) {
-							// If Category is filled
-							$flag = 0;
-						} else {
-							// If Category is not filled
-							$flag = 3;
-						}
-					} else {
-						if ($check_tag) {
-							// Details fill but Profile is Not Filled
-							$flag = 4;
-						} else {
-							// Details & Profile both Not Filled
-							$flag = 2;
-						}
-					}
-				} else {
-					// No Language Selected
-					$flag = 1;
-				}
-
+                    $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                    // Flags for user
+                    if ($check_lang) {
+                        if ($check_detail) {
+                            if ($check_tag) {
+                                // If Category is filled
+                                $flag = 0;
+                            } else {
+                                // If Category is not filled
+                                $flag = 3;
+                            }
+                        } else {
+                            $flag = 2;
+                        }
+                    } else {
+                        // No Language Selected
+                        $flag = 1;
+                    }
+                } elseif($request->user_role == 1) {
+                    // Flags for Mentor
+           
+                    $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                    if($check_detail){
+                        // Details Filled Now Check Verification
+                        $check_verification = MentorVerification::select('is_verified')->where('user_id', $user_id)->first();
+                        if($check_verification->is_verified == 0){
+                            // Mentor Details filled but not verified
+                            $flag = 2;
+                        } else {
+                            // Mentor Verified
+                            $flag = 0;
+                        }
+                    } else {
+                        // Details Not Filled ie New User 
+                        $flag = 1;
+                    }
+                }
             } else {
-
+                // Create New User
                 if ($provider == 'google') {
                     $flag = 1;
                     $new_user = new User();
@@ -349,25 +391,50 @@ class ApiAuthController extends Controller
                     $new_user->email = $user->email;
                     $new_user->unique_id = $user->id;
                     $new_user->avatar = $user->avatar;
+                             
                     $new_user->save();
 
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
+                    
+                    if ($request->user_role == 0) {
+                        $new_user->role()->create(
+                            ['is_user' => 1, 'is_mentor' => 0]
+                        );
+                    } elseif ($request->user_role == 1) {
+                        $new_user->role()->create(
+                            ['is_user' => 0, 'is_mentor' => 1]
+                        );
+                       
+                        $new_user->mentor_verification()->create(
+                            ['is_verified' => 0]
+                        );
+                    }
 
                     $phoenix_user_id = $new_user->id;
                 } elseif ($provider == 'facebook') {
+                    $flag = 1;
                     $new_user = new User();
                     $new_user->name = $user->name;
                     $new_user->unique_id = $user->id;
 
                     if (isset($user->email))
                         $new_user->email = $user->email;
-                    $new_user->avatar = $user->avatar;
-                    $new_user->save();
-                    $new_user->social_accounts()->create(
+                        $new_user->avatar = $user->avatar;
+                        $new_user->save();
+                        $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
+                    if ($request->user_role === 0) {
+                        $new_user->role()->create(
+                            ['is_user' => 1, 'is_mentor' => 0]
+                        );
+                    } elseif ($request->user_role === 1) {
+                        $new_user->role()->create(
+                            ['is_user' => 0, 'is_mentor' => 1]
+                        );
+                    }
                     $phoenix_user_id = $new_user->id;
                 } else {
                     return $this->apiResponse->sendResponse(500, 'Internal server error 1', null);
@@ -379,25 +446,25 @@ class ApiAuthController extends Controller
 
             $phoenix_user = User::where('unique_id', $global_user_id)->first();
             $client = new Client();
+
             $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
                 'form_params' => [
                     'user_id' => $user->id,
                     'user_name' => $user->name,
-                    'source'=>$provider
+                    'source' => $provider
                 ]
             ]);
 
             $result = $res->getBody()->getContents();
-            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id'=>$phoenix_user->id, 'legacy_user_id'=>$result));
+            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id' => $phoenix_user->id, 'legacy_user_id' => $result));
 
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
-	    $data = json_decode($response->getContent(), true)["data"];
-	    $data["phoenix_user_id"] = $phoenix_user_id;
-	    $data["email"] = $email;
-	    $data["legacy_user_id"] = $result;
-	    $data["user_name"] = $user->name;
+            $data = json_decode($response->getContent(), true)["data"];
+            $data["phoenix_user_id"] = $phoenix_user_id;
+            $data["email"] = $email;
+            $data["legacy_user_id"] = $result;
+            $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
-
         } catch (BadResponseException $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Invalid Access Tokens', null);
         }
@@ -407,7 +474,7 @@ class ApiAuthController extends Controller
     {
         $user = User::where('unique_id', $unique_id)->first();
 
-//    	dd([$unique_id, $user]);
+        //    	dd([$unique_id, $user]);
 
         if (!is_null($user)) {
             return $this->proxy('password', $flag, [
@@ -427,3 +494,4 @@ class ApiAuthController extends Controller
         }
     }
 }
+
