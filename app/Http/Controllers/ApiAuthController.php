@@ -369,7 +369,7 @@ class ApiAuthController extends Controller
                     $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
                     if($check_detail){
                         // Details Filled Now Check Verification
-                        $check_verification = MentorVerification::select('is_verified')->where('user_id', $user_id)->first();
+                        $check_verification = MentorVerification::where('user_id', $user_id)->first();
                         if($check_verification->is_verified == 0){
                             // Mentor Details filled but not verified
                             $flag = 2;
