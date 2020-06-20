@@ -382,21 +382,49 @@ class PreciselyController extends Controller
                 $record->user_id = $user->id;
                 $record->language_id = $request->id;
                 $record->save();
-                // Always return 2
+                // Flags
+                $flag = 2;
+                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
+                if($check_detail){
+                    if($check_tag){
+                        // If Category is filled
+                        $flag = 0;
+                    } else {
+                        // If Category is not filled
+                        $flag = 3;
+                    }
+                } else {
+                    $flag = 2;
+                }
                 $responseArray = [
-                    'message' => 'Success',
                     'new' => 2
                 ];
-                return $this->apiResponse->sendResponse(200, $responseArray, null);
+                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             } else {
                 $pcheck->language_id = $request->id;
                 $pcheck->save();
-                // Always return 2
+                // Flags
+                $flag = 2;
+                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
+                if($check_detail){
+                    // Check User Details is filled
+                    if($check_tag){
+                        // If Category is filled
+                        $flag = 0;
+                    } else {
+                        // If Category is not filled
+                        $flag = 3;
+                    }
+                } else {
+                    // Check User Details is not filled
+                    $flag = 2;
+                }
                 $responseArray = [
-                    'message' => 'Success',
                     'new' => 2
                 ];
-                return $this->apiResponse->sendResponse(200, $responseArray, null);
+                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             }
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
