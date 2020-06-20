@@ -369,8 +369,8 @@ class ApiAuthController extends Controller
                     $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
                     if($check_detail){
                         // Details Filled Now Check Verification
-                        $check_verification = MentorVerification::where('user_id', $user_id)->first();
-                        if($check_verification->is_verified == 0){
+                        $verified = MentorVerification::where('user_id',$user_id)->first();
+                        if($verified->is_verified == 0){
                             // Mentor Details filled but not verified
                             $flag = 2;
                         } else {
@@ -433,6 +433,9 @@ class ApiAuthController extends Controller
                     } elseif ($request->user_role === 1) {
                         $new_user->role()->create(
                             ['is_user' => 0, 'is_mentor' => 1]
+                        );
+                        $new_user->mentor_verification()->create(
+                            ['is_verified' => 0]
                         );
                     }
                     $phoenix_user_id = $new_user->id;
