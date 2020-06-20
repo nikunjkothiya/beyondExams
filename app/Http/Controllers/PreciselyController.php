@@ -72,7 +72,7 @@ class PreciselyController extends Controller
                     'lastname' => 'required|string|max:255',
                     'email' => 'required|email',
                     'designation' => 'required|string|max:255',
-                    'orgnaisation' => 'required|string|max:255',
+                    'organisation' => 'required|string|max:255',
                     'profile_link' => 'required|string|max:1024',
                 ]);
 
