@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Playlist;
 use Auth;
 use App\User;
 use App\FileType;
@@ -226,7 +227,7 @@ class AWSApiController extends Controller
 //                Storage::putFileAs(
 //                    'public/', $file, $filePath
 //                );
-                
+
                 Storage::disk('s3')->put($filePath, $contents);
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
@@ -252,7 +253,25 @@ class AWSApiController extends Controller
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
         }
+    }
 
+    public function save_playlist(Request $request){
+        $request = json_decode($request->all()["data"]);
 
+        $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+        $resource = new Resource();
+        $resource->file_type_id = 4;
+        $resource->title = $request->title;
+        $resource->author_id = $request->user_id;
+        $resource->slug = $slug;
+        $resource->file_url = $request->url;
+        $resource->description = "";
+        $resource->duration = $request->num_videos;
+        $resource->save();
+
+        $playlist = new Playlist();
+        $playlist->resource_id = $resource->id;
+        $playlist->structure = $request->structure;
+        $playlist->save();
     }
 }
