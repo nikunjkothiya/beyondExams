@@ -109,10 +109,22 @@ class AWSApiController extends Controller
         }
 
         try {
-            if ($request->type == 0) {
-                $all_files = Resource::with('user:id,name,avatar')->get();
+            if (isset($request->author_id)){
+                if ($request->type == 0) {
+                    $all_files = Resource::with('user:id,name,avatar')->where('author_id', $request->author_id)->get();
+                } else if ($request->type == 3){
+                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('author_id', $request->author_id)->get();
+                } else {
+                    $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
+                }
             } else {
-                $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->get();
+                if ($request->type == 0) {
+                    $all_files = Resource::with('user:id,name,avatar')->get();
+                } else if ($request->type == 3){
+                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->get();
+                } else {
+                    $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->get();
+                }
             }
 
             foreach ($all_files as $file) {
@@ -124,7 +136,7 @@ class AWSApiController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $all_files);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
@@ -141,7 +153,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%$request->keyword%")->get();
+            $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%{$request->keyword}%")->get();
 
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
