@@ -282,7 +282,7 @@ class AWSApiController extends Controller
         try {
             $playlist = Playlist::where('resource_id', $request->origin)->first();
             return $this->apiResponse->sendResponse(200, 'Success', $playlist->structure);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
