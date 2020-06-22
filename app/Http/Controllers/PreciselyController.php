@@ -95,6 +95,7 @@ class PreciselyController extends Controller
                     $record->profile_link = $request->profile_link;
                     $record->save();
                     if ($record) {
+                        $flag = 2;
                         $verified = MentorVerification::where('user_id',$user_id)->first();
                         if($verified->is_verified == 0){
                             // Mentor Details filled but not verified
@@ -106,9 +107,7 @@ class PreciselyController extends Controller
                             // Mentor Verified
                             $flag = 3;
                         }
-                        if($verified){
-                            $record['new'] = $flag;
-                        }
+                        $record['new'] = $flag;
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $record);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
@@ -123,6 +122,7 @@ class PreciselyController extends Controller
                     $check->profile_link = $request->profile_link;
                     $check->save();
                     if ($check) {
+                        $flag = 2;
                         $verified = MentorVerification::where('user_id',$user_id)->first();
                         if($verified->is_verified == 0){
                             // Mentor Details filled but not verified
@@ -134,9 +134,7 @@ class PreciselyController extends Controller
                             // Mentor Verified
                             $flag = 3;
                         }
-                        if($verified){
-                            $record['new'] = $flag;
-                        }
+                        $record['new'] = $flag;
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
