@@ -97,7 +97,7 @@ class PreciselyController extends Controller
                     if ($record) {
                         $verified = MentorVerification::where('user_id',$user_id)->first();
                         if($verified){
-                            $record['verified'] = $verified->is_verified;
+                            $record['new'] = $verified->is_verified;
                         }
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $record);
                     } else {
@@ -115,7 +115,7 @@ class PreciselyController extends Controller
                     if ($check) {
                         $verified = MentorVerification::where('user_id',$user_id)->first();
                         if($verified){
-                            $check['verified'] = $verified->is_verified;
+                            $check['new'] = $verified->is_verified;
                         }
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
                     } else {
