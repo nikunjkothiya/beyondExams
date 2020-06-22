@@ -432,7 +432,7 @@ class PreciselyController extends Controller
                     $flag = 2;
                 }
                 $responseArray = [
-                    'new' => 2
+                    'new' => $flag
                 ];
                 return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             } else {
@@ -456,7 +456,7 @@ class PreciselyController extends Controller
                     $flag = 2;
                 }
                 $responseArray = [
-                    'new' => 2
+                    'new' => $flag
                 ];
                 return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             }
