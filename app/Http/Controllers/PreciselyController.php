@@ -418,7 +418,7 @@ class PreciselyController extends Controller
                 $record->save();
                 // Flags
                 $flag = 2;
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
                 if($check_detail){
                     if($check_tag){
