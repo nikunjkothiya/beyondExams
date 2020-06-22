@@ -16,6 +16,7 @@ use App\Tag;
 use App\User;
 use App\UserDetail;
 use App\MentorDetail;
+use App\MentorVerification;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Http\Request;
@@ -71,7 +72,7 @@ class PreciselyController extends Controller
                     'lastname' => 'required|string|max:255',
                     'email' => 'required|email',
                     'designation' => 'required|string|max:255',
-                    'orgnaisation' => 'required|string|max:255',
+                    'organisation' => 'required|string|max:255',
                     'profile_link' => 'required|string|max:1024',
                 ]);
 
@@ -94,7 +95,11 @@ class PreciselyController extends Controller
                     $record->profile_link = $request->profile_link;
                     $record->save();
                     if ($record) {
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $record);
+                        $verified = MentorVerification::where('user_id',$user_id)->first();
+                        if($verified){
+                            $record['verified'] = $verified->is_verified;
+                        }
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $record);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -108,6 +113,10 @@ class PreciselyController extends Controller
                     $check->profile_link = $request->profile_link;
                     $check->save();
                     if ($check) {
+                        $verified = MentorVerification::where('user_id',$user_id)->first();
+                        if($verified){
+                            $check['verified'] = $verified->is_verified;
+                        }
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
@@ -209,7 +218,7 @@ class PreciselyController extends Controller
     }
 
 //    TODO: CORRECT RETURN TYPE
-    public function get_profile(Request $request)
+    public function get_user_profile(Request $request)
     {
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
@@ -236,7 +245,32 @@ class PreciselyController extends Controller
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
         }
+    }
 
+    public function get_mentor_profile(Request $request)
+    {
+        if (Auth::check()) {
+            $user = User::find(Auth::user()->id);
+            try {
+                $pcheck = MentorDetail::where('user_id', $user->id)->first();
+            } catch (Exception $e) {
+                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+            }
+
+            if ($pcheck) {
+                $data['mentor_details'] = $pcheck;
+                $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
+                foreach ($avatar as $ava) {
+                    $data['avatar'] = $ava->avatar;
+                    break;
+                }
+                #$data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+
+                return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
+            }
+        } else {
+            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
+        }
     }
 
     public function save_opportunity(Request $request)
@@ -382,21 +416,49 @@ class PreciselyController extends Controller
                 $record->user_id = $user->id;
                 $record->language_id = $request->id;
                 $record->save();
-                // Always return 2
+                // Flags
+                $flag = 2;
+                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
+                if($check_detail){
+                    if($check_tag){
+                        // If Category is filled
+                        $flag = 0;
+                    } else {
+                        // If Category is not filled
+                        $flag = 3;
+                    }
+                } else {
+                    $flag = 2;
+                }
                 $responseArray = [
-                    'message' => 'Success',
                     'new' => 2
                 ];
-                return $this->apiResponse->sendResponse(200, $responseArray, null);
+                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             } else {
                 $pcheck->language_id = $request->id;
                 $pcheck->save();
-                // Always return 2
+                // Flags
+                $flag = 2;
+                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
+                if($check_detail){
+                    // Check User Details is filled
+                    if($check_tag){
+                        // If Category is filled
+                        $flag = 0;
+                    } else {
+                        // If Category is not filled
+                        $flag = 3;
+                    }
+                } else {
+                    // Check User Details is not filled
+                    $flag = 2;
+                }
                 $responseArray = [
-                    'message' => 'Success',
                     'new' => 2
                 ];
-                return $this->apiResponse->sendResponse(200, $responseArray, null);
+                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             }
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
