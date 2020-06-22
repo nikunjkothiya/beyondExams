@@ -440,7 +440,7 @@ class PreciselyController extends Controller
                 $pcheck->save();
                 // Flags
                 $flag = 2;
-                $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
                 if($check_detail){
                     // Check User Details is filled
