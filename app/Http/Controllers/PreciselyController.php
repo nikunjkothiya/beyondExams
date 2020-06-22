@@ -134,7 +134,7 @@ class PreciselyController extends Controller
                             // Mentor Verified
                             $flag = 3;
                         }
-                        $record['new'] = $flag;
+                        $check['new'] = $flag;
                         return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
