@@ -115,19 +115,22 @@ class ApiAuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'unique_id' => 'required',
                 'refresh_token' => 'required',
-                'user_role' => 'required'
+//                'user_role' => 'required'
             ]);
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, $validator->errors(), null);
             }
 
+            if (!isset($request->user_role))
+                $request->user_role = 2;
+
             if (!User::where('unique_id', $request->unique_id)->first()) {
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
             }
 
             $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
-            
+
             if ($request->user_role == 0) {
                 $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                 if ($check_lang) {
@@ -156,7 +159,7 @@ class ApiAuthController extends Controller
                 }
             } elseif($request->user_role == 1) {
                 // Flags for Mentor
-       
+
                 $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
                 if($check_detail){
                     // Details Filled Now Check Verification
@@ -169,7 +172,7 @@ class ApiAuthController extends Controller
                         $flag = 0;
                     }
                 } else {
-                    // Details Not Filled ie New User 
+                    // Details Not Filled ie New User
                     $flag = 1;
                 }
             }
@@ -292,8 +295,11 @@ class ApiAuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
-                'user_role' => 'required'
+//                'user_role' => 'required'
             ]);
+
+            if (!isset($request->user_role))
+                $request->user_role = 2;
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
@@ -331,8 +337,8 @@ class ApiAuthController extends Controller
                 if(!$check_user_role){
                     $newRole = new UserRole();
                     $newRole->user_id = $user_id;
-                    $newRole->is_mentor = 0; 
-                    $newRole->is_user = 1; 
+                    $newRole->is_mentor = 0;
+                    $newRole->is_user = 1;
                     $newRole->save();
                 }
 
@@ -365,7 +371,7 @@ class ApiAuthController extends Controller
                     }
                 } elseif($request->user_role == 1) {
                     // Flags for Mentor
-           
+
                     $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
                     if($check_detail){
                         // Details Filled Now Check Verification
@@ -378,7 +384,7 @@ class ApiAuthController extends Controller
                             $flag = 0;
                         }
                     } else {
-                        // Details Not Filled ie New User 
+                        // Details Not Filled ie New User
                         $flag = 1;
                     }
                 }
@@ -391,13 +397,13 @@ class ApiAuthController extends Controller
                     $new_user->email = $user->email;
                     $new_user->unique_id = $user->id;
                     $new_user->avatar = $user->avatar;
-                             
+
                     $new_user->save();
 
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
-                    
+
                     if ($request->user_role == 0) {
                         $new_user->role()->create(
                             ['is_user' => 1, 'is_mentor' => 0]
@@ -406,7 +412,7 @@ class ApiAuthController extends Controller
                         $new_user->role()->create(
                             ['is_user' => 0, 'is_mentor' => 1]
                         );
-                       
+
                         $new_user->mentor_verification()->create(
                             ['is_verified' => 0]
                         );
