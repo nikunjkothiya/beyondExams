@@ -115,8 +115,9 @@ class ApiOpportunityController extends Controller
                 })->paginate(10);
 
                 if (count($user->saved_opportunities) > 0) {
+                    $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
                     foreach ($opportunities as $opportunity) {
-                        if (in_array($opportunity->id, $user->saved_opportunities))
+                        if (in_array(["id"=>$opportunity->id], $subset_saved_opporutnies))
                             $opportunity['saved'] = 1;
                         else
                             $opportunity['saved'] = 0;
