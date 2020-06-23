@@ -214,10 +214,18 @@ class UtilController extends Controller
             if ($check->fails()) {
                 return $apiResponse->sendResponse(400, 'Bad Request', [$check->errors(), $request]);
             }
+
             $data = json_decode($request->all()["data"]);
             if ($data->token != $this->KEY) {
                 return $apiResponse->sendResponse(401, 'Unauthorized Request', '');
             }
+
+            if (isset($data->legacy_id)){
+                if (DB::table('legacy_opportunity')->where('legacy_opportunity_id', $data->legacy_id)->exists()){
+                    return $apiResponse->sendResponse(500, 'Opportunity already exists', null);
+                }
+            }
+
             $slug = str_replace(" ", "-", strtolower($data->en->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
             $opportunity = array(
 //                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
@@ -367,10 +375,9 @@ class UtilController extends Controller
             $r = Opportunity::create($opportunity);
             $r->tags()->sync($data->tags);
             $r->eligible_regions()->sync($data->eligible_regions);
-            if (isset($data->legacy_id))
+            if (isset($data->legacy_id)){
                 DB::table('legacy_opportunity')->insertOrIgnore(array('phoenix_opportunity_id'=>$r->id, 'legacy_opportunity_id'=>$data->legacy_id));
-            else
-		return $apiResponse->sendResponse(500, "Not found legacy", $data);
+            }
 
             $data = [
                 "id" => $r->id,
@@ -381,5 +388,4 @@ class UtilController extends Controller
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
-
 }
