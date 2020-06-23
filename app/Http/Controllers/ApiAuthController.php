@@ -158,18 +158,31 @@ class ApiAuthController extends Controller
                     $flag = 1;
                 }
             } elseif($request->user_role == 1) {
+                // Update Mentor Roles
+                $check_user_role = UserRole::where('user_id',$user_id)->first();
+                $check_user_role->is_mentor = 1;
+                $check_user_role->save();
                 // Flags for Mentor
-
                 $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                $verified = MentorVerification::where('user_id',$user_id)->first();
+                if(!$verified){
+                    $newMentorVerification = new MentorVerification();
+                    $newMentorVerification->user_id = $user_id;
+                    $newMentorVerification->is_verified = 0;
+                    $newMentorVerification->save();
+                    $verified = MentorVerification::where('user_id',$user_id)->first();
+                }
                 if($check_detail){
                     // Details Filled Now Check Verification
-                    $check_verification = MentorVerification::select('is_verified')->where('user_id', $user_id)->first();
-                    if($check_verification->is_verified == 0){
+                    if($verified->is_verified == 0){
                         // Mentor Details filled but not verified
                         $flag = 2;
-                    } else {
+                    } elseif($verified->is_verified == 1) {
                         // Mentor Verified
                         $flag = 0;
+                    } elseif($verified->is_verified == 2){
+                        // Mentor Verified
+                        $flag = 3;
                     }
                 } else {
                     // Details Not Filled ie New User
@@ -299,7 +312,7 @@ class ApiAuthController extends Controller
             ]);
 
             if (!isset($request->user_role))
-                $request->user_role = 2;
+                $request->user_role = 0;
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
@@ -337,13 +350,24 @@ class ApiAuthController extends Controller
                 if(!$check_user_role){
                     $newRole = new UserRole();
                     $newRole->user_id = $user_id;
-                    $newRole->is_mentor = 0;
-                    $newRole->is_user = 1;
+                    if($request->user_role == 0){
+                        $newRole->is_user = 1;
+                        $newRole->is_mentor = 0;
+                    }
+                    if($request->user_role == 1){
+                        $newRole->is_user = 0;
+                        $newRole->is_mentor = 1;
+                    }
                     $newRole->save();
                 }
 
                 // Returning Flags
                 if ($request->user_role == 0) {
+                    // Update User Roles
+                    $check_user_role = UserRole::where('user_id',$user_id)->first();
+                    $check_user_role->is_user = 1;
+                    $check_user_role->save();
+                    // Return Flag for user
                     $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                     if ($check_lang) {
                         $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
@@ -370,18 +394,31 @@ class ApiAuthController extends Controller
                         $flag = 1;
                     }
                 } elseif($request->user_role == 1) {
+                    // Update Mentor Roles
+                    $check_user_role = UserRole::where('user_id',$user_id)->first();
+                    $check_user_role->is_mentor = 1;
+                    $check_user_role->save();
                     // Flags for Mentor
-
                     $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                    $verified = MentorVerification::where('user_id',$user_id)->first();
+                    if(!$verified){
+                        $newMentorVerification = new MentorVerification();
+                        $newMentorVerification->user_id = $user_id;
+                        $newMentorVerification->is_verified = 0;
+                        $newMentorVerification->save();
+                        $verified = MentorVerification::where('user_id',$user_id)->first();
+                    }
                     if($check_detail){
                         // Details Filled Now Check Verification
-                        $check_verification = MentorVerification::select('is_verified')->where('user_id', $user_id)->first();
-                        if($check_verification->is_verified == 0){
+                        if($verified->is_verified == 0){
                             // Mentor Details filled but not verified
                             $flag = 2;
-                        } else {
+                        } elseif($verified->is_verified == 1) {
                             // Mentor Verified
                             $flag = 0;
+                        } elseif($verified->is_verified == 2){
+                            // Mentor Verified
+                            $flag = 3;
                         }
                     } else {
                         // Details Not Filled ie New User
@@ -439,6 +476,9 @@ class ApiAuthController extends Controller
                     } elseif ($request->user_role === 1) {
                         $new_user->role()->create(
                             ['is_user' => 0, 'is_mentor' => 1]
+                        );
+                        $new_user->mentor_verification()->create(
+                            ['is_verified' => 0]
                         );
                     }
                     $phoenix_user_id = $new_user->id;
