@@ -8,6 +8,7 @@ use App\User;
 use App\FileType;
 use App\Resource;
 use App\UserResource;
+use App\UserRole;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
