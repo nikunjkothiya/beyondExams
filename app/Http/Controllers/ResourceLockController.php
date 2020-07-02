@@ -22,8 +22,8 @@ class ResourceLockController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'author_id' => 'required|integer',
-            'price_inr' => 'required',
-            'price_usd' => 'required'
+            // 'price_inr' => 'required',
+            // 'price_usd' => 'required'
         ]);
 
         if ($validator->fails()) {
