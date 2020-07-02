@@ -88,4 +88,12 @@ class User extends Authenticatable
     public function analytics(){
         return $this->hasMany('App\Analytics');
     }
+
+    public function user_key(){
+        return $this->hasMany('App\UserKey');
+    }
+
+    public function user_resource(){
+        return $this->hasMany('App\UserResource');
+    }
 }

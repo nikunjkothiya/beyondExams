@@ -98,3 +98,8 @@ Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_f
 Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analytics']);
 
 Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
+
+Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
+Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
+Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
+Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
