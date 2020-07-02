@@ -16,4 +16,12 @@ class Resource extends Model
     public function user(){
         return $this->belongsTo('App\User', 'author_id');
     }
+
+    public function resource_key(){
+        return $this->hasMany('App\ResourceKey');
+    }
+
+    public function user_resource(){
+        return $this->hasOne('App\UserResource');
+    }
 }

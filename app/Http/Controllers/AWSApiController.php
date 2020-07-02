@@ -7,6 +7,7 @@ use Auth;
 use App\User;
 use App\FileType;
 use App\Resource;
+use App\UserResource;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
@@ -109,6 +110,15 @@ class AWSApiController extends Controller
         }
 
         try {
+            $flag = 2;
+            $user_resources = UserResource::where('user_id',$request->user_id)->get();
+            if(count($user_resources) === 0){
+                // User has 2 free videos
+                $flag = 0;
+            } elseif(count($user_resources) === 1){
+                // User has 1 free video
+                $flag = 1;
+            }
             if (isset($request->author_id)){
                 if ($request->type == 0) {
                     $all_files = Resource::with('user:id,name,avatar')->where('author_id', $request->author_id)->get();
@@ -133,8 +143,9 @@ class AWSApiController extends Controller
                 if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
-
-            return $this->apiResponse->sendResponse(200, 'Success', $all_files);
+            $resp['flag'] = $flag;
+            $resp['data'] = $all_files;
+            return $this->apiResponse->sendResponse(200, 'Success', $resp);
 
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
@@ -185,9 +196,11 @@ class AWSApiController extends Controller
             }
 
             $user = User::find($request->user_id);
-
+            $newRole = UserRole::where('user_id',$request->user_id)->first();
             if ($user->role_id != 3) {
-                return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
+                if($newRole->is_mentor != 1){
+                    return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
+                }
             }
 
             $contents = $request->description;
