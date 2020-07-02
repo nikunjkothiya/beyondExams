@@ -14,10 +14,8 @@ class CreateUserKeysTable extends Migration
     public function up()
     {
         Schema::create('user_keys', function (Blueprint $table) {
-            $table->bigIncrements('id');
             $table->unsignedBigInteger('key_id');
             $table->unsignedBigInteger('user_id');
-            $table->timestamps();
         });
         Schema::table('user_keys',function($table){
             $table->foreign('key_id')->references('id')->on('keys');

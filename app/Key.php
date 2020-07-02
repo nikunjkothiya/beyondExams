@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use App\KeyPrice;
+// use App\KeyPrice;
 use App\User;
 use App\UserKey;
 use App\ResourceKey;
@@ -14,9 +14,9 @@ class Key extends Model
         'name', 'author_id'
     ];
 
-    public function key_price(){
-        return $this->hasOne('App\KeyPrice');
-    }
+    // public function key_price(){
+    //     return $this->hasOne('App\KeyPrice');
+    // }
 
     public function author(){
         return $this->belongsTo('App\User');

@@ -36,13 +36,13 @@ class ResourceLockController extends Controller
             $newKey->author_id = $request->author_id;
             $newKey->save();
 
-            $newKey->key_price()->create(
-                [
-                    'author_id' => $request->author_id,
-                    'price_inr' => $request->price_inr,
-                    'price_usd' => $request->price_usd
-                ]
-            );
+            // $newKey->key_price()->create(
+            //     [
+            //         'author_id' => $request->author_id,
+            //         'price_inr' => $request->price_inr,
+            //         'price_usd' => $request->price_usd
+            //     ]
+            // );
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
 
         } catch (\Exception $e) {
