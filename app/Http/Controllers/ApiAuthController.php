@@ -512,7 +512,7 @@ class ApiAuthController extends Controller
             $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
         } catch (BadResponseException $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Invalid Access Tokens', null);
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e);
         }
     }
 
