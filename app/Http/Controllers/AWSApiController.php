@@ -206,6 +206,8 @@ class AWSApiController extends Controller
 
             $contents = $request->description;
             if ($request->type == 3) {
+                if (!isset($request->type))
+                    return $this->apiResponse->sendResponse(400, 'File not specified', null);
                 $file = $request->file('file');
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -256,7 +258,8 @@ class AWSApiController extends Controller
 //                    'public/', $file, $filePath
 //                );
 
-                Storage::disk('s3')->put($filePath, $contents);
+//                Storage::disk('s3')->put($filePath, $contents);
+                Storage::disk('s3')->put($filePath, file_get_contents($file));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
                     'ffmpeg.binaries' => '/usr/bin/ffmpeg',
