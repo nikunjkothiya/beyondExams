@@ -206,8 +206,6 @@ class AWSApiController extends Controller
 
             $contents = $request->description;
             if ($request->type == 3) {
-                if (!isset($request->type))
-                    return $this->apiResponse->sendResponse(400, 'File not specified', null);
                 $file = $request->file('file');
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -254,12 +252,14 @@ class AWSApiController extends Controller
                 //            VIDEO
 //            return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/videos/', $name);
+//		$contents = Storage::get('public/videos/', $name);
+
 //                Storage::putFileAs(
 //                    'public/', $file, $filePath
 //                );
 
 //                Storage::disk('s3')->put($filePath, $contents);
-                Storage::disk('s3')->put($filePath, file_get_contents($file));
+                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/videos/' . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
                     'ffmpeg.binaries' => '/usr/bin/ffmpeg',
@@ -282,7 +282,7 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (\Exception $e) {
 
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
