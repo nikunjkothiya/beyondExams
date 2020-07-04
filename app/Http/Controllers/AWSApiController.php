@@ -11,10 +11,12 @@ use App\UserResource;
 use App\UserRole;
 use Exception;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ApiResponse;
+use App\Http\Controllers\UserRoleApiResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use FFMpeg;
+use GuzzleHttp\Client;
+
 
 
 class AWSApiController extends Controller
@@ -23,10 +25,12 @@ class AWSApiController extends Controller
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
     private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/"];
+    private $apiConsumer;
 
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
+        $this->apiConsumer = new Client();
     }
 
     public function save_thumbnail(Request $request)
@@ -41,6 +45,7 @@ class AWSApiController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
+
             $resource = Resource::find($request->resource_id);
             if ($resource) {
                 $file = $request->file('file');
@@ -227,19 +232,19 @@ class AWSApiController extends Controller
             $new_resource->description = $contents;
 
             if ($request->type == 1) {
-//            BLOGS
+            // BLOGS
 
                 $word = str_word_count(strip_tags($contents));
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
-//            $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
+            // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
 
             } else if ($request->type == 2) {
-//            ARTICLES
+            // ARTICLES
                 $word = str_word_count(strip_tags($contents));
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
@@ -249,16 +254,14 @@ class AWSApiController extends Controller
                 $new_resource->save();
 
             } else if ($request->type == 3) {
-                //            VIDEO
-//            return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
+                // VIDEO
+                // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/videos/', $name);
-//		$contents = Storage::get('public/videos/', $name);
-
-//                Storage::putFileAs(
-//                    'public/', $file, $filePath
-//                );
-
-//                Storage::disk('s3')->put($filePath, $contents);
+                // $contents = Storage::get('public/videos/', $name);
+                // Storage::putFileAs(
+                // 'public/', $file, $filePath
+                // );
+                // Storage::disk('s3')->put($filePath, $contents);
                 Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/videos/' . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
@@ -274,11 +277,34 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-
+    
             } else {
                 return $this->apiResponse->sendResponse(400, 'File type not supported', null);
             }
 
+            if($request->thumbnail){
+                $config = app()->make('config');
+                $this->apiConsumer->post(sprintf('%s/api/v1/save_resource_thumbnail', $config->get('app.url')), [
+                    'multipart' => [
+                        [
+                            'name' => 'user_id',
+                            'contents' => $user->id
+                        ],
+                        [
+                            'name' => 'file',
+                            'contents' => file_get_contents($request->thumbnail),
+                            'filename' => 'thumbnail.png'
+                        ],
+                        [
+                            'name' => 'resource_id',
+                            'contents' => $new_resource->id
+                        ]
+                    ]
+                ]);
+            }
+
+
+           
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (\Exception $e) {
 
