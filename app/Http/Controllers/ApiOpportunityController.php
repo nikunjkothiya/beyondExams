@@ -27,9 +27,23 @@ class ApiOpportunityController extends Controller
     public function get_opp($slug)
     {
         try {
+	    $hyphen_index = strrpos($slug, "-");
+	    $legacy_id = substr($slug, $hyphen_index + 1);
+	    if (preg_match("/[a-z]/i", $legacy_id)){
+	            $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+        	        $query->where('locale', 'en');
+	            }])->where('slug', $slug)->firstOrFail();
+	    }else {
+	    $phoenix_opp_id = DB::table('legacy_opportunities')->where('legacy_opportunity_id', $legacy_id)->pluck('phoenix_opportunity_id');
+	    if (count($phoenix_opp_id) == 1)
+		$phoenix_opp_id = $phoenix_opp_id[0];
+	    else {
+		return $this->apiResponse->sendResponse(404, 'Opportunity not found', null);
+	    }
             $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
-            }])->where('slug', $slug)->firstOrFail();
+            }])->where('slug','LIKE','%'. substr($slug, 0, strrpos($slug, "-")).'%')->where('id', $phoenix_opp_id)->firstOrFail();
+	    }
 
             $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
             $opportunity["next_slug"] = $opportunity_next["slug"];
@@ -115,8 +129,9 @@ class ApiOpportunityController extends Controller
                 })->paginate(10);
 
                 if (count($user->saved_opportunities) > 0) {
+                    $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
                     foreach ($opportunities as $opportunity) {
-                        if (in_array($opportunity->id, $user->saved_opportunities))
+                        if (in_array(["id"=>$opportunity->id], $subset_saved_opporutnies))
                             $opportunity['saved'] = 1;
                         else
                             $opportunity['saved'] = 0;
