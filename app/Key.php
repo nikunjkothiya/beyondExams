@@ -14,9 +14,9 @@ class Key extends Model
         'name', 'author_id'
     ];
 
-    // public function key_price(){
-    //     return $this->hasOne('App\KeyPrice');
-    // }
+    public function key_price(){
+        return $this->hasOne('App\KeyPrice');
+    }
 
     public function author(){
         return $this->belongsTo('App\User');
