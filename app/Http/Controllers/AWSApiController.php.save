@@ -37,7 +37,7 @@ class AWSApiController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|integer',
+               'user_id' => 'required|integer',
                 'file' => 'required',
                 'resource_id' => 'required|integer'
             ]);
@@ -203,11 +203,10 @@ class AWSApiController extends Controller
 
             $user = User::find($request->user_id);
             $newRole = UserRole::where('user_id',$request->user_id)->first();
-            if ($newRole == null && $user->role_id === 1) {
-                return $this->apiResponse->sendResponse(400, 'Not a mentor 1', null);
-            }
-            if($newRole && $newRole->is_mentor != 1){
-                return $this->apiResponse->sendResponse(400, 'Not a mentor 2', null);
+            if ($user->role_id != 3) {
+                if($newRole->is_mentor != 1){
+                    return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
+                }
             }
 
             $contents = $request->description;
@@ -278,6 +277,7 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
+    
             } else {
                 return $this->apiResponse->sendResponse(400, 'File type not supported', null);
             }
@@ -304,7 +304,7 @@ class AWSApiController extends Controller
             }
 
 
-
+           
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (\Exception $e) {
 
