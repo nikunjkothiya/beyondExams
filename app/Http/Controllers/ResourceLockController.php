@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
 use App\Key;
+use App\KeyPrice;
+use App\Currency;
 use App\UserKey;
 use App\ResourceKey;
 
@@ -22,8 +24,8 @@ class ResourceLockController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'author_id' => 'required|integer',
-            // 'price_inr' => 'required',
-            // 'price_usd' => 'required'
+            'price' => 'required|integer',
+            'currency' => 'required|integer|min:1|max:' . Currency::count()
         ]);
 
         if ($validator->fails()) {
@@ -36,13 +38,14 @@ class ResourceLockController extends Controller
             $newKey->author_id = $request->author_id;
             $newKey->save();
 
-            // $newKey->key_price()->create(
-            //     [
-            //         'author_id' => $request->author_id,
-            //         'price_inr' => $request->price_inr,
-            //         'price_usd' => $request->price_usd
-            //     ]
-            // );
+
+            $newKey->key_price()->create(
+                [
+                    'price' => $request->price,
+                    'currency_id' => $request->currency,
+                ]
+            );
+            $newKey['price'] = $request->price;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
 
         } catch (\Exception $e) {

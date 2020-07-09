@@ -59,5 +59,6 @@ class DatabaseSeeder extends Seeder
         $this->call(realReplyTableSeeder::class);
         $this->call(realTagUserTableSeeder::class);
         $this->call(realTransactionsTableSeeder::class);
+        $this->call(CurrencyTableSeeder::class);
     }
 }
