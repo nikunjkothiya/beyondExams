@@ -38,14 +38,15 @@ class ResourceLockController extends Controller
             $newKey->author_id = $request->author_id;
             $newKey->save();
 
-
             $newKey->key_price()->create(
                 [
                     'price' => $request->price,
                     'currency_id' => $request->currency,
                 ]
             );
+            $cur =  Currency::where('id',$request->currency)->first();
             $newKey['price'] = $request->price;
+            $newKey['currency'] = $cur->name;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
 
         } catch (\Exception $e) {
@@ -78,8 +79,17 @@ class ResourceLockController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        $user = UserKey::where('user_id',$request->user_id)->get();
-        return $this->apiResponse->sendResponse(200, 'Done', $user);
+        $keys = UserKey::where('user_id',$request->user_id)->get();
+        foreach($keys as $key){
+            $k = Key::where('id',$key->key_id)->first();
+            $kp = KeyPrice::where('key_id',$key->key_id)->first();
+            $cur =  Currency::where('id',$kp->currency_id)->first();
+
+            $key['name'] = $k->name;
+            $key['price'] = $kp->price;
+            $key['currency'] = $cur->name;
+        }
+        return $this->apiResponse->sendResponse(200, 'Done', $keys);
     }
 
     public function get_author_keys(request $request){
@@ -92,7 +102,13 @@ class ResourceLockController extends Controller
         }
         
         $keys = Key::where('author_id',$request->author_id)->get();
+        foreach($keys as $key){
+            $kp = KeyPrice::where('key_id',$key['id'])->first();
+            $cur =  Currency::where('id',$kp->currency_id)->first();
 
+            $key['price'] = $kp->price;
+            $key['currency'] = $cur->name;
+        }
         return $this->apiResponse->sendResponse(200, 'Successful', $keys);
     }
 }

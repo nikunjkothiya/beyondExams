@@ -57,6 +57,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('success', ['uses' => 'SubscriptionController@success']);
     Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 
+    // Premium Subscription
+    Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
+
+
     Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
     Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
     Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
@@ -100,7 +104,10 @@ Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analyti
 
 Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
 
+// Resource Locking
 Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
 Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
 Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
 Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
+
+Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
