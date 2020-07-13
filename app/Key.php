@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-// use App\KeyPrice;
+use App\KeyPrice;
 use App\User;
 use App\UserKey;
 use App\ResourceKey;

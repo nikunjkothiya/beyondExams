@@ -11,7 +11,7 @@ class UserKey extends Model
     protected $fillable = [
         'key_id', 'user_id'
     ];
-    
+    public $timestamps = false;
     public function key(){
         return $this->belongsTo('App\Key', 'key_id');
     }
