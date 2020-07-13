@@ -161,6 +161,9 @@ class AWSApiController extends Controller
                 $file['unlocked'] = false;
                 $user_keys = UserKey::where('user_id',$request->user_id)->get();
                 $keys = ResourceKey::where('resource_id',$file->id)->get();
+                if(count($keys) === 0){
+                    $file['unlocked'] = true;
+                }
                 if($keys){
                     foreach($keys as $key){
                         foreach($user_keys as $user_key){
