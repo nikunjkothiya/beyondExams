@@ -398,11 +398,26 @@ class UtilController extends Controller
                 'id' => 'required|int',
             ]);
 
-            $user = User::find($request->user_id);
+//	    if ($validator->fails()) {
+//                return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+//            }
 
-//            $user = Auth::user();
-            $legacy_opportunity_id = DB::table('legacy_opportunities')->where('phoenix_opportunity_id', $request->id)->select('legacy_opportunity_id')->get()[0]->legacy_opportunity_id;
-            $legacy_user_id = DB::table('legacy_users')->where('phoenix_user_id', $user->id)->select('legacy_user_id')->get()[0]->legacy_user_id;
+//            $user = User::find($request->user_id);
+
+            $user = Auth::user();
+            $legacy_opportunity_id = DB::table('legacy_opportunities')->where('phoenix_opportunity_id', $request->id)->select('legacy_opportunity_id')->get();
+	    if(count($legacy_opportunity_id) == 0){
+		return $apiResponse->sendResponse(400, 'Opportunity not found in legacy', null);
+	    }
+	    $legacy_opportunity_id = $legacy_opportunity_id[0]->legacy_opportunity_id;
+            $legacy_user_id = DB::table('legacy_users')->where('phoenix_user_id', $user->id)->select('legacy_user_id')->get();
+
+	    if(count($legacy_user_id) == 0){
+                return $apiResponse->sendResponse(400, 'User not found in legacy', null);
+            }
+
+	    $legacy_user_id = $legacy_user_id[0]->legacy_user_id;
+
 
             $client = new Client();
 
@@ -414,7 +429,7 @@ class UtilController extends Controller
             ]);
 
             $result = $res->getBody()->getContents();
-            return $apiResponse->sendResponse(200, 'Guidance request placed', $result);
+            return $apiResponse->sendResponse(200, 'Guidance request placed', json_decode($result, true));
 
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());

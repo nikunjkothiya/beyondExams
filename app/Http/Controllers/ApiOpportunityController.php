@@ -46,6 +46,7 @@ class ApiOpportunityController extends Controller
 	    }
 
             $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
+	    if ($opportunity_next != null)
             $opportunity["next_slug"] = $opportunity_next["slug"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
