@@ -11,6 +11,7 @@ use Validator;
 use App\User;
 use Auth;
 use DB;
+use Carbon\Carbon;
 
 class ApiOpportunityController extends Controller
 {
@@ -128,6 +129,8 @@ class ApiOpportunityController extends Controller
                 }])->whereHas('tags', function ($query) use ($user) {
                     $query->whereIn('tags.id', $user->tags);
                 })->paginate(10);
+//                })->whereDate('deadline', '>=',Carbon::now())->paginate(10);
+
 
                 if (count($user->saved_opportunities) > 0) {
                     $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
