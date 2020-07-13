@@ -155,6 +155,19 @@ class AWSApiController extends Controller
 
             foreach($all_files as $file){
                 $keys = ResourceKey::where('resource_id',$file->id)->get();
+                if($keys){
+                    foreach($keys as $key){
+                        unset($key['id']);
+                        unset($key['resource_id']);
+                        $k = Key::where('id',$key->key_id)->first();
+                        $kp = KeyPrice::where('key_id',$key->key_id)->first();
+                        $cur =  Currency::where('id',$kp->currency_id)->first();
+
+                        $key['name'] = $k->name;
+                        $key['price'] = $kp->price;
+                        $key['currency'] = $cur->name;
+                    }
+                }
                 $file['keys'] = $keys;
             }
 
