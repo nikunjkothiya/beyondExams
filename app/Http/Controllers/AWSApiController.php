@@ -154,7 +154,7 @@ class AWSApiController extends Controller
 
 
             foreach($all_files as $file){
-                $keys = ResourceKey::where('resource_id',$file->id)-get();
+                $keys = ResourceKey::where('resource_id',$file->id)->get();
                 $file['keys'] = $keys;
             }
 
