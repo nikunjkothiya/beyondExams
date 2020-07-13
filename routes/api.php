@@ -109,4 +109,4 @@ Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys
 Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
 Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
 
-// Premium Plans
+Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);

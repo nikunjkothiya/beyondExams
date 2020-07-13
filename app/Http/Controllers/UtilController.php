@@ -14,6 +14,7 @@ use App\User;
 use Auth;
 use Carbon\Carbon;
 use DateTime;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -387,6 +388,36 @@ class UtilController extends Controller
             return $apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e);
+        }
+    }
+
+    public function submit_guidance_request(Request $request) {
+        $apiResponse = new ApiResponse;
+        try {
+            $validator = $request->validate([
+                'id' => 'required|int',
+            ]);
+
+            $user = User::find($request->user_id);
+
+//            $user = Auth::user();
+            $legacy_opportunity_id = DB::table('legacy_opportunities')->where('phoenix_opportunity_id', $request->id)->select('legacy_opportunity_id')->get()[0]->legacy_opportunity_id;
+            $legacy_user_id = DB::table('legacy_users')->where('phoenix_user_id', $user->id)->select('legacy_user_id')->get()[0]->legacy_user_id;
+
+            $client = new Client();
+
+            $res = $client->request('POST', 'https://lithics.in/apis/mauka/precisely_chat/create_chat.php', [
+                'form_params' => [
+                    'user_id' => $legacy_user_id,
+                    'opp_id' => $legacy_opportunity_id
+                ]
+            ]);
+
+            $result = $res->getBody()->getContents();
+            return $apiResponse->sendResponse(200, 'Guidance request placed', $result);
+
+        } catch (\Exception $e) {
+            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }
