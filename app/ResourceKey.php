@@ -11,7 +11,7 @@ class ResourceKey extends Model
     protected $fillable = [
         'resource_id', 'key_id'
     ];
-
+    public $timestamps = false;
     public function key(){
         return $this->belongsTo('App\Key', 'key_id');
     }

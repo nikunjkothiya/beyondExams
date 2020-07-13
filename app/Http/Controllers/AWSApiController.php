@@ -7,6 +7,7 @@ use Auth;
 use App\User;
 use App\FileType;
 use App\Resource;
+use App\ResourceKey;
 use App\UserResource;
 use App\UserRole;
 use Exception;
@@ -150,6 +151,13 @@ class AWSApiController extends Controller
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
             $resp['flag'] = $flag;
+
+
+            foreach($all_files as $file){
+                $keys = ResourceKey::where('resource_id',$file->id)-get();
+                $file['keys'] = $keys;
+            }
+
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
 
@@ -203,11 +211,13 @@ class AWSApiController extends Controller
 
             $user = User::find($request->user_id);
             $newRole = UserRole::where('user_id',$request->user_id)->first();
-            if ($user->role_id != 3) {
-                if($newRole->is_mentor != 1){
-                    return $this->apiResponse->sendResponse(400, 'Not a mentor', null);
-                }
+            if ($newRole == null && $user->role_id === 1) {
+                return $this->apiResponse->sendResponse(400, 'Not a mentor 1', null);
             }
+            if($newRole && $newRole->is_mentor != 1){
+                return $this->apiResponse->sendResponse(400, 'Not a mentor 2', null);
+            }
+
 
             $contents = $request->description;
             if ($request->type == 3) {
