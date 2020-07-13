@@ -10,6 +10,7 @@ use App\Resource;
 use App\ResourceKey;
 use App\UserResource;
 use App\UserRole;
+use App\UserKey;
 use App\Key;
 use App\KeyPrice;
 use App\Currency;
@@ -157,9 +158,16 @@ class AWSApiController extends Controller
 
 
             foreach($all_files as $file){
+                $file['unlocked'] = false;
+                $user_keys = UserKey::where('user_id',$request->user_id)->get();
                 $keys = ResourceKey::where('resource_id',$file->id)->get();
                 if($keys){
                     foreach($keys as $key){
+                        foreach($user_keys as $user_key){
+                            if($user_key->key_id === $key->key_id){
+                                $file['unlocked'] = true;
+                            }
+                        }
                         unset($key['id']);
                         unset($key['resource_id']);
                         $k = Key::where('id',$key->key_id)->first();
