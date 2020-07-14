@@ -37,6 +37,9 @@ Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_fundin
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
 //Route::get('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
+
+Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
+
 //Protected APIs
 Route::group(['middleware' => 'auth:api'], function () {
     Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
@@ -51,15 +54,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	//	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
-
     Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
     Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
     Route::post('success', ['uses' => 'SubscriptionController@success']);
     Route::post('failure', ['uses' => 'SubscriptionController@failure']);
-
-    // Premium Subscription
-    Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
-
 
     Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
     Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
@@ -72,6 +70,18 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
     Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
     Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
+
+
+    // Resource Locking
+    Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
+    // Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
+    // Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
+    // Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
+
+    // Premium Subscription
+    Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
+    Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
+    Route::post('checkout', ['uses' => 'PremiumSubscriptionController@checkout']);
 
 });
 
@@ -104,10 +114,12 @@ Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analyti
 
 Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
 
-// Resource Locking
-Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
+
+Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
+
+
+// For Testing Only Need To be uncommented in secure Auth middleware
 Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
 Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
 Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
 
-Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);

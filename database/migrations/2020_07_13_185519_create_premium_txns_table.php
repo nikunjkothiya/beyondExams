@@ -15,9 +15,10 @@ class CreatePremiumTxnsTable extends Migration
     {
         Schema::create('premium_txn', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('txn_id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('plan_id');
-            $table->date('end_date');
+            $table->integer('valid')->default(0);
             $table->timestamps();
         });
         Schema::table('premium_txn',function($table){
@@ -33,6 +34,6 @@ class CreatePremiumTxnsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('premium_txns');
+        Schema::dropIfExists('premium_txn');
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\ApiResponse;
-use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
+use Auth;
 use App\Key;
 use App\KeyPrice;
 use App\Currency;
@@ -49,7 +49,7 @@ class ResourceLockController extends Controller
             $newKey['currency'] = $cur->name;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
@@ -73,13 +73,7 @@ class ResourceLockController extends Controller
     }
 
     public function get_user_keys(request $request){
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required'
-        ]);
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
-        $keys = UserKey::where('user_id',$request->user_id)->get();
+        $keys = UserKey::where('user_id', Auth::user()->id)->get();
         foreach($keys as $key){
             $k = Key::where('id',$key->key_id)->first();
             $kp = KeyPrice::where('key_id',$key->key_id)->first();
