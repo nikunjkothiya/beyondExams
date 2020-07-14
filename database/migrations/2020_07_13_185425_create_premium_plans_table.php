@@ -17,7 +17,7 @@ class CreatePremiumPlansTable extends Migration
             $table->bigIncrements('id');
             $table->string('plan_name');
             $table->integer('price');
-            $table->integer('validity');
+            $table->integer('months');
             $table->integer('enabled')->default(1);
             $table->unsignedBigInteger('currency_id');
             $table->timestamps();
