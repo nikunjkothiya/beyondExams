@@ -26,8 +26,8 @@ class PremiumSubscriptionController extends Controller
     {
         try {
             $plans = PremiumPlan::where('enabled', 1)->get();
-            foreach($plans as $plan){
-                $plan['currency'] = Currency::where('id',$plan->currency_id)->first()->name;
+            foreach ($plans as $plan) {
+                $plan['currency'] = Currency::where('id', $plan->currency_id)->first()->name;
                 unset($plan['currency_id']);
                 unset($plan['updated_at']);
                 unset($plan['created_at']);
@@ -38,7 +38,7 @@ class PremiumSubscriptionController extends Controller
         }
     }
 
-    function get_subscriptions(request $request)
+    function get_subscriptions()
     {
         try {
             $plan = PremiumValidity::where('user_id', Auth::user()->id)->first();
@@ -74,7 +74,7 @@ class PremiumSubscriptionController extends Controller
 
         try {
             $plan = PremiumValidity::where('user_id', Auth::user()->id)->first();
-            if($plan){
+            if ($plan) {
                 $plan->end_date = Carbon::parse($plan->end_date)->addDays($request->days);
                 $plan->save();
                 return $this->apiResponse->sendResponse(200, 'Days added to plan.', $plan);
@@ -85,7 +85,8 @@ class PremiumSubscriptionController extends Controller
         }
     }
 
-    function checkout(request $request){
+    function checkout(request $request)
+    {
         $validator = Validator::make($request->all(), [
             "payment_id"  => "required",
             "plan_id" => "required"
@@ -98,14 +99,14 @@ class PremiumSubscriptionController extends Controller
         try {
             // Set Variables
             $api = new Api(env('RAZOR_KEY'), env('RAZOR_SECRET'));
-            $plan = PremiumPlan::where('id',$request->plan_id)->first();
+            $plan = PremiumPlan::where('id', $request->plan_id)->first();
             // Get Payment Details
-            $payment = $api->payment->fetch($request->razorpay_payment_id);
-            
+            $payment = $api->payment->fetch($request->payment_id);
+
             // Capture the payment
-            if($payment->status = 'authorized'){
+            if ($payment->status = 'authorized') {
                 $payment->capture(
-                    array('amount'=>$payment->amount, 'currency'=>$payment->currency)
+                    array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
                 // Create A TXN
                 $txn = new PremiumTxn();
@@ -115,8 +116,8 @@ class PremiumSubscriptionController extends Controller
                 $txn->valid = 1;
                 $txn->save();
                 // Add Plan to user Account
-                $user_validity = PremiumValidity::where('user_id',Auth::user()->id)->first();
-                if($user_validity){
+                $user_validity = PremiumValidity::where('user_id', Auth::user()->id)->first();
+                if ($user_validity) {
                     $user_validity->end_date = Carbon::parse($user_validity->end_date)->addMonths($plan->months);
                     $user_validity->save();
                 } else {
