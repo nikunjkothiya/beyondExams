@@ -238,4 +238,12 @@ class ApiOpportunityController extends Controller
         }
 
     }
+
+    public function get_opportunity_stack()
+    {
+        $opportunities = Opportunity::with(['location', 'fund_type'])->where('deadline', '>', Carbon::now())->orderBy('deadline', 'asc')->take(6)->get();
+        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+    }
+
+
 }

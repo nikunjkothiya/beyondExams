@@ -111,3 +111,5 @@ Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
 Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
 
 Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
+
+Route::get('get_opportunity_stack', ['uses' => 'ApiOpportunityController@get_opportunity_stack']);
