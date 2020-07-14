@@ -586,9 +586,12 @@ class PreciselyController extends Controller
 
     public function segment_analytics(Request $request)
     {
+	/*
         try {
 //            Create new Analytics, connect it to user, connect it to opportunity
-            $user = User::find($request->userId);
+
+
+	    $user = User::find($request->userId);
             $is_view_action = strcmp($request->event, "Views");
 
             $opportunity = null;
@@ -646,6 +649,7 @@ class PreciselyController extends Controller
         } catch (\Exception $e) {
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }
+	}
+	     */
     }
 }
