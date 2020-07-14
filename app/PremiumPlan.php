@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PremiumPlan extends Model
 {
-    protected $fillable = ['plan_name','price','validity','currency_id'];
+    protected $fillable = ['plan_name','price','months','currency_id'];
 
     public function currency(){
         return $this->belongsTo('App\Currency');

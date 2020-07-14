@@ -11,6 +11,7 @@ use App\UserDetail;
 use App\Product;
 use App\Transaction;
 use Carbon\Carbon;
+use Exception;
 
 class SubscriptionController extends Controller
 {
