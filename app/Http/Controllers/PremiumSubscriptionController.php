@@ -9,8 +9,8 @@ use Exception;
 use Auth;
 use App\Currency;
 use App\PremiumPlan;
-use App\PremiumTxn;
 use App\PremiumValidity;
+use App\Transaction;
 use Carbon\Carbon;
 use Razorpay\Api\Api;
 
@@ -121,12 +121,13 @@ class PremiumSubscriptionController extends Controller
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
                 // Create A TXN
-                $txn = new PremiumTxn();
+                $txn = new Transaction();
                 $txn->txn_id = $payment->id;
                 $txn->user_id = Auth::user()->id;
-                $txn->plan_id = $plan->id;
+                $txn->product_id = 1;
                 $txn->valid = 1;
                 $txn->save();
+
                 // Add Plan to user Account
                 $user_validity = PremiumValidity::where('user_id', Auth::user()->id)->first();
                 if ($user_validity) {
