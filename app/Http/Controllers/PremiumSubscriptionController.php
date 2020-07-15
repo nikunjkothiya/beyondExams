@@ -104,18 +104,10 @@ class PremiumSubscriptionController extends Controller
 
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
+            return $this->apiResponse->sendResponse(400, 'Transaction was already captured', $payment->status);
 
             // Capture the payment
-            if ($payment->status = 'captured') {
-                // Payment Token Already used
-                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
-            } else if ($payment->status = 'refunded') {
-                // Payment was refunded
-                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
-            } else if ($payment->status = 'failed') {
-                // Payment Failed
-                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
-            } else if ($payment->status = 'authorized') {
+            if ($payment->status == 'authorized') {
                 // Capturing Payment
                 $payment->capture(
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
@@ -140,6 +132,15 @@ class PremiumSubscriptionController extends Controller
                     $user_validity->save();
                 }
                 return $this->apiResponse->sendResponse(200, 'Order Created', null);
+            } else if ($payment->status == 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status == 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status == 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
             } else {
                 // Unkown Error
                 return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
