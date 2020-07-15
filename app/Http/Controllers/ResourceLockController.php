@@ -12,6 +12,7 @@ use App\KeyPrice;
 use App\Currency;
 use App\UserKey;
 use App\ResourceKey;
+use Razorpay\Api\Api;
 
 class ResourceLockController extends Controller
 {
@@ -20,7 +21,8 @@ class ResourceLockController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function save_new_key(request $request){
+    public function save_new_key(request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'author_id' => 'required|integer',
@@ -44,17 +46,17 @@ class ResourceLockController extends Controller
                     'currency_id' => $request->currency,
                 ]
             );
-            $cur =  Currency::where('id',$request->currency)->first();
+            $cur =  Currency::where('id', $request->currency)->first();
             $newKey['price'] = $request->price;
             $newKey['currency'] = $cur->name;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
-
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }
 
-    public function lock_resource(request $request){
+    public function lock_resource(request $request)
+    {
         $validator = Validator::make($request->all(), [
             'resource_id' => 'required|integer',
             'key_id' => 'required|integer'
@@ -72,12 +74,13 @@ class ResourceLockController extends Controller
         return $this->apiResponse->sendResponse(200, 'Resource Locked With Key', $resourceKey);
     }
 
-    public function get_user_keys(request $request){
+    public function get_user_keys(request $request)
+    {
         $keys = UserKey::where('user_id', Auth::user()->id)->get();
-        foreach($keys as $key){
-            $k = Key::where('id',$key->key_id)->first();
-            $kp = KeyPrice::where('key_id',$key->key_id)->first();
-            $cur =  Currency::where('id',$kp->currency_id)->first();
+        foreach ($keys as $key) {
+            $k = Key::where('id', $key->key_id)->first();
+            $kp = KeyPrice::where('key_id', $key->key_id)->first();
+            $cur =  Currency::where('id', $kp->currency_id)->first();
 
             $key['name'] = $k->name;
             $key['price'] = $kp->price;
@@ -86,7 +89,8 @@ class ResourceLockController extends Controller
         return $this->apiResponse->sendResponse(200, 'Done', $keys);
     }
 
-    public function get_author_keys(request $request){
+    public function get_author_keys(request $request)
+    {
         $validator = Validator::make($request->all(), [
             'author_id' => 'required|integer',
         ]);
@@ -94,15 +98,65 @@ class ResourceLockController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        
-        $keys = Key::where('author_id',$request->author_id)->get();
-        foreach($keys as $key){
-            $kp = KeyPrice::where('key_id',$key['id'])->first();
-            $cur =  Currency::where('id',$kp->currency_id)->first();
+
+        $keys = Key::where('author_id', $request->author_id)->get();
+        foreach ($keys as $key) {
+            $kp = KeyPrice::where('key_id', $key['id'])->first();
+            $cur =  Currency::where('id', $kp->currency_id)->first();
 
             $key['price'] = $kp->price;
             $key['currency'] = $cur->name;
         }
         return $this->apiResponse->sendResponse(200, 'Successful', $keys);
+    }
+
+    function resource_checkout(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "payment_id"  => "required",
+            "key_id" => "required"
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+
+            // Set Variables
+            $api = new Api(env('RAZOR_KEY'), env('RAZOR_SECRET'));
+
+            // Get Payment Details
+            $payment = $api->payment->fetch($request->payment_id);
+
+            // Capture the payment
+            if ($payment->status = 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
+            } else if ($payment->status = 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status = 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status = 'authorized') {
+                // Capturing Payment
+                $payment->capture(
+                    array('amount' => $payment->amount, 'currency' => $payment->currency)
+                );
+                // Create A TXN
+                $user_key = new UserKey();
+                $user_key->user_key = Auth::user()->id;
+                $user_key->key_id = $request->key_id;
+                $user_key->save();
+
+                return $this->apiResponse->sendResponse(200, 'Purchase Successful. Key Added', null);
+            } else {
+                // Unkown Error
+                return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+        }
     }
 }

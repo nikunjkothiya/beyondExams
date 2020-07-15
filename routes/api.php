@@ -77,6 +77,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
     // Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
     // Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
+    Route::post('resource_checkout', ['uses' => 'ResourceLockController@resource_checkout']);
 
     // Premium Subscription
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);

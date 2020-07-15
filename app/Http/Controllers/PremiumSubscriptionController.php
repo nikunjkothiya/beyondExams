@@ -97,13 +97,26 @@ class PremiumSubscriptionController extends Controller
         }
 
         try {
+
             // Set Variables
             $api = new Api(env('RAZOR_KEY'), env('RAZOR_SECRET'));
             $plan = PremiumPlan::where('id', $request->plan_id)->first();
+
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
+
             // Capture the payment
-            if ($payment->status = 'authorized') {
+            if ($payment->status = 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
+            } else if ($payment->status = 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status = 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status = 'authorized') {
+                // Capturing Payment
                 $payment->capture(
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
@@ -126,8 +139,10 @@ class PremiumSubscriptionController extends Controller
                     $user_validity->save();
                 }
                 return $this->apiResponse->sendResponse(200, 'Order Created', null);
+            } else {
+                // Unkown Error
+                return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
             }
-            return $this->apiResponse->sendResponse(400, 'Transaction was not Authorized', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
