@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserKey extends Model
 {
     protected $fillable = [
-        'key_id', 'user_id','txn_id'
+        'key_id', 'user_id','transaction_id'
     ];
     public $timestamps = false;
     public function key(){
@@ -19,6 +19,6 @@ class UserKey extends Model
     }
 
     public function txn(){
-        return $this->belongsTo('App\Transaction', 'txn_id');
+        return $this->belongsTo('App\Transaction', 'transaction_id');
     }
 }
