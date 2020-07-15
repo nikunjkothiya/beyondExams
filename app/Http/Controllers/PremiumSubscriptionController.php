@@ -106,23 +106,14 @@ class PremiumSubscriptionController extends Controller
             $payment = $api->payment->fetch($request->payment_id);
 
             // Capture the payment
-            if ($payment->status = 'captured') {
-                // Payment Token Already used
-                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
-            } else if ($payment->status = 'refunded') {
-                // Payment was refunded
-                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
-            } else if ($payment->status = 'failed') {
-                // Payment Failed
-                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
-            } else if ($payment->status = 'authorized') {
+            if ($payment->status == 'authorized') {
                 // Capturing Payment
                 $payment->capture(
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
                 // Create A TXN
                 $txn = new Transaction();
-                $txn->txn_id = $payment->id;
+                $txn->transaction_id = $payment->id;
                 $txn->user_id = Auth::user()->id;
                 $txn->product_id = 1;
                 $txn->valid = 1;
@@ -140,6 +131,15 @@ class PremiumSubscriptionController extends Controller
                     $user_validity->save();
                 }
                 return $this->apiResponse->sendResponse(200, 'Order Created', null);
+            } else if ($payment->status == 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status == 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status == 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
             } else {
                 // Unkown Error
                 return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
