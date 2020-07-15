@@ -11,6 +11,7 @@ use Validator;
 use App\User;
 use Auth;
 use DB;
+use Carbon\Carbon;
 
 class ApiOpportunityController extends Controller
 {
@@ -125,9 +126,11 @@ class ApiOpportunityController extends Controller
 //            $tags = $user->tags;
                 $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                     $query->where('locale', 'en');
-                }])->whereHas('tags', function ($query) use ($user) {
+                }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                     $query->whereIn('tags.id', $user->tags);
                 })->paginate(10);
+//                })->whereDate('deadline', '>=',Carbon::now())->paginate(10);
+
 
                 if (count($user->saved_opportunities) > 0) {
                     $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
@@ -235,4 +238,12 @@ class ApiOpportunityController extends Controller
         }
 
     }
+
+    public function get_opportunity_stack()
+    {
+        $opportunities = Opportunity::with(['location', 'fund_type'])->where('deadline', '>', Carbon::now())->orderBy('deadline', 'asc')->take(6)->get();
+        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+    }
+
+
 }
