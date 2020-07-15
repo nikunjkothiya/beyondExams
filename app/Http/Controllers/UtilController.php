@@ -59,7 +59,6 @@ class UtilController extends Controller
             $user->saved_opportunities()->detach($id);
             $user->saved_opportunities()->attach($id);
         } catch (Exception $e) {
-
         }
         return response()->json([
             'status' => 'success',
@@ -79,7 +78,6 @@ class UtilController extends Controller
             $user = Auth::user();
             $user->saved_opportunities()->detach($id);
         } catch (Exception $e) {
-
         }
         return response()->json([
             'status' => 'success',
@@ -108,12 +106,11 @@ class UtilController extends Controller
             $record->user_id = $user->id;
             $record->opportunity_id = $id;
             $record->status = 1;
-//            opp_title, off_link, opp_deadline
-//            user_name, email,
+            //            opp_title, off_link, opp_deadline
+            //            user_name, email,
             $record->datetime = new DateTime();
 
             $record->save();
-
         } catch (Exception $e) {
             Log::error("FUCK IT!");
             Log::error($e);
@@ -201,10 +198,10 @@ class UtilController extends Controller
                 'deadline' => 'required|date',
                 'image' => 'required|string',
                 'link' => 'required|string',
-//               NA fundtype = 3, PF = 2, FF = 1
+                //               NA fundtype = 3, PF = 2, FF = 1
                 'fund_type' => 'required|integer|min:1|max:' . FundType::count(),
-//                Many2many: To handle multiple origins
-//                Replace null with online
+                //                Many2many: To handle multiple origins
+                //                Replace null with online
                 'opportunity_location' => 'required|integer|min:1|max:' . OpportunityLocation::count(),
 
                 'tags' => 'required|array|min:1',
@@ -221,168 +218,168 @@ class UtilController extends Controller
                 return $apiResponse->sendResponse(401, 'Unauthorized Request', '');
             }
 
-            if (isset($data->legacy_id)){
-                if (DB::table('legacy_opportunities')->where('legacy_opportunity_id', $data->legacy_id)->exists()){
+            if (isset($data->legacy_id)) {
+                if (DB::table('legacy_opportunities')->where('legacy_opportunity_id', $data->legacy_id)->exists()) {
                     return $apiResponse->sendResponse(500, 'Opportunity already exists', $data->legacy_id);
                 }
             }
 
             $slug = str_replace(" ", "-", strtolower($data->en->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
             $opportunity = array(
-//                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
+                //                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
                 'deadline' => $data->deadline,
                 'image' => $data->image,
-//                Google home page in case of no link
+                //                Google home page in case of no link
                 'link' => $data->link,
                 'fund_type_id' => $data->fund_type,
                 'slug' => $slug,
                 'opportunity_location_id' => $data->opportunity_location,
             );
 
-		if (isset($data->bn)){
-                    $opportunity['bn'] = [
-                        'title' =>$data->bn->title,
-                        'description' => $data->bn->description
-                    ];
-                }
-                if (isset($data->my)){
-                    $opportunity['my'] = [
-                        'title' =>$data->my->title,
-                        'description' => $data->my->description
-                    ];
-                }
-                if (isset($data->en)){
-                    $opportunity['en'] = [
-                        'title' =>$data->en->title,
-                        'description' => $data->en->description
-                    ];
-                }
-                if (isset($data->tl)){
-                    $opportunity['tl'] = [
-                        'title' =>$data->tl->title,
-                        'description' => $data->tl->description
-                    ];
-                }
-                if (isset($data->fr)){
-                    $opportunity['fr'] = [
-                        'title' =>$data->fr->title,
-                        'description' => $data->fr->description
-                    ];
-                }
-                if (isset($data->de)){
-                    $opportunity['de'] = [
-                        'title' =>$data->de->title,
-                        'description' => $data->de->description
-                    ];
-                }
-                if (isset($data->hi)){
-                    $opportunity['hi'] = [
-                        'title' =>$data->hi->title,
-                        'description' => $data->hi->description
-                    ];
-                }
-//                if (isset($data->id)){
-//                    $opportunity['id'] = [
-//                        'title' =>$data->id->title,
-//                        'description' => $data->id->description
-//                    ];
-//                }
-                if (isset($data->it)){
-                    $opportunity['it'] = [
-                        'title' =>$data->it->title,
-                        'description' => $data->it->description
-                    ];
-                }
-                if (isset($data->ja)){
-                    $opportunity['ja'] = [
-                        'title' =>$data->ja->title,
-                        'description' => $data->ja->description
-                    ];
-                }
-                if (isset($data->km)){
-                    $opportunity['km'] = [
-                        'title' =>$data->km->title,
-                        'description' => $data->km->description
-                    ];
-                }
-                if (isset($data->ko)){
-                    $opportunity['ko'] = [
-                        'title' =>$data->ko->title,
-                        'description' => $data->ko->description
-                    ];
-                }
-                if (isset($data->lo)){
-                    $opportunity['lo'] = [
-                        'title' =>$data->lo->title,
-                        'description' => $data->lo->description
-                    ];
-                }
-                if (isset($data->ms)){
-                    $opportunity['ms'] = [
-                        'title' =>$data->ms->title,
-                        'description' => $data->ms->description
-                    ];
-                }
-                if (isset($data->ne)){
-                    $opportunity['ne'] = [
-                        'title' =>$data->ne->title,
-                        'description' => $data->ne->description
-                    ];
-                }
-                if (isset($data->ro)){
-                    $opportunity['ro'] = [
-                        'title' =>$data->ro->title,
-                        'description' => $data->ro->description
-                    ];
-                }
-                if (isset($data->ru)){
-                    $opportunity['ru'] = [
-                        'title' =>$data->ru->title,
-                        'description' => $data->ru->description
-                    ];
-                }
-                if (isset($data->si)){
-                    $opportunity['si'] = [
-                        'title' =>$data->si->title,
-                        'description' => $data->si->description
-                    ];
-                }
-                if (isset($data->es)){
-                    $opportunity['es'] = [
-                        'title' =>$data->es->title,
-                        'description' => $data->es->description
-                    ];
-                }
-                if (isset($data->ta)){
-                    $opportunity['ta'] = [
-                        'title' =>$data->ta->title,
-                        'description' => $data->ta->description
-                    ];
-                }
-                if (isset($data->th)){
-                    $opportunity['th'] = [
-                        'title' =>$data->th->title,
-                        'description' => $data->th->description
-                    ];
-                }
-                if (isset($data->vi)){
-                    $opportunity['vi'] = [
-                        'title' =>$data->vi->title,
-                        'description' => $data->vi->description
-                    ];
-                }
+            if (isset($data->bn)) {
+                $opportunity['bn'] = [
+                    'title' => $data->bn->title,
+                    'description' => $data->bn->description
+                ];
+            }
+            if (isset($data->my)) {
+                $opportunity['my'] = [
+                    'title' => $data->my->title,
+                    'description' => $data->my->description
+                ];
+            }
+            if (isset($data->en)) {
+                $opportunity['en'] = [
+                    'title' => $data->en->title,
+                    'description' => $data->en->description
+                ];
+            }
+            if (isset($data->tl)) {
+                $opportunity['tl'] = [
+                    'title' => $data->tl->title,
+                    'description' => $data->tl->description
+                ];
+            }
+            if (isset($data->fr)) {
+                $opportunity['fr'] = [
+                    'title' => $data->fr->title,
+                    'description' => $data->fr->description
+                ];
+            }
+            if (isset($data->de)) {
+                $opportunity['de'] = [
+                    'title' => $data->de->title,
+                    'description' => $data->de->description
+                ];
+            }
+            if (isset($data->hi)) {
+                $opportunity['hi'] = [
+                    'title' => $data->hi->title,
+                    'description' => $data->hi->description
+                ];
+            }
+            //                if (isset($data->id)){
+            //                    $opportunity['id'] = [
+            //                        'title' =>$data->id->title,
+            //                        'description' => $data->id->description
+            //                    ];
+            //                }
+            if (isset($data->it)) {
+                $opportunity['it'] = [
+                    'title' => $data->it->title,
+                    'description' => $data->it->description
+                ];
+            }
+            if (isset($data->ja)) {
+                $opportunity['ja'] = [
+                    'title' => $data->ja->title,
+                    'description' => $data->ja->description
+                ];
+            }
+            if (isset($data->km)) {
+                $opportunity['km'] = [
+                    'title' => $data->km->title,
+                    'description' => $data->km->description
+                ];
+            }
+            if (isset($data->ko)) {
+                $opportunity['ko'] = [
+                    'title' => $data->ko->title,
+                    'description' => $data->ko->description
+                ];
+            }
+            if (isset($data->lo)) {
+                $opportunity['lo'] = [
+                    'title' => $data->lo->title,
+                    'description' => $data->lo->description
+                ];
+            }
+            if (isset($data->ms)) {
+                $opportunity['ms'] = [
+                    'title' => $data->ms->title,
+                    'description' => $data->ms->description
+                ];
+            }
+            if (isset($data->ne)) {
+                $opportunity['ne'] = [
+                    'title' => $data->ne->title,
+                    'description' => $data->ne->description
+                ];
+            }
+            if (isset($data->ro)) {
+                $opportunity['ro'] = [
+                    'title' => $data->ro->title,
+                    'description' => $data->ro->description
+                ];
+            }
+            if (isset($data->ru)) {
+                $opportunity['ru'] = [
+                    'title' => $data->ru->title,
+                    'description' => $data->ru->description
+                ];
+            }
+            if (isset($data->si)) {
+                $opportunity['si'] = [
+                    'title' => $data->si->title,
+                    'description' => $data->si->description
+                ];
+            }
+            if (isset($data->es)) {
+                $opportunity['es'] = [
+                    'title' => $data->es->title,
+                    'description' => $data->es->description
+                ];
+            }
+            if (isset($data->ta)) {
+                $opportunity['ta'] = [
+                    'title' => $data->ta->title,
+                    'description' => $data->ta->description
+                ];
+            }
+            if (isset($data->th)) {
+                $opportunity['th'] = [
+                    'title' => $data->th->title,
+                    'description' => $data->th->description
+                ];
+            }
+            if (isset($data->vi)) {
+                $opportunity['vi'] = [
+                    'title' => $data->vi->title,
+                    'description' => $data->vi->description
+                ];
+            }
 
 
             $r = Opportunity::create($opportunity);
             $r->tags()->sync($data->tags);
             $r->eligible_regions()->sync($data->eligible_regions);
-            if (isset($data->legacy_id)){
-                DB::table('legacy_opportunities')->insertOrIgnore(array('phoenix_opportunity_id'=>$r->id, 'legacy_opportunity_id'=>$data->legacy_id));
+            if (isset($data->legacy_id)) {
+                DB::table('legacy_opportunities')->insertOrIgnore(array('phoenix_opportunity_id' => $r->id, 'legacy_opportunity_id' => $data->legacy_id));
             }
 
             $data = [
                 "id" => $r->id,
-		"legacy_id"=> $data->legacy_id
+                "legacy_id" => $data->legacy_id
             ];
 
             return $apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
@@ -391,32 +388,33 @@ class UtilController extends Controller
         }
     }
 
-    public function submit_guidance_request(Request $request) {
+    public function submit_guidance_request(Request $request)
+    {
         $apiResponse = new ApiResponse;
         try {
             $validator = $request->validate([
                 'id' => 'required|int',
             ]);
 
-//	    if ($validator->fails()) {
-//                return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-//            }
+            // if ($validator->fails()) {
+            // return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            //  }
 
-//            $user = User::find($request->user_id);
+            // $user = User::find($request->user_id);
 
             $user = Auth::user();
             $legacy_opportunity_id = DB::table('legacy_opportunities')->where('phoenix_opportunity_id', $request->id)->select('legacy_opportunity_id')->get();
-	    if(count($legacy_opportunity_id) == 0){
-		return $apiResponse->sendResponse(400, 'Opportunity not found in legacy', null);
-	    }
-	    $legacy_opportunity_id = $legacy_opportunity_id[0]->legacy_opportunity_id;
+            if (count($legacy_opportunity_id) == 0) {
+                return $apiResponse->sendResponse(400, 'Opportunity not found in legacy', null);
+            }
+            $legacy_opportunity_id = $legacy_opportunity_id[0]->legacy_opportunity_id;
             $legacy_user_id = DB::table('legacy_users')->where('phoenix_user_id', $user->id)->select('legacy_user_id')->get();
 
-	    if(count($legacy_user_id) == 0){
+            if (count($legacy_user_id) == 0) {
                 return $apiResponse->sendResponse(400, 'User not found in legacy', null);
             }
 
-	    $legacy_user_id = $legacy_user_id[0]->legacy_user_id;
+            $legacy_user_id = $legacy_user_id[0]->legacy_user_id;
 
 
             $client = new Client();
@@ -430,7 +428,6 @@ class UtilController extends Controller
 
             $result = $res->getBody()->getContents();
             return $apiResponse->sendResponse(200, 'Guidance request placed', json_decode($result, true));
-
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }

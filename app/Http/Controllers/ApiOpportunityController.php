@@ -28,27 +28,27 @@ class ApiOpportunityController extends Controller
     public function get_opp($slug)
     {
         try {
-	    $hyphen_index = strrpos($slug, "-");
-	    $legacy_id = substr($slug, $hyphen_index + 1);
-	    if (preg_match("/[a-z]/i", $legacy_id)){
-	            $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
-        	        $query->where('locale', 'en');
-	            }])->where('slug', $slug)->firstOrFail();
-	    }else {
-	    $phoenix_opp_id = DB::table('legacy_opportunities')->where('legacy_opportunity_id', $legacy_id)->pluck('phoenix_opportunity_id');
-	    if (count($phoenix_opp_id) == 1)
-		$phoenix_opp_id = $phoenix_opp_id[0];
-	    else {
-		return $this->apiResponse->sendResponse(404, 'Opportunity not found', null);
-	    }
-            $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
-                $query->where('locale', 'en');
-            }])->where('slug','LIKE','%'. substr($slug, 0, strrpos($slug, "-")).'%')->where('id', $phoenix_opp_id)->firstOrFail();
-	    }
+            $hyphen_index = strrpos($slug, "-");
+            $legacy_id = substr($slug, $hyphen_index + 1);
+            if (preg_match("/[a-z]/i", $legacy_id)) {
+                $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                    $query->where('locale', 'en');
+                }])->where('slug', $slug)->firstOrFail();
+            } else {
+                $phoenix_opp_id = DB::table('legacy_opportunities')->where('legacy_opportunity_id', $legacy_id)->pluck('phoenix_opportunity_id');
+                if (count($phoenix_opp_id) == 1)
+                    $phoenix_opp_id = $phoenix_opp_id[0];
+                else {
+                    return $this->apiResponse->sendResponse(404, 'Opportunity not found', null);
+                }
+                $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                    $query->where('locale', 'en');
+                }])->where('slug', 'LIKE', '%' . substr($slug, 0, strrpos($slug, "-")) . '%')->where('id', $phoenix_opp_id)->firstOrFail();
+            }
 
             $opportunity_next = Opportunity::where('id', '>', $opportunity["id"])->select('slug')->first();
-	    if ($opportunity_next != null)
-            $opportunity["next_slug"] = $opportunity_next["slug"];
+            if ($opportunity_next != null)
+                $opportunity["next_slug"] = $opportunity_next["slug"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $opportunity);
         } catch (Exception $e) {
@@ -90,7 +90,7 @@ class ApiOpportunityController extends Controller
         try {
             if (Auth::check()) {
                 $user = Auth::user();
-//            $user = User::find($request->user_id)->get();
+                // $user = User::find($request->user_id)->get();
                 $current_opp_id = Opportunity::select('id')->where('slug', $request->slug)->first();
                 if (!is_null($current_opp_id)) {
                     $opportunity = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) use ($current_opp_id, $request) {
@@ -117,25 +117,25 @@ class ApiOpportunityController extends Controller
     public function get_opportunities(Request $request)
     {
         try {
-//            $user_id = $request->user_id;
+            //            $user_id = $request->user_id;
 
-//            if (!is_null(User::find($user_id)->id)) {
+            //            if (!is_null(User::find($user_id)->id)) {
             if (Auth::check()) {
                 $user = Auth::user();
-//                $user = User::find($user_id);
-//            $tags = $user->tags;
+                //                $user = User::find($user_id);
+                //            $tags = $user->tags;
                 $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                     $query->where('locale', 'en');
                 }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                     $query->whereIn('tags.id', $user->tags);
                 })->paginate(10);
-//                })->whereDate('deadline', '>=',Carbon::now())->paginate(10);
+                //                })->whereDate('deadline', '>=',Carbon::now())->paginate(10);
 
 
                 if (count($user->saved_opportunities) > 0) {
                     $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
                     foreach ($opportunities as $opportunity) {
-                        if (in_array(["id"=>$opportunity->id], $subset_saved_opporutnies))
+                        if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
                             $opportunity['saved'] = 1;
                         else
                             $opportunity['saved'] = 0;
@@ -151,7 +151,7 @@ class ApiOpportunityController extends Controller
                 return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
             }
         } catch (Exception $e) {
-//    return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
+            //    return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
             //abort(404);
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
@@ -229,14 +229,11 @@ class ApiOpportunityController extends Controller
                 }
 
                 return $this->apiResponse->sendResponse(200, 'Success', $opp_slugs);
-
             };
-
         } catch (Exception $e) {
             //abort(404);
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', null);
         }
-
     }
 
     public function get_opportunity_stack()
@@ -244,6 +241,4 @@ class ApiOpportunityController extends Controller
         $opportunities = Opportunity::with(['location', 'fund_type'])->where('deadline', '>', Carbon::now())->orderBy('deadline', 'asc')->take(6)->get();
         return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
     }
-
-
 }
