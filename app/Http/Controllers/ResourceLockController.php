@@ -12,6 +12,7 @@ use App\KeyPrice;
 use App\Currency;
 use App\UserKey;
 use App\ResourceKey;
+use App\Transaction;
 use Razorpay\Api\Api;
 
 class ResourceLockController extends Controller
@@ -145,10 +146,16 @@ class ResourceLockController extends Controller
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
                 // Create A TXN
-                $user_key = new UserKey();
-                $user_key->user_key = Auth::user()->id;
-                $user_key->key_id = $request->key_id;
-                $user_key->save();
+                $txn = new Transaction();
+                $txn->txn_id = $payment->id;
+                $txn->user_id = Auth::user()->id;
+                $txn->product_id = 2;
+                $txn->valid = 1;
+                $txn->save();
+
+                $txn->user_key()->create(
+                    ['key_id' => $request->key_id, 'user_id' => Auth::user()->id]
+                );
 
                 return $this->apiResponse->sendResponse(200, 'Purchase Successful. Key Added', null);
             } else {
