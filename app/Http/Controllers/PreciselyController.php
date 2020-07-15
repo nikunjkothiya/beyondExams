@@ -236,7 +236,7 @@ class PreciselyController extends Controller
     }
 
 //    TODO: CORRECT RETURN TYPE
-    public function get_user_profile(Request $request)
+    public function get_user_profile()
     {
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
@@ -265,7 +265,7 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_mentor_profile(Request $request)
+    public function get_mentor_profile()
     {
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);

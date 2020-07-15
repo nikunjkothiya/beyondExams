@@ -26,16 +26,17 @@ class OrganisationController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function post_opportunity(Request $request) {
+    public function post_opportunity(Request $request)
+    {
         try {
             $check = Validator::make($request->all(), [
                 'deadline' => 'required|date',
                 'image' => 'required|mimes:jpeg,jpg,png',
                 'link' => 'required|string',
-//               NA fundtype = 3, PF = 2, FF = 1
+                //               NA fundtype = 3, PF = 2, FF = 1
                 'fund_type' => 'required|integer|min:1|max:' . FundType::count(),
-//                Many2many: To handle multiple origins
-//                Replace null with online
+                //                Many2many: To handle multiple origins
+                //                Replace null with online
                 'opportunity_location' => 'required|integer|min:1|max:' . OpportunityLocation::count(),
 
                 'tags' => 'required|array|min:1',
@@ -48,8 +49,8 @@ class OrganisationController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Bad Request', [$check->errors(), $request]);
             }
 
-            $check = Organisation::where('id',$request->org_id)->first();
-            if($check){
+            $check = Organisation::where('id', $request->org_id)->first();
+            if ($check) {
                 $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
 
                 $file = $request->file('image');
@@ -62,14 +63,16 @@ class OrganisationController extends Controller
                 $filePath = "opportunity_images/" . $name;
 
                 Storage::putFileAs(
-                    'public/', $file, $filePath
+                    'public/',
+                    $file,
+                    $filePath
                 );
 
                 $opportunity = array(
-//                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
+                    //                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
                     'deadline' => $request->deadline,
                     'image' => $filePath,
-//                Google home page in case of no link
+                    //                Google home page in case of no link
                     'link' => $request->link,
                     'fund_type_id' => $request->fund_type,
                     'slug' => $slug,
@@ -77,7 +80,7 @@ class OrganisationController extends Controller
                 );
 
                 $opportunity['en'] = [
-                    'title' =>$request->title,
+                    'title' => $request->title,
                     'description' => $request->description
                 ];
 
@@ -91,11 +94,9 @@ class OrganisationController extends Controller
                 DB::table('opportunity_organisation')->insert(['opportunity_id' => $r->id, 'organisation_id' => $check->id]);
 
                 return $this->apiResponse->sendResponse(200, 'Opportunity Successfully Inserted', $data);
-
             } else {
                 return $this->apiResponse->sendResponse(500, 'User unauthenticated', null);
             }
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -125,7 +126,8 @@ Forum [list of questions]
 Trending opportunities
      */
 
-    public function analytics(Request $request){
+    public function analytics(Request $request)
+    {
         $total_views = DB::table('opportunity_views')->where('opportunity_id', $request->opp_id)->sum('views');
         $total_shares = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('action_id', '=', 2)->count();
         $total_time_spent = DB::table('analytics')->where('opportunity_id', $request->opp_id)->where('key', "duration")->sum('value');
@@ -134,7 +136,7 @@ Trending opportunities
         $total_views_bw_dates = DB::table('opportunity_views')->where('opportunity_id', $request->opp_id)->select('created_at', DB::raw('SUM(views) as total'))->groupBy('created_at')->get();
         $last_few = Analytics::with('action')->where('opportunity_id', $request->opp_id)->paginate(15);
 
-        $data = ["total_time_spent"=> $total_time_spent, "total_share"=>$total_shares, "total_official_link"=>$total_official_link];
+        $data = ["total_time_spent" => $total_time_spent, "total_share" => $total_shares, "total_official_link" => $total_official_link];
         $data["relevant"] = $relevant;
         $data["total_views"] = $total_views;
         $data["total_views_bw_dates"] = $total_views_bw_dates;
