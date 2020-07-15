@@ -85,7 +85,7 @@ class PremiumSubscriptionController extends Controller
         }
     }
 
-    function checkout(request $request)
+    function premium_checkout(request $request)
     {
         $validator = Validator::make($request->all(), [
             "payment_id"  => "required",
@@ -102,7 +102,6 @@ class PremiumSubscriptionController extends Controller
             $plan = PremiumPlan::where('id', $request->plan_id)->first();
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
-
             // Capture the payment
             if ($payment->status = 'authorized') {
                 $payment->capture(

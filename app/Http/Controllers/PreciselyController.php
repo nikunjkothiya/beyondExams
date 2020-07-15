@@ -588,7 +588,7 @@ class PreciselyController extends Controller
     {
 	/*
         try {
-//            Create new Analytics, connect it to user, connect it to opportunity
+        // Create new Analytics, connect it to user, connect it to opportunity
 
 
 	    $user = User::find($request->userId);
@@ -649,7 +649,7 @@ class PreciselyController extends Controller
         } catch (\Exception $e) {
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-	}
-	     */
+	    }
+	 */
     }
 }
