@@ -54,10 +54,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 	//	Route::post('opportunities',['uses' => 'ApiOpportunityController@get_opportunities']);
 
-    Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
-    Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
-    Route::post('success', ['uses' => 'SubscriptionController@success']);
-    Route::post('failure', ['uses' => 'SubscriptionController@failure']);
+    // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
+    // Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
+    // Route::post('success', ['uses' => 'SubscriptionController@success']);
+    // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 
     Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
     Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
@@ -81,7 +81,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Premium Subscription
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
     Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
-    Route::post('checkout', ['uses' => 'PremiumSubscriptionController@checkout']);
+    Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
 
 });
 
