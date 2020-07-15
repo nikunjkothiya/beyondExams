@@ -104,7 +104,6 @@ class PremiumSubscriptionController extends Controller
 
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
-            return $this->apiResponse->sendResponse(400, 'Transaction was already captured', $payment->status);
 
             // Capture the payment
             if ($payment->status == 'authorized') {
@@ -114,7 +113,7 @@ class PremiumSubscriptionController extends Controller
                 );
                 // Create A TXN
                 $txn = new Transaction();
-                $txn->txn_id = $payment->id;
+                $txn->transaction_id = $payment->id;
                 $txn->user_id = Auth::user()->id;
                 $txn->product_id = 1;
                 $txn->valid = 1;
