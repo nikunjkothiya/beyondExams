@@ -16,12 +16,12 @@ class CreateUserKeysTable extends Migration
         Schema::create('user_keys', function (Blueprint $table) {
             $table->unsignedBigInteger('key_id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('txn_id');
+            $table->unsignedBigInteger('transaction_id');
         });
         Schema::table('user_keys',function($table){
             $table->foreign('key_id')->references('id')->on('keys');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('txn_id')->references('id')->on('transactions');
+            $table->foreign('transaction_id')->references('id')->on('transactions');
         });
     }
 
