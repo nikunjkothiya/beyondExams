@@ -106,7 +106,7 @@ class PremiumSubscriptionController extends Controller
             $payment = $api->payment->fetch($request->payment_id);
 
             if(!$plan){
-                return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);
+                return $this->apiResponse->sendResponse(400, 'Plan Does not exist', null);
             }
 
             if(!$payment){
