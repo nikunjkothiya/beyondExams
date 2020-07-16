@@ -54,7 +54,7 @@ class ResourceLockController extends Controller
             $newKey['currency'] = $cur->name;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -89,13 +89,13 @@ class ResourceLockController extends Controller
             $key['price'] = $kp->price;
             $key['currency'] = $cur->name;
 
-            $resources = ResourceKey::where('key_id',$k->id)->get();
+            $resources = ResourceKey::where('key_id', $k->id)->get();
             foreach ($resources as $resource) {
                 unset($resource['key_id']);
                 unset($resource['id']);
                 $resource_info = Resource::where('id', $resource->resource_id)->first();
                 $author = User::where('id', $resource_info->author_id)->first();
-                $resource['name'] = $resource_info->title; 
+                $resource['name'] = $resource_info->title;
                 $resource['author'] = $author->name;
             }
 
@@ -145,13 +145,13 @@ class ResourceLockController extends Controller
             $payment = $api->payment->fetch($request->payment_id);
 
             // Check if resource_key exist
-            $resource_key = ResourceKey::where('id',$request->key_id)->first();
+            $resource_key = ResourceKey::where('id', $request->key_id)->first();
 
-            if(!$resource_key){
+            if (!$resource_key) {
                 return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);
             }
 
-            if(!$payment){
+            if (!$payment) {
                 return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
             }
 
@@ -188,7 +188,7 @@ class ResourceLockController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
             }
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(400, 'Payment Error', $e->getMessage());
         }
     }
 }

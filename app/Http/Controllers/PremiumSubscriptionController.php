@@ -34,7 +34,7 @@ class PremiumSubscriptionController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Success', $plans);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -58,7 +58,7 @@ class PremiumSubscriptionController extends Controller
                 return $this->apiResponse->sendResponse(200, 'No Premium Plan Bought', $result);
             }
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -81,7 +81,7 @@ class PremiumSubscriptionController extends Controller
             }
             return $this->apiResponse->sendResponse(400, 'User has no active plan', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -153,7 +153,7 @@ class PremiumSubscriptionController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
             }
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(400, 'Payment Error', $e->getMessage());
         }
     }
 }
