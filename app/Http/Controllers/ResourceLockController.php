@@ -133,11 +133,11 @@ class ResourceLockController extends Controller
             // Check if resource_key exist
             $resource_key = ResourceKey::where('id',$request->key_id)->first();
             
-            if(isNull($resource_key)){
+            if(!$resource_key){
                 return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);
             }
 
-            if(isNull($payment)){
+            if(!$payment){
                 return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
             }
 

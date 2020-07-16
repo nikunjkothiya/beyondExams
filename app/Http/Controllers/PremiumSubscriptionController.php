@@ -105,6 +105,14 @@ class PremiumSubscriptionController extends Controller
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
 
+            if(!$plan){
+                return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);
+            }
+            
+            if(!$payment){
+                return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
+            }
+
             // Capture the payment
             if ($payment->status == 'authorized') {
                 // Capturing Payment
