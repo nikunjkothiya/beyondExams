@@ -10,9 +10,11 @@ use Auth;
 use App\Key;
 use App\KeyPrice;
 use App\Currency;
+use App\Resource;
 use App\UserKey;
 use App\ResourceKey;
 use App\Transaction;
+use App\User;
 use Razorpay\Api\Api;
 
 class ResourceLockController extends Controller
@@ -86,6 +88,18 @@ class ResourceLockController extends Controller
             $key['name'] = $k->name;
             $key['price'] = $kp->price;
             $key['currency'] = $cur->name;
+
+            $resources = ResourceKey::where('key_id',$k->id)->get();
+            foreach ($resources as $resource) {
+                unset($resource['key_id']);
+                unset($resource['id']);
+                $resource_info = Resource::where('id', $resource->resource_id)->first();
+                $author = User::where('id', $resource_info->author_id)->first();
+                $resource['name'] = $resource_info->title; 
+                $resource['author'] = $author->name;
+            }
+
+            $key['resources'] = $resources;
         }
         return $this->apiResponse->sendResponse(200, 'Done', $keys);
     }
