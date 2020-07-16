@@ -129,6 +129,17 @@ class ResourceLockController extends Controller
 
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
+            
+            // Check if resource_key exist
+            $resource_key = ResourceKey::where('id',$request->key_id)->first();
+            
+            if(isNull($resource_key)){
+                return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);
+            }
+
+            if(isNull($payment)){
+                return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
+            }
 
             // Capture the payment
             if ($payment->status == 'authorized') {
