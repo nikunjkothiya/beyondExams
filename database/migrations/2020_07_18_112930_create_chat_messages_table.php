@@ -20,12 +20,13 @@ class CreateChatMessagesTable extends Migration
             $table->unsignedBigInteger('type_id')->default(1);
             $table->unsignedBigInteger('sender_id');
             $table->timestamps();
-            $table->integer('is_child')->default(-1);
+            $table->unsignedBigInteger('is_child')->nullable();
         });
         Schema::table('chat_messages',function($table){
             $table->foreign('chat_id')->references('id')->on('chats');
             $table->foreign('type_id')->references('id')->on('message_types');
             $table->foreign('sender_id')->references('id')->on('users');
+            $table->foreign('is_child')->references('id')->on('chat_messages');
         });
     }
 

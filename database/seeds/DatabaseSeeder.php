@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DisciplinesTableSeeder::class);
         $this->call(FundTypeTableSeeder::class);
         $this->call(FileTypeTableSeeder::class);
+        $this->call(MessagesTypesTableSeeder::class);
         $this->call(LanguageTableSeeder::class);
         $this->call(OpportunityLocationTableSeeder::class);
         $this->call(EligibleRegionTableSeeder::class);

@@ -17,8 +17,8 @@ class CreateChatsTable extends Migration
             $table->bigIncrements('id');
             $table->string('title');
             $table->unsignedBigInteger('creator_id');
-            $table->integer('is_group')->default(0);
-            $table->integer('is_support')->default(0);
+            $table->boolean('is_group')->default(0);
+            $table->boolean('is_support')->default(0);
             $table->timestamps();
         });
 
