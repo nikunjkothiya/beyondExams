@@ -19,6 +19,7 @@ use App\ChatOperator;
 use App\ChatUser;
 use App\Opportunity;
 use App\OpportunityRepresentative;
+use App\OpportunityTranslations;
 
 class ChatController extends Controller
 {
@@ -141,7 +142,7 @@ class ChatController extends Controller
                 if (!$chat_group) {
                     // Create New Chat Group if it does not exist
 
-                    $opp = Opportunity::where('id', $request->opportunity_id)->first();
+                    $opp = OpportunityTranslations::where('id', $request->opportunity_id)->where('locale','en')->first();
                     $chat = new Chat();
                     $chat->title = $opp->title;
                     $chat->creator_id = Auth::user()->id;
@@ -189,7 +190,7 @@ class ChatController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        
+
         try {
 
             // check if chat group exist
@@ -197,7 +198,7 @@ class ChatController extends Controller
             
             if (!$chat_group) {
                 // Create New Chat Group if it does not exist
-                $opp = Opportunity::where('id', $request->opportunity_id)->first();
+                $opp = OpportunityTranslations::where('id', $request->opportunity_id)->where('locale','en')->first();
                 $chat = new Chat();
                 $chat->title = $opp->title;
                 $chat->creator_id = Auth::user()->id;
