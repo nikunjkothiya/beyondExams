@@ -17,6 +17,7 @@ use App\ChatGroup;
 use App\ChatMessage;
 use App\ChatOperator;
 use App\ChatUser;
+use App\Opportunity;
 use App\OpportunityRepresentative;
 
 class ChatController extends Controller
@@ -61,7 +62,7 @@ class ChatController extends Controller
                 }
             } else if ($request->role_id == 3) {
                 // Requested Role is Mentor
-                if (Auth::user()->role_id == 3) {
+                if ($user_role->is_admin == 1) {
                     $chats = Chat::paginate(15);
                     return $this->apiResponse->sendResponse(200, 'Success', $chats);
                 } else {
@@ -87,19 +88,8 @@ class ChatController extends Controller
         }
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
-
-        if ($request->role_id == 1) {
-            if ($user_role->is_user == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
-            }
-        } else if ($request->role_id == 1) {
-            if ($user_role->is_mentor == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
-            }
-        } else if ($request->role_id == 3) {
-            if (Auth::user()->role_id !== 3) {
-                return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
-            }
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
         }
 
         try {
@@ -126,18 +116,8 @@ class ChatController extends Controller
         }
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
-        if ($request->role_id == 1) {
-            if ($user_role->is_user == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
-            }
-        } else if ($request->role_id == 1) {
-            if ($user_role->is_mentor == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
-            }
-        } else if ($request->role_id == 3) {
-            if (Auth::user()->role_id !== 3) {
-                return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
-            }
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
         }
 
         try {
@@ -147,7 +127,7 @@ class ChatController extends Controller
                 $chat->title = $request->title;
                 $chat->creator_id = Auth::user()->id;
                 $chat->is_support = false;
-                $chat->is_group = false;
+                $chat->is_group = true;
                 $chat->save();
 
                 $chat->users()->create([
@@ -160,8 +140,10 @@ class ChatController extends Controller
                 $chat_group = ChatGroup::where('opportunity_id', $request->opportunity_id)->first();
                 if (!$chat_group) {
                     // Create New Chat Group if it does not exist
+
+                    $opp = Opportunity::where('id', $request->opportunity_id)->first();
                     $chat = new Chat();
-                    $chat->title = $request->title;
+                    $chat->title = $opp->title;
                     $chat->creator_id = Auth::user()->id;
                     $chat->is_support = false;
                     $chat->is_group = true;
@@ -185,7 +167,7 @@ class ChatController extends Controller
                     foreach ($represntatives as $represntative) {
                         $chat->users()->create([
                             'user_id' => $represntative->representative_id,
-                            'role_id' => 3,
+                            'role_id' => 4,
                         ]);
                     }
                 }
@@ -201,22 +183,23 @@ class ChatController extends Controller
     public function create_opportunity_chat(request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
             'opportunity_id' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-
+        
         try {
 
             // check if chat group exist
             $chat_group = ChatGroup::where('opportunity_id', $request->opportunity_id)->first();
+            
             if (!$chat_group) {
                 // Create New Chat Group if it does not exist
+                $opp = Opportunity::where('id', $request->opportunity_id)->first();
                 $chat = new Chat();
-                $chat->title = $request->title;
+                $chat->title = $opp->title;
                 $chat->creator_id = Auth::user()->id;
                 $chat->is_support = false;
                 $chat->is_group = true;
@@ -241,6 +224,7 @@ class ChatController extends Controller
 
     public function create_support_chat()
     {
+
         try {
             $chat = new Chat();
             $chat->title = 'Precisely Support';
@@ -272,18 +256,8 @@ class ChatController extends Controller
         }
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
-        if ($request->role_id == 1) {
-            if ($user_role->is_user == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
-            }
-        } else if ($request->role_id == 1) {
-            if ($user_role->is_mentor == 0) {
-                return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
-            }
-        } else if ($request->role_id == 3) {
-            if (Auth::user()->role_id !== 3) {
-                return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
-            }
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
         }
 
         try {
@@ -312,15 +286,17 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        try {
-            if (Auth::user()->role_id == 3) {
-                $chatAdmin = new ChatAdmin();
-                $chatAdmin->user_id = $request->user_id;
-                $chatAdmin->save();
+        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+        }
 
-                return $this->apiResponse->sendResponse(200, 'New Chat admin created.', null);
-            }
-            return $this->apiResponse->sendResponse(400, 'You are not a admin', null);
+        try {
+            $chatAdmin = new ChatAdmin();
+            $chatAdmin->user_id = $request->user_id;
+            $chatAdmin->save();
+
+            return $this->apiResponse->sendResponse(200, 'New Chat admin created.', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
@@ -335,6 +311,11 @@ class ChatController extends Controller
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
         }
 
         try {
@@ -386,8 +367,9 @@ class ChatController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
-            'file' => 'required|string',
+            'file' => 'required',
             'type_id' => 'required|integer',
+            'role_id' => 'required|integer',
         ]);
 
         if ($validator->fails()) {

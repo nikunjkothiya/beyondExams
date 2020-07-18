@@ -16,8 +16,8 @@ class CreateUserRolesTable extends Migration
         Schema::create('user_roles', function (Blueprint $table) {
             $table->bigIncrements('id')->unique();
             $table->unsignedBigInteger('user_id');
-            $table->bigInteger('is_user')->default(0);
-            $table->bigInteger('is_mentor')->default(0);
+            $table->boolean('is_user')->default(0);
+            $table->boolean('is_mentor')->default(0);
             $table->timestamps();
         });
         Schema::table('user_roles',function($table){
