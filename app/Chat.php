@@ -22,6 +22,10 @@ class Chat extends Model
         return $this->belongsTo('App\User', 'creator_id');
     }
 
+    public function users(){
+        return $this->hasMany('App\ChatUser');
+    }
+
     public function operators(){
         return $this->hasMany('App\ChatOperator');
     } 

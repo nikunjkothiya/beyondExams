@@ -27,7 +27,7 @@ Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
-//Protected APIs
+//Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
    
     // Profile APi
@@ -42,7 +42,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
     Route::post('save_user_filters', ['uses' => 'PreciselyController@save_user_filters']);
     Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
-    Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
 
     // Opportuinities APi
     Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
@@ -65,6 +64,19 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
     Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
     Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
+
+    // Chats Integration
+    Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
+    Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
+    Route::post('create_group_chat', ['uses' => 'ChatController@create_group_chat']);
+    Route::post('create_opportunity_chat', ['uses' => 'ChatController@create_opportunity_chat']);
+    Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
+    Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
+    Route::post('add_chat_admin', ['uses' => 'ChatController@add_chat_admin']);
+    Route::post('add_chat_operator', ['uses' => 'ChatController@add_chat_operator']);
+    Route::post('send_message', ['uses' => 'ChatController@send_message']);
+    
+
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
@@ -93,9 +105,11 @@ Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_f
 Route::get('next_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_next_opportunity']);
 Route::get('previous_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_previous_opportunity']);
 
+
 //Route::group(['middleware'=>'auth:organisation'], function (){
 Route::post('organisation/post/opportunity', ['uses' => 'OrganisationController@post_opportunity']);
 //});
+
 
 /*
 	Testing APIs
@@ -113,4 +127,3 @@ Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
 Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
 
 Route::get('get_opportunity_stack', ['uses' => 'ApiOpportunityController@get_opportunity_stack']);
-
