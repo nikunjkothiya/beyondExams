@@ -1,10 +1,10 @@
-	<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUserRolesTable extends Migration
+class CreateChatAdminsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,10 @@ class CreateUserRolesTable extends Migration
      */
     public function up()
     {
-        Schema::create('user_roles', function (Blueprint $table) {
-            $table->bigIncrements('id')->unique();
+        Schema::create('chat_admins', function (Blueprint $table) {
             $table->unsignedBigInteger('user_id');
-            $table->boolean('is_user')->default(0);
-            $table->boolean('is_mentor')->default(0);
-            $table->timestamps();
         });
-        Schema::table('user_roles',function($table){
+        Schema::table('chat_admins',function($table){
             $table->foreign('user_id')->references('id')->on('users');
         });
     }
@@ -32,7 +28,6 @@ class CreateUserRolesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_roles');
+        Schema::dropIfExists('chat_admins');
     }
 }
-
