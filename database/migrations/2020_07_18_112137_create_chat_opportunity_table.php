@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateChatOpportunitiesTable extends Migration
+class CreateChatOpportunityTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,13 @@ class CreateChatOpportunitiesTable extends Migration
      */
     public function up()
     {
-        Schema::create('chat_opportunities', function (Blueprint $table) {
+        Schema::create('chat_opportunity', function (Blueprint $table) {
             $table->unsignedBigInteger('chat_id');
             $table->unsignedBigInteger('opportunity_id');
             $table->timestamps();
         });
 
-        Schema::table('chat_opportunities',function($table){
+        Schema::table('chat_opportunity',function($table){
             $table->foreign('chat_id')->references('id')->on('chats');
             $table->foreign('opportunity_id')->references('id')->on('opportunities');
         });
