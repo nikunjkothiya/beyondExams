@@ -42,6 +42,10 @@ class User extends Authenticatable
         return $this->hasOne('App\UserRole');
     }
 
+    public function chats(){
+        return $this->belongsToMany('App\Chat');
+    }
+
     public function mentor_verification(){
         return $this->hasOne('App\MentorVerification');
     }

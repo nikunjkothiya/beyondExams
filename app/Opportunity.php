@@ -25,6 +25,10 @@ class Opportunity extends Model implements TranslatableContract
         return $this->belongsToMany('App\Tag');
     }
 
+    public function chats(){
+        return $this->hasMany('App\Chat');
+    }
+
     public function tag_types(){
 
     }

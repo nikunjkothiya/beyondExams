@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Chat extends Model
 {
     protected $fillable = [
-        'creator_id', 'title', 'is_group', 'is_support' 
+        'creator_id', 'title', 'is_group', 'is_support', 'opportunity_id'
     ];
 
     public function opportunity(){
-        return $this->hasOne('App\Opportunity');
+        return $this->belongsTo('App\Opportunity');
     }
 
     public function group(){
@@ -23,12 +23,12 @@ class Chat extends Model
     }
 
     public function users(){
-        return $this->hasMany('App\ChatUser');
+        return $this->belongsToMany('App\User');
     }
 
     public function operators(){
         return $this->hasMany('App\ChatOperator');
-    } 
+    }
 
     public function messages(){
         return $this->hasMany('App\ChatMessage');
