@@ -76,6 +76,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('add_chat_operator', ['uses' => 'ChatController@add_chat_operator']);
     Route::post('send_message', ['uses' => 'ChatController@send_message']);
     Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
+    Route::post('add_student_firebase_id', ['uses' => 'ChatController@add_student_firebase_id']);
+    Route::post('add_admin_firebase_id', ['uses' => 'ChatController@add_admin_firebase_id']);
     
 
 
