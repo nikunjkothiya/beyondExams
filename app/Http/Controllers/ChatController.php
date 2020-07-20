@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\ApiResponse;
+use App\MessageType;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
@@ -23,6 +24,13 @@ use App\OpportunityTranslations;
 
 class ChatController extends Controller
 {
+    private $apiResponse;
+    private $user_role_id = 1;
+    private $mentor_role_id = 2;
+    private $admin_role_id = 3;
+    private $organization_role_id = 4;
+    private $num_entries_per_page = 15;
+
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
@@ -41,34 +49,34 @@ class ChatController extends Controller
         try {
             $user_role = UserRole::where('user_id', Auth::user()->id)->first();
 
-            if ($request->role_id == 1) {
-                // Requested Role is User
-                if ($user_role->is_user == 1) {
-                    $chats = Chat::with(['chat_users' => function ($query) {
-                        $query->where('user_id', Auth::user()->id)->where('role_id', 1);
-                    }])->paginate(15);
-                    return $this->apiResponse->sendResponse(200, 'Success', $chats);
-                } else {
-                    return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
-                }
-            } else if ($request->role_id == 2) {
-                // Requested Role is Mentor
-                if ($user_role->is_mentor == 1) {
-                    $chats = Chat::with(['chat_users' => function ($query) {
-                        $query->where('user_id', Auth::user()->id)->where('role_id', 2);
-                    }])->paginate(15);
-                    return $this->apiResponse->sendResponse(200, 'Success', $chats);
-                } else {
-                    return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
-                }
-            } else if ($request->role_id == 3) {
-                // Requested Role is Mentor
-                if ($user_role->is_admin == 1) {
-                    $chats = Chat::paginate(15);
-                    return $this->apiResponse->sendResponse(200, 'Success', $chats);
-                } else {
-                    return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
-                }
+            switch ($request->role_id) {
+                case $this->user_role_id:
+                    $chats = Auth::user()->chats()->where('is_group', false)->where('is_support', false)->paginate($this->num_entries_per_page);
+                    // Requested Role is User
+                    if ($user_role->is_user == 1) {
+                        return $this->apiResponse->sendResponse(200, 'Success', $chats);
+                    } else {
+                        return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
+                    }
+                    break;
+                case $this->mentor_role_id:
+                    $chats = Auth::user()->chats()->where('is_group', false)->paginate($this->num_entries_per_page);
+                    // Requested Role is Mentor
+                    if ($user_role->is_mentor == 1) {
+                        return $this->apiResponse->sendResponse(200, 'Success', $chats);
+                    } else {
+                        return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
+                    }
+                    break;
+                case $this->admin_role_id:
+                    // Requested Role is Mentor
+                    if ($user_role->is_admin == 1) {
+                        $chats = Chat::paginate($this->num_entries_per_page);
+                        return $this->apiResponse->sendResponse(200, 'Success', $chats);
+                    } else {
+                        return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+                    }
+                    break;
             }
 
             return $this->apiResponse->sendResponse(400, 'No such user role.', null);
@@ -89,19 +97,21 @@ class ChatController extends Controller
         }
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
-        if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+
+        if ($user_role->is_admin == 0 && $request->role_id == $this->admin_role_id) {
+            return $this->apiResponse->sendResponse(400, 'User is not admin.', null);
         }
 
         try {
-            $chat_users = ChatUser::where('chat_id', $request->chat_id)->where('user_id', Auth::user()->id)->where('role_id', $request->role_id)->get();
-            if (count($chat_users) > 0) {
-                $messages = ChatMessage::paginate(15);
+            if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
+                $messages = ChatMessage::with(['sender' => function ($query) {
+                    $query->select('id', 'name', 'avatar');
+                }])->where('chat_id', $request->chat_id)->paginate($this->num_entries_per_page);
                 return $this->apiResponse->sendResponse(200, 'Success', $messages);
             }
             return $this->apiResponse->sendResponse(400, 'Not Authorised', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -109,7 +119,6 @@ class ChatController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
-            'role_id' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -117,67 +126,52 @@ class ChatController extends Controller
         }
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+
         if ($user_role->is_admin == 0) {
             return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
         }
 
         try {
+            $chat = new Chat();
+            $chat->creator_id = Auth::user()->id;
+            $chat->is_group = true;
 
-            if (!$request->opportunity_id) {
-                $chat = new Chat();
+            if (!isset($request->opportunity_id)) {
                 $chat->title = $request->title;
-                $chat->creator_id = Auth::user()->id;
-                $chat->is_support = false;
-                $chat->is_group = true;
                 $chat->save();
-
-                $chat->users()->create([
-                    'user_id' => Auth::user()->id,
-                    'role_id' => $request->role_id
-                ]);
-                return $this->apiResponse->sendResponse(200, 'Chat created', $chat);
             } else {
                 // check if chat group exist
-                $chat_group = ChatGroup::where('opportunity_id', $request->opportunity_id)->first();
-                if (!$chat_group) {
+                if (!ChatGroup::where('opportunity_id', $request->opportunity_id)->exists()) {
                     // Create New Chat Group if it does not exist
+                    $opportunity = Opportunity::find($request->opportunity_id);
 
-                    $opp = OpportunityTranslations::where('id', $request->opportunity_id)->where('locale','en')->first();
-                    $chat = new Chat();
-                    $chat->title = $opp->title;
-                    $chat->creator_id = Auth::user()->id;
-                    $chat->is_support = false;
-                    $chat->is_group = true;
+                    $chat->title = $opportunity->title;
+                    $chat->opportunity()->associate($opportunity);
                     $chat->save();
 
                     $chat->group()->create([
                         'opportunity_id' => $request->opportunity_id,
                     ]);
 
-                    $chat->users()->create([
-                        'user_id' => Auth::user()->id,
-                        'role_id' => $request->role_id
-                    ]);
-                }
-                // Get the chat
-                $chat = Chat::where('id', $chat_group->chat_id)->first();
+                    $chat->users()->attach([Auth::user()->id => ['role_id' => $this->admin_role_id]]);
 
-                // Add Chats representatives if needed
-                if ($request->add_representatives == true) {
-                    $represntatives = OpportunityRepresentative::where('opportunity_id', $request->opportunity_id)->get();
-                    foreach ($represntatives as $represntative) {
-                        $chat->users()->create([
-                            'user_id' => $represntative->representative_id,
-                            'role_id' => 4,
-                        ]);
+                    // Add Chats representatives if needed
+                    if ($request->add_representatives == true) {
+                        $represntatives = OpportunityRepresentative::where('opportunity_id', $request->opportunity_id)->get();
+                        foreach ($represntatives as $represntative) {
+                            $chat->users()->attach([$represntative->representative_id => ['role_id' => $this->organization_role_id]]);
+                        }
                     }
-                }
 
-                // Return the chat
-                return $this->apiResponse->sendResponse(200, 'Succes', $chat);
+                } else {
+                    $chat = Chat::where('id', ChatGroup::where('opportunity_id', $request->opportunity_id)->select('chat_id')->first()["chat_id"])->first();
+                }
             }
+
+            return $this->apiResponse->sendResponse(200, 'Chat created', $chat);
+
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getLine());
         }
     }
 
@@ -192,34 +186,27 @@ class ChatController extends Controller
         }
 
         try {
+            $chat = Auth::user()->chats()->with('opportunity')->whereHas('opportunity', function ($query) use ($request) {
+                $query->where('id', $request->opportunity_id);
+            })->first();
 
-            // check if chat group exist
-            $chat_group = ChatGroup::where('opportunity_id', $request->opportunity_id)->first();
-            
-            if (!$chat_group) {
-                // Create New Chat Group if it does not exist
-                $opp = OpportunityTranslations::where('id', $request->opportunity_id)->where('locale','en')->first();
+            if (is_null($chat)) {
+                $opportunity = Opportunity::find($request->opportunity_id);
+
                 $chat = new Chat();
-                $chat->title = $opp->title;
                 $chat->creator_id = Auth::user()->id;
-                $chat->is_support = false;
-                $chat->is_group = true;
+                $chat->title = $opportunity->title;
+                $chat->opportunity()->associate($opportunity);
                 $chat->save();
 
-                $chat->group()->create([
-                    'opportunity_id' => $request->opportunity_id,
-                ]);
 
-                $chat->users()->create([
-                    'user_id' => Auth::user()->id,
-                    'role_id' => 1
-                ]);
+                $chat->users()->attach([Auth::user()->id => ['role_id' => $this->user_role_id]]);
             }
-            // Get the chat
-            $chat = Chat::where('id', $chat_group->chat_id)->first();
+
+
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -227,17 +214,17 @@ class ChatController extends Controller
     {
 
         try {
-            $chat = new Chat();
-            $chat->title = 'Precisely Support';
-            $chat->creator_id = Auth::user()->id;
-            $chat->is_support = true;
-            $chat->is_group = false;
-            $chat->save();
+            $chat = Auth::user()->chats()->where('is_support', true)->first();
+            if (is_null($chat)) {
+                $chat = new Chat();
+                $chat->title = "Precisely Support";
+                $chat->creator_id = Auth::user()->id;
+                $chat->is_support = true;
+                $chat->save();
 
-            $chat->users()->create([
-                'user_id' => Auth::user()->id,
-                'role_id' => 1
-            ]);
+                $chat->users()->attach([Auth::user()->id => ['role_id' => $this->user_role_id]]);
+            }
+
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
@@ -249,7 +236,7 @@ class ChatController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
             'chat_id' => 'required|integer',
-            'role_id' => 'required|integer',
+            'role_id' => 'required|integer|min:1|max:' . Role::count()
         ]);
 
         if ($validator->fails()) {
@@ -263,41 +250,13 @@ class ChatController extends Controller
 
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
-            if (!$chat) {
+            if (is_null($chat)) {
                 return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
             }
-            $chat->user()->create([
-                'user_id' => $request->user_id,
-                'role_id' => $request->role_id
-            ]);
+
+            $chat->users()->attach([$request->user_id => ['role_id' => $request->role_id]]);
 
             return $this->apiResponse->sendResponse(200, 'User added to chat', null);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
-        }
-    }
-
-    public function add_chat_admin(request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
-
-        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
-        if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
-        }
-
-        try {
-            $chatAdmin = new ChatAdmin();
-            $chatAdmin->user_id = $request->user_id;
-            $chatAdmin->save();
-
-            return $this->apiResponse->sendResponse(200, 'New Chat admin created.', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
@@ -338,6 +297,7 @@ class ChatController extends Controller
 
     public function send_message(request $request)
     {
+//        TODO: Integrate fcm
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
             'message' => 'required|string',
@@ -349,16 +309,19 @@ class ChatController extends Controller
         }
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
-            if (!$chat) {
+            if (is_null($chat)) {
                 return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
             }
-            $chat->messages()->create([
-                'message' => $request->message,
-                'type_id' => 1,
-                'sender_id' => Auth::user()->id
-            ]);
 
-            return $this->apiResponse->sendResponse(200, 'Message Added', null);
+            $chat_message = new ChatMessage();
+            $chat_message->message = $request->message;
+            $chat_message->chat_id = $request->chat_id;
+            $chat_message->role_id = $request->role_id;
+            $chat_message->type_id = 1;
+            $chat_message->sender_id = Auth::user()->id;
+            $chat_message->save();
+
+            return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
@@ -369,8 +332,8 @@ class ChatController extends Controller
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
             'file' => 'required',
-            'type_id' => 'required|integer',
-            'role_id' => 'required|integer',
+            'type_id' => 'required|integer|min:2|max:' . MessageType::count(),
+            'role_id' => 'required|integer|min:1|max:' . Role::count(),
         ]);
 
         if ($validator->fails()) {
@@ -378,16 +341,29 @@ class ChatController extends Controller
         }
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
-            if (!$chat) {
+            if (is_null($chat)) {
                 return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
             }
-            $chat->messages()->create([
-                'message' => 'File Uploaded',
-                'type_id' => $request->type_id,
-                'sender_id' => Auth::user()->id
-            ]);
 
-            return $this->apiResponse->sendResponse(200, 'Multimedia message Added', null);
+            $file = $request->file('file');
+            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+
+            $name = time() . uniqid() . $ext;
+
+            $message_type = MessageType::find($request->type_id)["type"] . "/";
+            $filePath = storage_path() . '/app/public/chats/' . $message_type;
+
+            $file->move($filePath, $name);
+
+            $chat_message = new ChatMessage();
+            $chat_message->message = url('/storage/chats/' . $message_type . $name);
+            $chat_message->chat_id = $request->chat_id;
+            $chat_message->role_id = $request->role_id;
+            $chat_message->type_id = $request->type_id;
+            $chat_message->sender_id = Auth::user()->id;
+            $chat_message->save();
+
+            return $this->apiResponse->sendResponse(200, 'Multimedia message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
