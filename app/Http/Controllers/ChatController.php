@@ -51,7 +51,13 @@ class ChatController extends Controller
 
             switch ($request->role_id) {
                 case $this->user_role_id:
-                    $chats = Auth::user()->chats()->where('is_group', false)->where('is_support', false)->paginate($this->num_entries_per_page);
+                    $chats = Auth::user()->chats()->where('is_support', false)->paginate($this->num_entries_per_page);
+                    foreach ($chats as $chat) {
+                        if (!$chat["is_group"])
+                            $chat["group_id"] = ChatGroup::where("opportunity_id", $chat["opportunity_id"])->value("chat_id");
+                        else
+                            $chat["group_id"] = null;
+                    }
                     // Requested Role is User
                     if ($user_role->is_user == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
