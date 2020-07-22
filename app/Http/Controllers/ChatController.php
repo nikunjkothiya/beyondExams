@@ -114,6 +114,14 @@ class ChatController extends Controller
                 $messages = ChatMessage::with(['sender' => function ($query) {
                     $query->select('id', 'name', 'avatar');
                 }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+                $chatUser = ChatUser::where('user_id', Auth::user()->id)->where('chat_id', $request->chat_id)->first();
+                if(is_null($chatUser)){
+                    $newChatUser = new ChatUser();
+                    $newChatUser->user_id = Auth::user()->id;
+                    $newChatUser->chat_id = $request->chat_id;
+                    $newChatUser->role_id = $this->user_role_id;
+                    $newChatUser->save();
+                }
                 return $this->apiResponse->sendResponse(200, 'Success', $messages);
             }
             return $this->apiResponse->sendResponse(400, 'Not Authorised', null);
