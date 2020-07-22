@@ -110,10 +110,7 @@ class ChatController extends Controller
         }
 
         try {
-            if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
-                $messages = ChatMessage::with(['sender' => function ($query) {
-                    $query->select('id', 'name', 'avatar');
-                }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+            if(Chat::where('chat_id', $request->chat_id)->first()->is_group){
                 $chatUser = ChatUser::where('user_id', Auth::user()->id)->where('chat_id', $request->chat_id)->first();
                 if(is_null($chatUser)){
                     $newChatUser = new ChatUser();
@@ -122,6 +119,12 @@ class ChatController extends Controller
                     $newChatUser->role_id = $this->user_role_id;
                     $newChatUser->save();
                 }
+            }
+
+            if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
+                $messages = ChatMessage::with(['sender' => function ($query) {
+                    $query->select('id', 'name', 'avatar');
+                }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                 return $this->apiResponse->sendResponse(200, 'Success', $messages);
             }
             return $this->apiResponse->sendResponse(400, 'Not Authorised', null);
