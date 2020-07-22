@@ -29,6 +29,8 @@ class ApiAuthController extends Controller
     private $apiConsumer;
     private $db;
     private $auth;
+    private $user_role_id = 1;
+    private $mentor_role_id = 2;
 
     public function __construct(Application $app, ApiResponse $apiResponse)
     {
@@ -115,7 +117,7 @@ class ApiAuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'unique_id' => 'required',
                 'refresh_token' => 'required',
-//                'user_role' => 'required'
+                // 'user_role' => 'required'
             ]);
 
             if ($validator->fails()) {
@@ -123,7 +125,7 @@ class ApiAuthController extends Controller
             }
 
             if (!isset($request->user_role))
-                $request->user_role = 2;
+                $request->user_role = 1;
 
             if (!User::where('unique_id', $request->unique_id)->first()) {
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
@@ -131,7 +133,7 @@ class ApiAuthController extends Controller
 
             $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
 
-            if ($request->user_role == 0) {
+            if ($request->user_role == $this->user_role_id) {
                 $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                 if ($check_lang) {
                     $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
@@ -157,7 +159,7 @@ class ApiAuthController extends Controller
                     // No Language Selected
                     $flag = 1;
                 }
-            } elseif($request->user_role == 1) {
+            } elseif($request->user_role == $this->mentor_role_id) {
                 // Update Mentor Roles
                 $check_user_role = UserRole::where('user_id',$user_id)->first();
                 $check_user_role->is_mentor = 1;
@@ -350,11 +352,11 @@ class ApiAuthController extends Controller
                 if(!$check_user_role){
                     $newRole = new UserRole();
                     $newRole->user_id = $user_id;
-                    if($request->user_role == 0){
+                    if($request->user_role == $this->user_role_id){
                         $newRole->is_user = 1;
                         $newRole->is_mentor = 0;
                     }
-                    if($request->user_role == 1){
+                    if($request->user_role == $this->mentor_role_id){
                         $newRole->is_user = 0;
                         $newRole->is_mentor = 1;
                     }
@@ -362,7 +364,7 @@ class ApiAuthController extends Controller
                 }
 
                 // Returning Flags
-                if ($request->user_role == 0) {
+                if ($request->user_role == $this->user_role_id) {
                     // Update User Roles
                     $check_user_role = UserRole::where('user_id',$user_id)->first();
                     $check_user_role->is_user = 1;
@@ -393,7 +395,7 @@ class ApiAuthController extends Controller
                         // No Language Selected
                         $flag = 1;
                     }
-                } elseif($request->user_role == 1) {
+                } elseif($request->user_role == $this->mentor_role_id) {
                     // Update Mentor Roles
                     $check_user_role = UserRole::where('user_id',$user_id)->first();
                     $check_user_role->is_mentor = 1;
@@ -441,11 +443,11 @@ class ApiAuthController extends Controller
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
 
-                    if ($request->user_role == 0) {
+                    if ($request->user_role == $this->user_role_id) {
                         $new_user->role()->create(
                             ['is_user' => 1, 'is_mentor' => 0]
                         );
-                    } elseif ($request->user_role == 1) {
+                    } elseif ($request->user_role == $this->mentor_role_id) {
                         $new_user->role()->create(
                             ['is_user' => 0, 'is_mentor' => 1]
                         );
@@ -469,11 +471,11 @@ class ApiAuthController extends Controller
                         $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
-                    if ($request->user_role === 0) {
+                    if ($request->user_role === $this->user_role_id) {
                         $new_user->role()->create(
                             ['is_user' => 1, 'is_mentor' => 0]
                         );
-                    } elseif ($request->user_role === 1) {
+                    } elseif ($request->user_role === $this->mentor_role_id) {
                         $new_user->role()->create(
                             ['is_user' => 0, 'is_mentor' => 1]
                         );
