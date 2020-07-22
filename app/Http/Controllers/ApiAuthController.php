@@ -123,7 +123,7 @@ class ApiAuthController extends Controller
             }
 
             if (!isset($request->user_role))
-                $request->user_role = 2;
+                $request->user_role = 1;
 
             if (!User::where('unique_id', $request->unique_id)->first()) {
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
@@ -312,7 +312,7 @@ class ApiAuthController extends Controller
             ]);
 
             if (!isset($request->user_role))
-                $request->user_role = 0;
+                $request->user_role = 1;
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());

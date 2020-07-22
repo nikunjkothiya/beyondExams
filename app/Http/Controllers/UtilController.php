@@ -396,9 +396,9 @@ class UtilController extends Controller
                 'id' => 'required|int',
             ]);
 
-            // if ($validator->fails()) {
-            // return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-            //  }
+//            if ($validator->fails()) {
+//             return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+//            }
 
             // $user = User::find($request->user_id);
 
