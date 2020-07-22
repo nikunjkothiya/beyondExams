@@ -390,7 +390,7 @@ class ChatController extends Controller
             $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
         })->get()->pluck('firebaseId');
 
-//        $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
+        // $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
         $adminIds = AdminFirebase::all()->pluck('firebaseId');
 
         $student_headers = array(
