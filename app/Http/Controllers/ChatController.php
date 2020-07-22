@@ -52,7 +52,7 @@ class ChatController extends Controller
 
             switch ($request->role_id) {
                 case $this->user_role_id:
-                    $chats = Auth::user()->chats()->where('is_support', false)->paginate($this->num_entries_per_page);
+                    $chats = Auth::user()->chats()->where('is_support', false)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                     foreach ($chats as $chat) {
                         if (!$chat["is_group"])
                             $chat["group_id"] = ChatGroup::where("opportunity_id", $chat["opportunity_id"])->value("chat_id");
@@ -67,7 +67,7 @@ class ChatController extends Controller
                     }
                     break;
                 case $this->mentor_role_id:
-                    $chats = Auth::user()->chats()->where('is_group', false)->paginate($this->num_entries_per_page);
+//                    $chats = Auth::user()->chats()->where('is_group', false)->paginate($this->num_entries_per_page);
                     // Requested Role is Mentor
                     if ($user_role->is_mentor == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
@@ -78,7 +78,7 @@ class ChatController extends Controller
                 case $this->admin_role_id:
                     // Requested Role is Mentor
                     if ($user_role->is_admin == 1) {
-                        $chats = Chat::paginate($this->num_entries_per_page);
+                        $chats = Chat::all()->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
                         return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
@@ -113,7 +113,7 @@ class ChatController extends Controller
             if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
                 $messages = ChatMessage::with(['sender' => function ($query) {
                     $query->select('id', 'name', 'avatar');
-                }])->where('chat_id', $request->chat_id)->paginate($this->num_entries_per_page);
+                }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                 return $this->apiResponse->sendResponse(200, 'Success', $messages);
             }
             return $this->apiResponse->sendResponse(400, 'Not Authorised', null);
@@ -329,6 +329,10 @@ class ChatController extends Controller
             // Send Notifications via get firebaseIDs
             $this->get_firebaseIds($request->chat_id, $chat_message->id, Auth::user()->id, Auth::user()->name);
 
+            $chat_message = ChatMessage::with(['sender' => function ($query) {
+                $query->select('id', 'name', 'avatar');
+            }])->find($chat_message->id);
+
             return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
@@ -382,59 +386,34 @@ class ChatController extends Controller
 
     public function get_firebaseIds($chat_id, $message_id, $user_id, $sender_name)
     {
-        $chatUsers = ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id');
+        $studentIds = StudentFirebase::with("user")->whereHas("user", function($query) use ($user_id, $chat_id) {
+            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
+        })->get()->pluck('firebaseId');
 
-        $studentIds = StudentFirebase::whereIn('user_id', $chatUsers)->get()->pluck('firebaseId');
+//        $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
         $adminIds = AdminFirebase::all()->pluck('firebaseId');
 
-        $this->send_user_notification($message_id, $adminIds->merge($studentIds), $sender_name);
-        $this->send_admin_notification($message_id, $adminIds, $sender_name);
-    }
-
-    public function send_user_notification($messageId, $firebaseIds, $sender_name)
-    {
-
-        // Send Notification to app
-        $messageData = ChatMessage::with('chats')->where('id', $messageId)->first();
-        $messageData['sender_name'] = $sender_name;
-
-        $url = 'https://fcm.googleapis.com/fcm/send';
-
-        $fields = array(
-            'registration_ids' => $firebaseIds,
-            'notification' => array(
-                "title" => 'New message on Precisely',
-                "image" => 'https://lithics.in/apis/ic_notification.png'
-            ),
-            'data' => $messageData,
-            'android' => array("priority" => "high"),
-            "webpush" => array(
-                "headers" => array(
-                    "Urgency" => "high"
-                )
-            )
-        );
-        $fields = json_encode($fields, JSON_UNESCAPED_SLASHES);
-        $client = new Client();
-
-        // For Student
-        $headers = array(
+        $student_headers = array(
             "key: AIzaSyDovLKo3djdRbs963vqKdbj-geRWyzMTrg",
             "Authorization: key=" . "AAAAOjqNmFY:APA91bFaHsWDfwZqlt2uYKo7Lufj_4ZfP9tNK57HSZHIOD8kW-Rca-GlDbTyDBAAG3LacvqxUmgPK3zIzxoL6r6wwKWx_I7WEsqvYpjvhiZaCoK8CZtgDdmi8Gwp-xXtSruDgt_qKpWI",
             "Content-Type: application/json"
         );
+        $this->send_user_notification($message_id, $studentIds, $sender_name, $student_headers);
 
-        $client->request('POST', $url, [
-            'headers' => $headers,
-            'form_params' => $fields
-        ]);
+        $admin_firebase = array(
+            "key: AIzaSyBwTH4gMhdWKZd5dlxYbvY3SIYMREOzGZY",
+            "Authorization: key=" . "AAAAgvxGJqg:APA91bHQCC7Av_6k-DhytBf0-lhgbO_omK2nfbThcwz4C49VF1EK500EnrK1HmxGTRpixPBVIxojkRmoys2U1FV4KfmIhTn-hFURrYSS9BIRS_-Op6E3Y4k7IQ-qirLKqyS8iw7qyv6v",
+            "Content-Type: application/json"
+        );
+        $this->send_user_notification($message_id, $adminIds, $sender_name, $admin_firebase);
     }
 
-    public function send_admin_notification($messageId, $firebaseIds, $sender_name)
+    public function send_user_notification($messageId, $firebaseIds, $sender_name, $headers)
     {
+        try{
 
         // Send Notification to app
-        $messageData = ChatMessage::with('chats')->where('id', $messageId)->first();
+        $messageData = ChatMessage::with('chat')->where('id', $messageId)->first();
         $messageData['sender_name'] = $sender_name;
 
         $url = 'https://fcm.googleapis.com/fcm/send';
@@ -453,27 +432,28 @@ class ChatController extends Controller
                 )
             )
         );
+
         $fields = json_encode($fields, JSON_UNESCAPED_SLASHES);
-        $client = new Client();
 
-        // For Admin 
-        $headers = array(
-            "key: AIzaSyBwTH4gMhdWKZd5dlxYbvY3SIYMREOzGZY",
-            "Authorization: key=" . "AAAAgvxGJqg:APA91bHQCC7Av_6k-DhytBf0-lhgbO_omK2nfbThcwz4C49VF1EK500EnrK1HmxGTRpixPBVIxojkRmoys2U1FV4KfmIhTn-hFURrYSS9BIRS_-Op6E3Y4k7IQ-qirLKqyS8iw7qyv6v",
-            "Content-Type: application/json"
-        );
+        $ch = curl_init ();
+        curl_setopt ( $ch, CURLOPT_URL, $url );
+        curl_setopt ( $ch, CURLOPT_POST, true );
+        curl_setopt ( $ch, CURLOPT_HTTPHEADER, $headers );
+        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt ( $ch, CURLOPT_POSTFIELDS, $fields );
 
-        $client->request('POST', $url, [
-            'headers' => $headers,
-            'form_params' => $fields
-        ]);
+        curl_exec ( $ch );
+
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 
     public function add_student_firebase_id(request $request)
     {
         $validator = Validator::make($request->all(), [
-            'device_id' => 'required|integer',
-            'firebase_id' => 'required|integer',
+            'device_id' => 'required|string',
+            'firebase_id' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -496,8 +476,8 @@ class ChatController extends Controller
     public function add_admin_firebase_id(request $request)
     {
         $validator = Validator::make($request->all(), [
-            'device_id' => 'required|integer',
-            'firebase_id' => 'required|integer',
+            'device_id' => 'required|string',
+            'firebase_id' => 'required|string',
         ]);
 
         if ($validator->fails()) {
