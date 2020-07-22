@@ -17,6 +17,7 @@ class CreateChatsTable extends Migration
             $table->bigIncrements('id');
             $table->string('title');
             $table->unsignedBigInteger('creator_id');
+            $table->unsignedBigInteger('opportunity_id')->nullable();
             $table->boolean('is_group')->default(0);
             $table->boolean('is_support')->default(0);
             $table->timestamps();
@@ -24,6 +25,7 @@ class CreateChatsTable extends Migration
 
         Schema::table('chats',function($table){
             $table->foreign('creator_id')->references('id')->on('users');
+            $table->foreign('opportunity_id')->references('id')->on('opportunities');
         });
     }
 
