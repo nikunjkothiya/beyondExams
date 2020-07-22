@@ -67,7 +67,7 @@ class ChatController extends Controller
                     }
                     break;
                 case $this->mentor_role_id:
-//                    $chats = Auth::user()->chats()->where('is_group', false)->paginate($this->num_entries_per_page);
+                    $chats = Auth::user()->chats()->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                     // Requested Role is Mentor
                     if ($user_role->is_mentor == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
