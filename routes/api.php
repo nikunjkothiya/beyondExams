@@ -66,6 +66,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
 
     // Chats Integration
+    Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
     Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
     Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
     Route::post('create_group_chat', ['uses' => 'ChatController@create_group_chat']);
@@ -125,6 +126,6 @@ Route::post('segment_analytics', ['uses' => 'PreciselyController@segment_analyti
 
 Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
 
-Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
+// Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
 
 Route::get('get_opportunity_stack', ['uses' => 'ApiOpportunityController@get_opportunity_stack']);
