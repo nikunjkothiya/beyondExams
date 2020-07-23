@@ -110,7 +110,7 @@ class ChatController extends Controller
         }
 
         try {
-            if(Chat::where('chat_id', $request->chat_id)->first()->is_group){
+            if(Chat::where('id', $request->chat_id)->first()->is_group){
                 $chatUser = ChatUser::where('user_id', Auth::user()->id)->where('chat_id', $request->chat_id)->first();
                 if(is_null($chatUser)){
                     $newChatUser = new ChatUser();

@@ -226,10 +226,10 @@ class UtilController extends Controller
 
             $slug = str_replace(" ", "-", strtolower($data->en->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
             $opportunity = array(
-                //                Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
+                // Deadline = ongoing. Hack: Set it as unlikely date and have a flag for ongoing and handle in UI. Else: Animesh
                 'deadline' => $data->deadline,
                 'image' => $data->image,
-                //                Google home page in case of no link
+                // Google home page in case of no link
                 'link' => $data->link,
                 'fund_type_id' => $data->fund_type,
                 'slug' => $slug,
@@ -278,12 +278,12 @@ class UtilController extends Controller
                     'description' => $data->hi->description
                 ];
             }
-            //                if (isset($data->id)){
-            //                    $opportunity['id'] = [
-            //                        'title' =>$data->id->title,
-            //                        'description' => $data->id->description
-            //                    ];
-            //                }
+            // if (isset($data->id)){
+            // $opportunity['id'] = [
+            // 'title' =>$data->id->title,
+            // 'description' => $data->id->description
+            // ];
+            // }
             if (isset($data->it)) {
                 $opportunity['it'] = [
                     'title' => $data->it->title,
@@ -396,9 +396,9 @@ class UtilController extends Controller
                 'id' => 'required|int',
             ]);
 
-//            if ($validator->fails()) {
-//             return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-//            }
+            // if ($validator->fails()) {
+            // return $apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            // }
 
             // $user = User::find($request->user_id);
 
@@ -433,3 +433,5 @@ class UtilController extends Controller
         }
     }
 }
+
+
