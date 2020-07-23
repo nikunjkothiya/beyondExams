@@ -5,7 +5,9 @@ use Illuminate\Http\Request;
 //M2M APIs
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 
-// Public APIs
+// Legacy Migrations API
+Route::post('insert_legacy_users', ['uses' => 'LegacyDataController@insert_legacy_users']);
+Route::post('insert_legacy_subscriptions', ['uses' => 'LegacyDataController@insert_legacy_subscriptions']);
 
 // Login/Signup APi
 Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verifyAccessToken']);

@@ -473,11 +473,11 @@ class ApiAuthController extends Controller
                     );
                     if ($request->user_role === $this->user_role_id) {
                         $new_user->role()->create(
-                            ['is_user' => 1, 'is_mentor' => 0]
+                            ['is_user' => 1]
                         );
                     } elseif ($request->user_role === $this->mentor_role_id) {
                         $new_user->role()->create(
-                            ['is_user' => 0, 'is_mentor' => 1]
+                            ['is_mentor' => 1]
                         );
                         $new_user->mentor_verification()->create(
                             ['is_verified' => 0]
