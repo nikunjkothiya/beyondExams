@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use App\PremiumValidity;
 use App\User;
-use Illuminate\Http\Request;
 
 use Carbon\Carbon;
 use Exception;
@@ -26,9 +26,9 @@ class LegacyDataController extends Controller
             }
             foreach($request->users as $user){
                 $insertUser = new User();
-                $insertUser->email = $user->email;
-                $insertUser->unique_id = $user->user_id;
-                $insertUser->name = $user->user_name;
+                $insertUser->email = $user['email'];
+                $insertUser->unique_id = $user['user_id'];
+                $insertUser->name = $user['user_name'];
                 $insertUser->save();
                 $insertUser->role()->create(
                     ['is_user' => 1]
@@ -48,13 +48,13 @@ class LegacyDataController extends Controller
             }
             $invalidUsers = array();
             foreach($request->subscriptions as $subscription){
-                $user = User::where('email', $subscription->email_id)->first();
+                $user = User::where('email', $subscription['email_id'])->first();
                 if(is_null($user)){
                     array_push($invalidUsers, $subscription);
                 } else {
                     $insertPlan = new PremiumValidity();
-                    $insertPlan->user_id = $user->id;   
-                    $insertPlan->end_date = Carbon::parse($subscription->end_date);
+                    $insertPlan->user_id = $user['id'];   
+                    $insertPlan->end_date = Carbon::parse($subscription['end_date']);
                     $insertPlan->save();
                 }
             }
