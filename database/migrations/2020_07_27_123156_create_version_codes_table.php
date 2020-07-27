@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMessageTypesTable extends Migration
+class CreateVersionCodesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,11 @@ class CreateMessageTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('message_types', function (Blueprint $table) {
+        Schema::create('version_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('type');
+            $table->string('version_code');
+            $table->string('version_name');
+            $table->timestamps();
         });
     }
 
@@ -26,6 +28,6 @@ class CreateMessageTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('message_types');
+        Schema::dropIfExists('version_codes');
     }
 }

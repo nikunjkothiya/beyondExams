@@ -31,6 +31,8 @@ class ApiAuthController extends Controller
     private $auth;
     private $user_role_id = 1;
     private $mentor_role_id = 2;
+    private $admin_role_id = 3;
+    private $org_role_id = 4;
 
     public function __construct(Application $app, ApiResponse $apiResponse)
     {
@@ -159,30 +161,30 @@ class ApiAuthController extends Controller
                     // No Language Selected
                     $flag = 1;
                 }
-            } elseif($request->user_role == $this->mentor_role_id) {
+            } elseif ($request->user_role == $this->mentor_role_id) {
                 // Update Mentor Roles
-                $check_user_role = UserRole::where('user_id',$user_id)->first();
+                $check_user_role = UserRole::where('user_id', $user_id)->first();
                 $check_user_role->is_mentor = 1;
                 $check_user_role->save();
                 // Flags for Mentor
                 $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
-                $verified = MentorVerification::where('user_id',$user_id)->first();
-                if(!$verified){
+                $verified = MentorVerification::where('user_id', $user_id)->first();
+                if (!$verified) {
                     $newMentorVerification = new MentorVerification();
                     $newMentorVerification->user_id = $user_id;
                     $newMentorVerification->is_verified = 0;
                     $newMentorVerification->save();
-                    $verified = MentorVerification::where('user_id',$user_id)->first();
+                    $verified = MentorVerification::where('user_id', $user_id)->first();
                 }
-                if($check_detail){
+                if ($check_detail) {
                     // Details Filled Now Check Verification
-                    if($verified->is_verified == 0){
+                    if ($verified->is_verified == 0) {
                         // Mentor Details filled but not verified
                         $flag = 2;
-                    } elseif($verified->is_verified == 1) {
+                    } elseif ($verified->is_verified == 1) {
                         // Mentor Verified
                         $flag = 0;
-                    } elseif($verified->is_verified == 2){
+                    } elseif ($verified->is_verified == 2) {
                         // Mentor Verified
                         $flag = 3;
                     }
@@ -310,7 +312,7 @@ class ApiAuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
-//                'user_role' => 'required'
+                //                'user_role' => 'required'
             ]);
 
             if (!isset($request->user_role))
@@ -348,15 +350,15 @@ class ApiAuthController extends Controller
 
 
                 // Assign Role Entry if not existing
-                $check_user_role = UserRole::where('user_id',$user_id)->first();
-                if(!$check_user_role){
+                $check_user_role = UserRole::where('user_id', $user_id)->first();
+                if (!$check_user_role) {
                     $newRole = new UserRole();
                     $newRole->user_id = $user_id;
-                    if($request->user_role == $this->user_role_id){
+                    if ($request->user_role == $this->user_role_id) {
                         $newRole->is_user = 1;
                         $newRole->is_mentor = 0;
                     }
-                    if($request->user_role == $this->mentor_role_id){
+                    if ($request->user_role == $this->mentor_role_id) {
                         $newRole->is_user = 0;
                         $newRole->is_mentor = 1;
                     }
@@ -366,7 +368,7 @@ class ApiAuthController extends Controller
                 // Returning Flags
                 if ($request->user_role == $this->user_role_id) {
                     // Update User Roles
-                    $check_user_role = UserRole::where('user_id',$user_id)->first();
+                    $check_user_role = UserRole::where('user_id', $user_id)->first();
                     $check_user_role->is_user = 1;
                     $check_user_role->save();
                     // Return Flag for user
@@ -395,30 +397,30 @@ class ApiAuthController extends Controller
                         // No Language Selected
                         $flag = 1;
                     }
-                } elseif($request->user_role == $this->mentor_role_id) {
+                } elseif ($request->user_role == $this->mentor_role_id) {
                     // Update Mentor Roles
-                    $check_user_role = UserRole::where('user_id',$user_id)->first();
+                    $check_user_role = UserRole::where('user_id', $user_id)->first();
                     $check_user_role->is_mentor = 1;
                     $check_user_role->save();
                     // Flags for Mentor
                     $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
-                    $verified = MentorVerification::where('user_id',$user_id)->first();
-                    if(!$verified){
+                    $verified = MentorVerification::where('user_id', $user_id)->first();
+                    if (!$verified) {
                         $newMentorVerification = new MentorVerification();
                         $newMentorVerification->user_id = $user_id;
                         $newMentorVerification->is_verified = 0;
                         $newMentorVerification->save();
-                        $verified = MentorVerification::where('user_id',$user_id)->first();
+                        $verified = MentorVerification::where('user_id', $user_id)->first();
                     }
-                    if($check_detail){
+                    if ($check_detail) {
                         // Details Filled Now Check Verification
-                        if($verified->is_verified == 0){
+                        if ($verified->is_verified == 0) {
                             // Mentor Details filled but not verified
                             $flag = 2;
-                        } elseif($verified->is_verified == 1) {
+                        } elseif ($verified->is_verified == 1) {
                             // Mentor Verified
                             $flag = 0;
-                        } elseif($verified->is_verified == 2){
+                        } elseif ($verified->is_verified == 2) {
                             // Mentor Verified
                             $flag = 3;
                         }
@@ -443,18 +445,31 @@ class ApiAuthController extends Controller
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
 
-                    if ($request->user_role == $this->user_role_id) {
-                        $new_user->role()->create(
-                            ['is_user' => 1, 'is_mentor' => 0]
-                        );
-                    } elseif ($request->user_role == $this->mentor_role_id) {
-                        $new_user->role()->create(
-                            ['is_user' => 0, 'is_mentor' => 1]
-                        );
 
-                        $new_user->mentor_verification()->create(
-                            ['is_verified' => 0]
-                        );
+                    switch ($request->user_role) {
+                        case $this->user_role_id:
+                            $new_user->role()->create(
+                                ['is_user' => 1, 'is_mentor' => 0]
+                            );
+                            break;
+                        case $this->mentor_role_id:
+                            $new_user->role()->create(
+                                ['is_mentor' => 1]
+                            );
+                            $new_user->mentor_verification()->create(
+                                ['is_verified' => 0]
+                            );
+                            break;
+                        case $this->admin_role_id:
+                            $new_user->role()->create(
+                                ['is_admin' => 1]
+                            );
+                            break;
+                        case $this->org_role_id:
+                            $new_user->role()->create(
+                                ['is_organisation' => 1]
+                            );
+                            break;
                     }
 
                     $phoenix_user_id = $new_user->id;
@@ -466,22 +481,35 @@ class ApiAuthController extends Controller
 
                     if (isset($user->email))
                         $new_user->email = $user->email;
-                        $new_user->avatar = $user->avatar;
-                        $new_user->save();
-                        $new_user->social_accounts()->create(
+                    $new_user->avatar = $user->avatar;
+                    $new_user->save();
+                    $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
-                    if ($request->user_role === $this->user_role_id) {
-                        $new_user->role()->create(
-                            ['is_user' => 1]
-                        );
-                    } elseif ($request->user_role === $this->mentor_role_id) {
-                        $new_user->role()->create(
-                            ['is_mentor' => 1]
-                        );
-                        $new_user->mentor_verification()->create(
-                            ['is_verified' => 0]
-                        );
+                    switch ($request->user_role) {
+                        case $this->user_role_id:
+                            $new_user->role()->create(
+                                ['is_user' => 1, 'is_mentor' => 0]
+                            );
+                            break;
+                        case $this->mentor_role_id:
+                            $new_user->role()->create(
+                                ['is_mentor' => 1]
+                            );
+                            $new_user->mentor_verification()->create(
+                                ['is_verified' => 0]
+                            );
+                            break;
+                        case $this->admin_role_id:
+                            $new_user->role()->create(
+                                ['is_admin' => 1]
+                            );
+                            break;
+                        case $this->org_role_id:
+                            $new_user->role()->create(
+                                ['is_organisation' => 1]
+                            );
+                            break;
                     }
                     $phoenix_user_id = $new_user->id;
                 } else {
@@ -542,4 +570,3 @@ class ApiAuthController extends Controller
         }
     }
 }
-

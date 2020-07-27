@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 
 // Legacy Migrations API
+Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
 Route::post('insert_legacy_users', ['uses' => 'LegacyDataController@insert_legacy_users']);
 Route::post('insert_legacy_subscriptions', ['uses' => 'LegacyDataController@insert_legacy_subscriptions']);
 
@@ -82,7 +83,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('add_student_firebase_id', ['uses' => 'ChatController@add_student_firebase_id']);
     Route::post('add_admin_firebase_id', ['uses' => 'ChatController@add_admin_firebase_id']);
     
-
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
