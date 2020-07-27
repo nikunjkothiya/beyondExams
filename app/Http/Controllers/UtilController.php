@@ -11,6 +11,7 @@ use App\OpportunityLocation;
 use App\PlusTransaction;
 use App\Tag;
 use App\User;
+use App\VersionCode;
 use Auth;
 use Carbon\Carbon;
 use DateTime;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use stdClass;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class UtilController extends Controller
 {
@@ -432,6 +433,29 @@ class UtilController extends Controller
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
+
+    public function add_version_code(Request $request)
+    {
+        $apiResponse = new ApiResponse;
+        try {
+            $validator = Validator::make($request->all(), [
+                "version_code"  => "required",
+                "version_name" => "required"
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $vc = new VersionCode();
+            $vc->version_code = $request->version_code;
+            $vc->version_name = $request->version_name;
+            $vc->save();
+
+            return $apiResponse->sendResponse(200, 'Version Added', $vc);
+        } catch (\Exception $e) {
+            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
 }
-
-
