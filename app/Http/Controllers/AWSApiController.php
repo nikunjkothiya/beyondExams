@@ -132,17 +132,17 @@ class AWSApiController extends Controller
             }
             if (isset($request->author_id)){
                 if ($request->type == 0) {
-                    $all_files = Resource::with('user:id,name,avatar')->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with('user:id,name,avatar')->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
                 } else if ($request->type == 3){
-                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
                 } else {
                     $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
                 }
             } else {
                 if ($request->type == 0) {
-                    $all_files = Resource::with('user:id,name,avatar')->get();
+                    $all_files = Resource::with('user:id,name,avatar')->where('duration', '>', 0)->get();
                 } else if ($request->type == 3){
-                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->get();
+                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
                 } else {
                     $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->get();
                 }

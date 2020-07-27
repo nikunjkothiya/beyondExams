@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Exception;
 use Auth;
 use GuzzleHttp\Client;
+use DB;
+use Carbon\Carbon;
+
 
 // Models
 use App\Role;
@@ -78,7 +81,7 @@ class ChatController extends Controller
                 case $this->admin_role_id:
                     // Requested Role is Mentor
                     if ($user_role->is_admin == 1) {
-                        $chats = Chat::all()->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+                        $chats = Chat::all()->with(['users' => function($query){$query->select('name');}])->orderByDesc('created_at')->get();
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
                         return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
@@ -201,13 +204,18 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
+	if (isset($request->legacy)){
+	    $opportunity_id = DB::table('legacy_opportunities')->where("legacy_opportunity_id", $request->opportunity_id)->value("phoenix_opportunity_id");
+	} else
+	    $opportunity_id = $request->opportunity_id;
+
         try {
-            $chat = Auth::user()->chats()->with('opportunity')->whereHas('opportunity', function ($query) use ($request) {
-                $query->where('id', $request->opportunity_id);
+            $chat = Auth::user()->chats()->with('opportunity')->whereHas('opportunity', function ($query) use ($opportunity_id) {
+                $query->where('id', $opportunity_id);
             })->first();
 
             if (is_null($chat)) {
-                $opportunity = Opportunity::find($request->opportunity_id);
+                $opportunity = Opportunity::find($opportunity_id);
 
                 $chat = new Chat();
                 $chat->creator_id = Auth::user()->id;
@@ -215,6 +223,9 @@ class ChatController extends Controller
                 $chat->opportunity()->associate($opportunity);
                 $chat->save();
 
+		$this->add_opportunity_admin_message("Hey! We have got a match!", $chat->id, 3);
+		$this->add_opportunity_admin_message("I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find($opportunity_id)->value("link"), $chat->id, 2);
+		$this->add_opportunity_admin_message("Please feel free to ask me anything.", $chat->id, 1);
 
                 $chat->users()->attach([Auth::user()->id => ['role_id' => $this->user_role_id]]);
             }
@@ -224,6 +235,17 @@ class ChatController extends Controller
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
+    }
+
+    public function add_opportunity_admin_message($message, $chat_id, $seconds){
+            $chat_message = new ChatMessage();
+            $chat_message->message = $message;
+            $chat_message->chat_id = $chat_id;
+            $chat_message->role_id = 3;
+            $chat_message->sender_id = 1;
+	    $chat_message->created_at = Carbon::now()->subSeconds($seconds);
+	    $chat_message->updated_at = Carbon::now()->subSeconds($seconds);
+            $chat_message->save();
     }
 
     public function create_support_chat()
