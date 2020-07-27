@@ -81,7 +81,7 @@ class ChatController extends Controller
                 case $this->admin_role_id:
                     // Requested Role is Mentor
                     if ($user_role->is_admin == 1) {
-                        $chats = Chat::all()->with(['users' => function($query){$query->select('name');}])->orderByDesc('created_at')->get();
+                        $chats = Chat::with(['users' => function($query){$query->select('name');}])->orderByDesc('created_at')->get();
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
                         return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
