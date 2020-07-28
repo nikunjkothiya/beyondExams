@@ -56,7 +56,7 @@ class ChatController extends Controller
 
             switch ($request->role_id) {
                 case $this->user_role_id:
-                    $chats = Auth::user()->chats()->where('is_support', false)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+                    $chats = Auth::user()->chats()->where('is_support', false)->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
                     foreach ($chats as $chat) {
                         $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
                         if (!$chat["is_group"])
@@ -72,7 +72,7 @@ class ChatController extends Controller
                     }
                     break;
                 case $this->mentor_role_id:
-                    $chats = Auth::user()->chats()->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+                    $chats = Auth::user()->chats()->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
                     foreach ($chats as $chat){
                         $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
                     }
@@ -88,7 +88,7 @@ class ChatController extends Controller
                     if ($user_role->is_admin == 1) {
                         $chats = Chat::with(['users' => function ($query) {
                             $query->select('name');
-                        }])->orderByDesc('created_at')->get();
+                        }])->orderByDesc('updated_at')->get();
                         foreach ($chats as $chat){
                             $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
 			    $chat["unread"] = ChatUser::where("role_id", $this->admin_role_id)->where("chat_id", $chat["id"])->pluck("unread");
@@ -378,6 +378,7 @@ class ChatController extends Controller
             $chat_message->save();
 
             $chat->updated_at = Carbon::now();
+	    $chat->save();
 
 //            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
 //            foreach ($chatusers as $chatuser){
