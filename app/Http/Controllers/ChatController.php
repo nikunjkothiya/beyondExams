@@ -377,6 +377,8 @@ class ChatController extends Controller
             $chat_message->sender_id = Auth::user()->id;
             $chat_message->save();
 
+            $chat->updated_at = Carbon::now();
+
 //            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
 //            foreach ($chatusers as $chatuser){
 //                $chatuser->unread += 1;
