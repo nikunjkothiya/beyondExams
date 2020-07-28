@@ -57,6 +57,7 @@ class ChatController extends Controller
                 case $this->user_role_id:
                     $chats = Auth::user()->chats()->where('is_support', false)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                     foreach ($chats as $chat) {
+                        $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
                         if (!$chat["is_group"])
                             $chat["group_id"] = ChatGroup::where("opportunity_id", $chat["opportunity_id"])->value("chat_id");
                         else
@@ -71,6 +72,9 @@ class ChatController extends Controller
                     break;
                 case $this->mentor_role_id:
                     $chats = Auth::user()->chats()->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+                    foreach ($chats as $chat){
+                        $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+                    }
                     // Requested Role is Mentor
                     if ($user_role->is_mentor == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
@@ -84,6 +88,9 @@ class ChatController extends Controller
                         $chats = Chat::with(['users' => function ($query) {
                             $query->select('name');
                         }])->orderByDesc('created_at')->get();
+                        foreach ($chats as $chat){
+                            $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+                        }
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
                         return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
@@ -367,6 +374,11 @@ class ChatController extends Controller
             $chat_message->sender_id = Auth::user()->id;
             $chat_message->save();
 
+//            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
+//            foreach ($chatusers as $chatuser){
+//                $chatuser->unread += 1;
+//            }
+
             // Send Notifications via get firebaseIDs
             $this->get_firebaseIds($request->chat_id, $chat_message->id, Auth::user()->id, Auth::user()->name);
 
@@ -382,9 +394,10 @@ class ChatController extends Controller
 
     public function get_firebaseIds($chat_id, $message_id, $user_id, $sender_name)
     {
-        $studentIds = StudentFirebase::with("user")->whereHas("user", function ($query) use ($user_id, $chat_id) {
-            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
-        })->get()->pluck('firebaseId');
+        $studentIds = StudentFirebase::whereIn('user_id', Chat::find($chat_id)->users()->pluck('user_id'))->where('user_id', '!=', Auth::user()->id)->pluck('firebaseId');
+//        $studentIds = StudentFirebase::with("user")->whereHas("user", function ($query) use ($user_id, $chat_id) {
+//            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
+//        })->get()->pluck('firebaseId');
 
         // $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
         $adminIds = AdminFirebase::all()->pluck('firebaseId');
@@ -537,4 +550,51 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
+
+    public function change_chat_title(Request $request){
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|int',
+            'title' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        if (Auth::user()->role()->is_admin != 1)
+            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
+
+        $chat = Chat::find($request->chat_id);
+        $chat->title = $request->title;
+        $chat->save();
+
+        return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
+    }
+
+    public function get_all_mentors(Request $request){
+        if (Auth::user()->role()->is_admin != 1)
+            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
+        $mentors = User::whereHas('role', function($query){$query->where("is_mentor", 1);})->select('id', 'name', 'email')->get();
+
+        return $this->apiResponse->sendResponse(200, 'Mentors fetched successfully.', $mentors);
+    }
+
+    public function assign_mentor(Request $request){
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|int',
+            'mentor_id' => 'required|int',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $chat = Chat::find($request->chat_id);
+        $chat->users()->attach([Auth::user()->id => ['role_id' => $this->mentor_role_id]]);
+        $chat->save();
+
+        return $this->apiResponse->sendResponse(200, "Mentor assigned successfully", null);
+    }
+
+
 }

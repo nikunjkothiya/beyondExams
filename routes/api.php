@@ -32,7 +32,7 @@ Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
-   
+
     // Profile APi
     Route::post('logout', ['uses' => 'ApiAuthController@logout']);
     Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
@@ -82,7 +82,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
     Route::post('add_student_firebase_id', ['uses' => 'ChatController@add_student_firebase_id']);
     Route::post('add_admin_firebase_id', ['uses' => 'ChatController@add_admin_firebase_id']);
-    
+    Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
+    Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
+    Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
+
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
@@ -107,7 +110,7 @@ Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbna
 Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 
 
-// Opportuinity Navigation 
+// Opportuinity Navigation
 Route::get('next_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_next_opportunity']);
 Route::get('previous_opportunity_by_slug', ['uses' => 'ApiOpportunityController@get_previous_opportunity']);
 
