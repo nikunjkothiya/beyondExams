@@ -67,7 +67,7 @@ class ChatController extends Controller
                     if ($user_role->is_user == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
-                        return $this->apiResponse->sendResponse(400, 'User is not a student.', null);
+                        return $this->apiResponse->sendResponse(403, 'User is not a student.', null);
                     }
                     break;
                 case $this->mentor_role_id:
@@ -79,7 +79,7 @@ class ChatController extends Controller
                     if ($user_role->is_mentor == 1) {
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
-                        return $this->apiResponse->sendResponse(400, 'User is not a mentor.', null);
+                        return $this->apiResponse->sendResponse(403, 'User is not a mentor.', null);
                     }
                     break;
                 case $this->admin_role_id:
@@ -93,7 +93,7 @@ class ChatController extends Controller
                         }
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
-                        return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+                        return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
                     }
                     break;
             }
@@ -118,7 +118,7 @@ class ChatController extends Controller
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
 
         if ($user_role->is_admin == 0 && $request->role_id == $this->admin_role_id) {
-            return $this->apiResponse->sendResponse(401, 'User is not admin.', null);
+            return $this->apiResponse->sendResponse(403, 'User is not admin.', null);
         } else if ($user_role->is_admin == 1 && $request->role_id == $this->admin_role_id) {
             $messages = ChatMessage::with(['sender' => function ($query) {
                 $query->select('id', 'name', 'avatar');
@@ -163,7 +163,7 @@ class ChatController extends Controller
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
 
         if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
         }
 
         try {
@@ -298,7 +298,7 @@ class ChatController extends Controller
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
         if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
         }
 
         try {
@@ -562,7 +562,7 @@ class ChatController extends Controller
         }
 
         if (Auth::user()->role()->is_admin != 1)
-            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
 
         $chat = Chat::find($request->chat_id);
         $chat->title = $request->title;
@@ -573,7 +573,7 @@ class ChatController extends Controller
 
     public function get_all_mentors(Request $request){
         if (Auth::user()->role()->is_admin != 1)
-            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
         $mentors = User::whereHas('role', function($query){$query->where("is_mentor", 1);})->select('id', 'name', 'email')->get();
 
         return $this->apiResponse->sendResponse(200, 'Mentors fetched successfully.', $mentors);
