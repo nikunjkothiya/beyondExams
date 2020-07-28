@@ -79,9 +79,11 @@ class ChatController extends Controller
                     }
                     break;
                 case $this->admin_role_id:
-                    // Requested Role is Mentor
+                    // Requested Role is Admin
                     if ($user_role->is_admin == 1) {
-                        $chats = Chat::with(['users' => function($query){$query->select('name');}])->orderByDesc('created_at')->get();
+                        $chats = Chat::with(['users' => function ($query) {
+                            $query->select('name');
+                        }])->orderByDesc('created_at')->get();
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
                         return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
@@ -109,13 +111,18 @@ class ChatController extends Controller
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
 
         if ($user_role->is_admin == 0 && $request->role_id == $this->admin_role_id) {
-            return $this->apiResponse->sendResponse(400, 'User is not admin.', null);
+            return $this->apiResponse->sendResponse(401, 'User is not admin.', null);
+        } else if ($user_role->is_admin == 1 && $request->role_id == $this->admin_role_id) {
+            $messages = ChatMessage::with(['sender' => function ($query) {
+                $query->select('id', 'name', 'avatar');
+            }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+            return $this->apiResponse->sendResponse(200, 'Success', $messages);
         }
 
         try {
-            if(Chat::where('id', $request->chat_id)->first()->is_group){
+            if (Chat::where('id', $request->chat_id)->first()->is_group) {
                 $chatUser = ChatUser::where('user_id', Auth::user()->id)->where('chat_id', $request->chat_id)->first();
-                if(is_null($chatUser)){
+                if (is_null($chatUser)) {
                     $newChatUser = new ChatUser();
                     $newChatUser->user_id = Auth::user()->id;
                     $newChatUser->chat_id = $request->chat_id;
@@ -130,7 +137,7 @@ class ChatController extends Controller
                 }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
                 return $this->apiResponse->sendResponse(200, 'Success', $messages);
             }
-            return $this->apiResponse->sendResponse(400, 'Not Authorised', null);
+            return $this->apiResponse->sendResponse(403, 'Access to the chat is forbidden', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -204,10 +211,10 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-	if (isset($request->legacy)){
-	    $opportunity_id = DB::table('legacy_opportunities')->where("legacy_opportunity_id", $request->opportunity_id)->value("phoenix_opportunity_id");
-	} else
-	    $opportunity_id = $request->opportunity_id;
+        if (isset($request->legacy)) {
+            $opportunity_id = DB::table('legacy_opportunities')->where("legacy_opportunity_id", $request->opportunity_id)->value("phoenix_opportunity_id");
+        } else
+            $opportunity_id = $request->opportunity_id;
 
         try {
             $chat = Auth::user()->chats()->with('opportunity')->whereHas('opportunity', function ($query) use ($opportunity_id) {
@@ -223,9 +230,9 @@ class ChatController extends Controller
                 $chat->opportunity()->associate($opportunity);
                 $chat->save();
 
-		$this->add_opportunity_admin_message("Hey! We have got a match!", $chat->id, 3);
-		$this->add_opportunity_admin_message("I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find($opportunity_id)->value("link"), $chat->id, 2);
-		$this->add_opportunity_admin_message("Please feel free to ask me anything.", $chat->id, 1);
+                $this->add_opportunity_admin_message("Hey! We have got a match!", $chat->id, 3);
+                $this->add_opportunity_admin_message("I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find($opportunity_id)->value("link"), $chat->id, 2);
+                $this->add_opportunity_admin_message("Please feel free to ask me anything.", $chat->id, 1);
 
                 $chat->users()->attach([Auth::user()->id => ['role_id' => $this->user_role_id]]);
             }
@@ -237,15 +244,16 @@ class ChatController extends Controller
         }
     }
 
-    public function add_opportunity_admin_message($message, $chat_id, $seconds){
-            $chat_message = new ChatMessage();
-            $chat_message->message = $message;
-            $chat_message->chat_id = $chat_id;
-            $chat_message->role_id = 3;
-            $chat_message->sender_id = 1;
-	    $chat_message->created_at = Carbon::now()->subSeconds($seconds);
-	    $chat_message->updated_at = Carbon::now()->subSeconds($seconds);
-            $chat_message->save();
+    public function add_opportunity_admin_message($message, $chat_id, $seconds)
+    {
+        $chat_message = new ChatMessage();
+        $chat_message->message = $message;
+        $chat_message->chat_id = $chat_id;
+        $chat_message->role_id = 3;
+        $chat_message->sender_id = 1;
+        $chat_message->created_at = Carbon::now()->subSeconds($seconds);
+        $chat_message->updated_at = Carbon::now()->subSeconds($seconds);
+        $chat_message->save();
     }
 
     public function create_support_chat()
@@ -283,13 +291,13 @@ class ChatController extends Controller
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
         if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
         }
 
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
             if (is_null($chat)) {
-                return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
+                return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
             }
 
             $chat->users()->attach([$request->user_id => ['role_id' => $request->role_id]]);
@@ -313,7 +321,7 @@ class ChatController extends Controller
 
         $user_role = UserRole::where('user_id', Auth::user()->id)->first();
         if ($user_role->is_admin == 0) {
-            return $this->apiResponse->sendResponse(400, 'User is not a admin.', null);
+            return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
         }
 
         try {
@@ -326,7 +334,7 @@ class ChatController extends Controller
 
                 return $this->apiResponse->sendResponse(200, 'Operator added to the chat.', null);
             } else {
-                return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
+                return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
             }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
@@ -348,7 +356,7 @@ class ChatController extends Controller
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
             if (is_null($chat)) {
-                return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
+                return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
             }
 
             $chat_message = new ChatMessage();
@@ -372,6 +380,71 @@ class ChatController extends Controller
         }
     }
 
+    public function get_firebaseIds($chat_id, $message_id, $user_id, $sender_name)
+    {
+        $studentIds = StudentFirebase::with("user")->whereHas("user", function ($query) use ($user_id, $chat_id) {
+            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
+        })->get()->pluck('firebaseId');
+
+        // $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
+        $adminIds = AdminFirebase::all()->pluck('firebaseId');
+
+        $student_headers = array(
+            "key: AIzaSyDovLKo3djdRbs963vqKdbj-geRWyzMTrg",
+            "Authorization: key=" . "AAAAOjqNmFY:APA91bFaHsWDfwZqlt2uYKo7Lufj_4ZfP9tNK57HSZHIOD8kW-Rca-GlDbTyDBAAG3LacvqxUmgPK3zIzxoL6r6wwKWx_I7WEsqvYpjvhiZaCoK8CZtgDdmi8Gwp-xXtSruDgt_qKpWI",
+            "Content-Type: application/json"
+        );
+        $this->send_user_notification($message_id, $studentIds, $sender_name, $student_headers);
+
+        $admin_firebase = array(
+            "key: AIzaSyBwTH4gMhdWKZd5dlxYbvY3SIYMREOzGZY",
+            "Authorization: key=" . "AAAAgvxGJqg:APA91bHQCC7Av_6k-DhytBf0-lhgbO_omK2nfbThcwz4C49VF1EK500EnrK1HmxGTRpixPBVIxojkRmoys2U1FV4KfmIhTn-hFURrYSS9BIRS_-Op6E3Y4k7IQ-qirLKqyS8iw7qyv6v",
+            "Content-Type: application/json"
+        );
+        $this->send_user_notification($message_id, $adminIds, $sender_name, $admin_firebase);
+    }
+
+    public function send_user_notification($messageId, $firebaseIds, $sender_name, $headers)
+    {
+        try {
+
+            // Send Notification to app
+            $messageData = ChatMessage::with('chat')->where('id', $messageId)->first();
+            $messageData['sender_name'] = $sender_name;
+
+            $url = 'https://fcm.googleapis.com/fcm/send';
+
+            $fields = array(
+                'registration_ids' => $firebaseIds,
+                'notification' => array(
+                    "title" => 'New message on Precisely',
+                    "image" => 'https://lithics.in/apis/ic_notification.png'
+                ),
+                'data' => $messageData,
+                'android' => array("priority" => "high"),
+                "webpush" => array(
+                    "headers" => array(
+                        "Urgency" => "high"
+                    )
+                )
+            );
+
+            $fields = json_encode($fields, JSON_UNESCAPED_SLASHES);
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+
+            curl_exec($ch);
+
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function send_multimedia_message(request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -387,7 +460,7 @@ class ChatController extends Controller
         try {
             $chat = Chat::where('id', $request->chat_id)->first();
             if (is_null($chat)) {
-                return $this->apiResponse->sendResponse(400, 'Chat does not exist.', null);
+                return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
             }
 
             $file = $request->file('file');
@@ -414,71 +487,6 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Multimedia message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
-        }
-    }
-
-    public function get_firebaseIds($chat_id, $message_id, $user_id, $sender_name)
-    {
-        $studentIds = StudentFirebase::with("user")->whereHas("user", function($query) use ($user_id, $chat_id) {
-            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
-        })->get()->pluck('firebaseId');
-
-        // $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
-        $adminIds = AdminFirebase::all()->pluck('firebaseId');
-
-        $student_headers = array(
-            "key: AIzaSyDovLKo3djdRbs963vqKdbj-geRWyzMTrg",
-            "Authorization: key=" . "AAAAOjqNmFY:APA91bFaHsWDfwZqlt2uYKo7Lufj_4ZfP9tNK57HSZHIOD8kW-Rca-GlDbTyDBAAG3LacvqxUmgPK3zIzxoL6r6wwKWx_I7WEsqvYpjvhiZaCoK8CZtgDdmi8Gwp-xXtSruDgt_qKpWI",
-            "Content-Type: application/json"
-        );
-        $this->send_user_notification($message_id, $studentIds, $sender_name, $student_headers);
-
-        $admin_firebase = array(
-            "key: AIzaSyBwTH4gMhdWKZd5dlxYbvY3SIYMREOzGZY",
-            "Authorization: key=" . "AAAAgvxGJqg:APA91bHQCC7Av_6k-DhytBf0-lhgbO_omK2nfbThcwz4C49VF1EK500EnrK1HmxGTRpixPBVIxojkRmoys2U1FV4KfmIhTn-hFURrYSS9BIRS_-Op6E3Y4k7IQ-qirLKqyS8iw7qyv6v",
-            "Content-Type: application/json"
-        );
-        $this->send_user_notification($message_id, $adminIds, $sender_name, $admin_firebase);
-    }
-
-    public function send_user_notification($messageId, $firebaseIds, $sender_name, $headers)
-    {
-        try{
-
-        // Send Notification to app
-        $messageData = ChatMessage::with('chat')->where('id', $messageId)->first();
-        $messageData['sender_name'] = $sender_name;
-
-        $url = 'https://fcm.googleapis.com/fcm/send';
-
-        $fields = array(
-            'registration_ids' => $firebaseIds,
-            'notification' => array(
-                "title" => 'New message on Precisely',
-                "image" => 'https://lithics.in/apis/ic_notification.png'
-            ),
-            'data' => $messageData,
-            'android' => array("priority" => "high"),
-            "webpush" => array(
-                "headers" => array(
-                    "Urgency" => "high"
-                )
-            )
-        );
-
-        $fields = json_encode($fields, JSON_UNESCAPED_SLASHES);
-
-        $ch = curl_init ();
-        curl_setopt ( $ch, CURLOPT_URL, $url );
-        curl_setopt ( $ch, CURLOPT_POST, true );
-        curl_setopt ( $ch, CURLOPT_HTTPHEADER, $headers );
-        curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt ( $ch, CURLOPT_POSTFIELDS, $fields );
-
-        curl_exec ( $ch );
-
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
