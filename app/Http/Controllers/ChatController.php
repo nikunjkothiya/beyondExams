@@ -90,6 +90,8 @@ class ChatController extends Controller
                         }])->orderByDesc('created_at')->get();
                         foreach ($chats as $chat){
                             $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+                            $chat["unread"] = ChatUser::where("user_id", Auth::user()->id)->where("chat_id", $chat["id"])->pluck("unread");
+                            $chat["num_messages"] = ChatMessage::where('chat_id', $chat["id"]);
                         }
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
@@ -374,6 +376,8 @@ class ChatController extends Controller
             $chat_message->sender_id = Auth::user()->id;
             $chat_message->save();
 
+            $chat->updated_at = Carbon::now();
+
 //            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
 //            foreach ($chatusers as $chatuser){
 //                $chatuser->unread += 1;
@@ -572,7 +576,7 @@ class ChatController extends Controller
     }
 
     public function get_all_mentors(Request $request){
-        if (Auth::user()->role()->is_admin != 1)
+        if (Auth::user()->role()->pluck('is_admin') != 1)
             return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
         $mentors = User::whereHas('role', function($query){$query->where("is_mentor", 1);})->select('id', 'name', 'email')->get();
 
