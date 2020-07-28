@@ -25,6 +25,7 @@ use App\ChatUser;
 use App\Opportunity;
 use App\OpportunityRepresentative;
 use App\StudentFirebase;
+use App\User;
 
 class ChatController extends Controller
 {
@@ -90,6 +91,8 @@ class ChatController extends Controller
                         }])->orderByDesc('created_at')->get();
                         foreach ($chats as $chat){
                             $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+			    $chat["unread"] = ChatUser::where("role_id", $this->admin_role_id)->where("chat_id", $chat["id"])->pluck("unread");
+			    $chat["message_count"] = ChatMessage::where("chat_id", $chat["id"])->count();
                         }
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
@@ -515,11 +518,17 @@ class ChatController extends Controller
         }
 
         try {
+	    if (StudentFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->count() > 0) {
+		$firebase = StudentFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->first();
+		$firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+	    } else {
             $firebase = new StudentFirebase();
             $firebase->user_id = Auth::user()->id;
             $firebase->deviceId = $request->device_id;
             $firebase->firebaseId = $request->firebase_id;
             $firebase->save();
+	    }
 
             return $this->apiResponse->sendResponse(200, 'Success.', $firebase);
         } catch (Exception $e) {
@@ -539,11 +548,17 @@ class ChatController extends Controller
         }
 
         try {
-            $firebase = new AdminFirebase();
-            $firebase->user_id = Auth::user()->id;
-            $firebase->deviceId = $request->device_id;
-            $firebase->firebaseId = $request->firebase_id;
-            $firebase->save();
+	    if (AdminFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->count() > 0) {
+		$firebase = AdminFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->first();
+                $firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+	    } else {
+                $firebase = new AdminFirebase();
+                $firebase->user_id = Auth::user()->id;
+                $firebase->deviceId = $request->device_id;
+                $firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+	    }
 
             return $this->apiResponse->sendResponse(200, 'Success.', $firebase);
         } catch (Exception $e) {
@@ -572,7 +587,7 @@ class ChatController extends Controller
     }
 
     public function get_all_mentors(Request $request){
-        if (Auth::user()->role()->is_admin != 1)
+	if (Auth::user()->role()->pluck('is_admin')[0] != 1)
             return $this->apiResponse->sendResponse(401, 'User is not a admin.', null);
         $mentors = User::whereHas('role', function($query){$query->where("is_mentor", 1);})->select('id', 'name', 'email')->get();
 
