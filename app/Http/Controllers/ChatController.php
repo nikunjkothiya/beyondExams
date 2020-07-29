@@ -103,7 +103,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(400, 'No such user role.', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
@@ -521,8 +521,8 @@ class ChatController extends Controller
         }
 
         try {
-	    if (StudentFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->count() > 0) {
-		$firebase = StudentFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->first();
+	    if (StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
+		$firebase = StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
 		$firebase->firebaseId = $request->firebase_id;
                 $firebase->save();
 	    } else {
@@ -551,8 +551,8 @@ class ChatController extends Controller
         }
 
         try {
-	    if (AdminFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->count() > 0) {
-		$firebase = AdminFirebase::where('user_id', Auth::user()->id)->where('device_id', $request->device_id)->first();
+	    if (AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
+		$firebase = AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
                 $firebase->firebaseId = $request->firebase_id;
                 $firebase->save();
 	    } else {
