@@ -31,7 +31,7 @@ Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
 //Protected APIs via Auth Middleware
-Route::group(['middleware' => ['verifyAuth']], function () {
+Route::group(['middleware' => 'auth:api'], function () {
 
     // Profile APi
     Route::post('logout', ['uses' => 'ApiAuthController@logout']);
