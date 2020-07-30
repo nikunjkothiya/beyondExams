@@ -201,6 +201,14 @@ class PreciselyController extends Controller
                         $responseArray = [
                             'new' => $flag
                         ];
+                        if(isset($request->domain_ids)){
+                            foreach($request->domain_ids as $domain){
+                                $domain_user = new DomainUser();
+                                $domain_user->user_id = Auth::user()->id;
+                                $domain_user->domain_id = $domain;
+                                $domain_user->save();
+                            }
+                        }
                         return $this->apiResponse->sendResponse(200, 'User details saved', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
@@ -227,6 +235,14 @@ class PreciselyController extends Controller
                         $responseArray = [
                             'new' => $flag
                         ];
+                        if(isset($request->domain_ids)){
+                            foreach($request->domain_ids as $domain){
+                                $domain_user = new DomainUser();
+                                $domain_user->user_id = Auth::user()->id;
+                                $domain_user->domain_id = $domain;
+                                $domain_user->save();
+                            }
+                        }
                         return $this->apiResponse->sendResponse(200, 'User details saved.', $responseArray);
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
@@ -519,17 +535,18 @@ class PreciselyController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'domain_id' => 'required|integer'
+                'domain_ids' => 'required'
             ]);
 
             if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'No domain id given', $validator->errors());
+                return $this->apiResponse->sendResponse(400, 'No domain ids were given', $validator->errors());
             }
-
-            $domain_user = new DomainUser();
-            $domain_user->user_id = Auth::user()->id;
-            $domain_user->domain_id = $request->domain_id;
-            $domain_user->save();
+            foreach($request->domain_ids as $domain){
+                $domain_user = new DomainUser();
+                $domain_user->user_id = Auth::user()->id;
+                $domain_user->domain_id = $domain;
+                $domain_user->save();
+            }
 
             return $this->apiResponse->sendResponse(200, 'User domain added', null);
         } catch (Exception $e) {
