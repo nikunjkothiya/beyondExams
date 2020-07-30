@@ -54,6 +54,10 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Tag');
     }
 
+    public function domains(){
+        return $this->belongsToMany('App\DomainUser');
+    }
+
     public function saved_opportunities(){
         return $this->belongsToMany('App\Opportunity');
     }

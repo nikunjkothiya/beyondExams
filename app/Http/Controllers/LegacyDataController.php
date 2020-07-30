@@ -6,9 +6,9 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use App\PremiumValidity;
 use App\User;
-
 use Carbon\Carbon;
 use Exception;
+use DB;
 
 class LegacyDataController extends Controller
 {
@@ -18,13 +18,24 @@ class LegacyDataController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
+    public function get_legacy_users()
+    {
+        try {
+            $legacyDB = DB::connection('mysql_legacy');
+            $users = $legacyDB->table('user_authentication')->get();
+            return $this->apiResponse->sendResponse(200, "Users", $users);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function insert_legacy_users(request $request)
     {
         try {
             if (!isset($request->users)) {
                 return $this->apiResponse->sendResponse(400, "No data given", null);
             }
-            foreach($request->users as $user){
+            foreach ($request->users as $user) {
                 $insertUser = new User();
                 $insertUser->email = $user['email'];
                 $insertUser->unique_id = $user['user_id'];
@@ -47,13 +58,13 @@ class LegacyDataController extends Controller
                 return $this->apiResponse->sendResponse(400, "No data given", null);
             }
             $invalidUsers = array();
-            foreach($request->subscriptions as $subscription){
+            foreach ($request->subscriptions as $subscription) {
                 $user = User::where('email', $subscription['email_id'])->first();
-                if(is_null($user)){
+                if (is_null($user)) {
                     array_push($invalidUsers, $subscription);
                 } else {
                     $insertPlan = new PremiumValidity();
-                    $insertPlan->user_id = $user['id'];   
+                    $insertPlan->user_id = $user['id'];
                     $insertPlan->end_date = Carbon::parse($subscription['end_date']);
                     $insertPlan->save();
                 }

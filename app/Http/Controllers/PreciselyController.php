@@ -9,6 +9,8 @@ use App\ActionUserOpportunity;
 use App\Analytics;
 use App\Country;
 use App\Discipline;
+use App\Domain;
+use App\DomainUser;
 use App\Language;
 use App\Opportunity;
 use App\Qualification;
@@ -62,8 +64,9 @@ class PreciselyController extends Controller
         }
     }
 
-    public function submit_mentor_profile(Request $request){
-        try{
+    public function submit_mentor_profile(Request $request)
+    {
+        try {
             if (Auth::check()) {
                 $user = User::find(Auth::user()->id);
                 $user_id = $user->id;
@@ -96,14 +99,14 @@ class PreciselyController extends Controller
                     $record->save();
                     if ($record) {
                         $flag = 2;
-                        $verified = MentorVerification::where('user_id',$user_id)->first();
-                        if($verified->is_verified == 0){
+                        $verified = MentorVerification::where('user_id', $user_id)->first();
+                        if ($verified->is_verified == 0) {
                             // Mentor Details filled but not verified
                             $flag = 2;
-                        } elseif($verified->is_verified == 1) {
+                        } elseif ($verified->is_verified == 1) {
                             // Mentor Verified
                             $flag = 0;
-                        } elseif($verified->is_verified == 2){
+                        } elseif ($verified->is_verified == 2) {
                             // Mentor Verified
                             $flag = 3;
                         }
@@ -123,14 +126,14 @@ class PreciselyController extends Controller
                     $check->save();
                     if ($check) {
                         $flag = 2;
-                        $verified = MentorVerification::where('user_id',$user_id)->first();
-                        if($verified->is_verified == 0){
+                        $verified = MentorVerification::where('user_id', $user_id)->first();
+                        if ($verified->is_verified == 0) {
                             // Mentor Details filled but not verified
                             $flag = 2;
-                        } elseif($verified->is_verified == 1) {
+                        } elseif ($verified->is_verified == 1) {
                             // Mentor Verified
                             $flag = 0;
-                        } elseif($verified->is_verified == 2){
+                        } elseif ($verified->is_verified == 2) {
                             // Mentor Verified
                             $flag = 3;
                         }
@@ -163,7 +166,7 @@ class PreciselyController extends Controller
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'email' => 'required|email',
                 ]);
-//            dd($validator);
+                //  dd($validator);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
@@ -190,7 +193,7 @@ class PreciselyController extends Controller
                     if ($record) {
                         // Check if tags are filled if filled then 0 else 3
                         $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-                        if($check_tag){
+                        if ($check_tag) {
                             $flag = 0;
                         } else {
                             $flag = 3;
@@ -216,7 +219,7 @@ class PreciselyController extends Controller
                     if ($check) {
                         // Check if tags are filled if filled then 0 else 3
                         $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-                        if($check_tag){
+                        if ($check_tag) {
                             $flag = 0;
                         } else {
                             $flag = 3;
@@ -235,7 +238,7 @@ class PreciselyController extends Controller
         }
     }
 
-//    TODO: CORRECT RETURN TYPE
+    //    TODO: CORRECT RETURN TYPE
     public function get_user_profile()
     {
         if (Auth::check()) {
@@ -322,24 +325,22 @@ class PreciselyController extends Controller
                             DB::table('opportunity_user')->insert(['opportunity_id' => $opp_id, 'user_id' => $user->id]);
                         }
                     }
-
                 } catch (Exception $e) {
                     return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
                 }
-
             } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
-//            try{
-//                $id = $request->id;
-//                $user = UserDetail::where('user_id',$request->user_id)->first();
-//                $user->saved_opportunities()->detach($id);
-//                $user->saved_opportunities()->attach($id);
-//            }
-//            catch(Exception $e){
-//                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-//            }
+            // try{
+            //   $id = $request->id;
+            //   $user = UserDetail::where('user_id',$request->user_id)->first();
+            //   $user->saved_opportunities()->detach($id);
+            //   $user->saved_opportunities()->attach($id);
+            // }
+            // catch(Exception $e){
+            //   return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+            // }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -371,22 +372,19 @@ class PreciselyController extends Controller
                                 DB::table('opportunity_user')->where([['user_id', $user->id], ['opportunity_id', $opp_id]])->delete();
                                 return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
                                 break;
-
                             }
                         }
                     }
-
                 } catch (Exception $e) {
                     return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
                 }
-
             } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
 
-//            $id = $request->id;
-//            $user = UserDetail::where('user_id',$request->user_id)->first();
-//            $user->saved_opportunities()->detach($id);
+            // $id = $request->id;
+            // $user = UserDetail::where('user_id',$request->user_id)->first();
+            // $user->saved_opportunities()->detach($id);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -438,8 +436,8 @@ class PreciselyController extends Controller
                 $flag = 2;
                 $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
-                if($check_detail){
-                    if($check_tag){
+                if ($check_detail) {
+                    if ($check_tag) {
                         // If Category is filled
                         $flag = 0;
                     } else {
@@ -460,9 +458,9 @@ class PreciselyController extends Controller
                 $flag = 2;
                 $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
-                if($check_detail){
+                if ($check_detail) {
                     // Check User Details is filled
-                    if($check_tag){
+                    if ($check_tag) {
                         // If Category is filled
                         $flag = 0;
                     } else {
@@ -494,7 +492,7 @@ class PreciselyController extends Controller
 
             $user = User::where('id', $user->id)->first();
             $tags = $request->tags;
-//            return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $tags);
+            // return $this->apiResponse->sendResponse(200, 'Saved filters selected by user', $tags);
             if (empty($tags)) {
                 return $this->apiResponse->sendResponse(400, 'Select at least one filter', null);
             }
@@ -503,7 +501,7 @@ class PreciselyController extends Controller
             $user->tags()->sync(json_decode($tags));
             // Check if profile are filled if filled then 0 else 2
             $check_detail = UserDetail::select('email')->where('user_id', $user->id)->first()->email;
-            if($check_detail){
+            if ($check_detail) {
                 $flag = 0;
             } else {
                 $flag = 2;
@@ -515,6 +513,54 @@ class PreciselyController extends Controller
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
+    }
+
+    public function save_user_domains(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'domain_id' => 'required|integer'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'No domain id given', $validator->errors());
+            }
+
+            $domain_user = new DomainUser();
+            $domain_user->user_id = Auth::user()->id;
+            $domain_user->domain_id = $request->domain_id;
+            $domain_user->save();
+
+            return $this->apiResponse->sendResponse(200, 'User domain added', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+        }        
+    }
+
+    public function get_user_domains()
+    {
+        try {
+            $userdomains = DomainUser::with('domains')->where('user_id',Auth::user()->id)->get();
+            if(count($userdomains) > 0){
+                return $this->apiResponse->sendResponse(200, 'Success', $userdomains);
+            }
+            return $this->apiResponse->sendResponse(404, 'No Domain linked with user', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+        }        
+    }
+
+    public function get_all_domains()
+    {
+        try {
+            $domains = Domain::all();
+            if(count($domains) > 0){
+                return $this->apiResponse->sendResponse(200, 'Success', $domains);
+            }
+            return $this->apiResponse->sendResponse(404, 'No Domains found.', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+        }        
     }
 
     public function get_all_countries(Request $request)
@@ -586,7 +632,7 @@ class PreciselyController extends Controller
 
     public function segment_analytics(Request $request)
     {
-	/*
+        /*
         try {
         // Create new Analytics, connect it to user, connect it to opportunity
 
