@@ -248,12 +248,12 @@ class ApiOpportunityController extends Controller
             }])->latest()->first();
 
             if (!is_null($opportunity))
-                $opportunities[] = $opportunity;
+                $opportunities[$opportunity->id] = $opportunity;
 
             if (count($opportunities) == 6)
                 break;
         }
 
-        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", array_values($opportunities));
     }
 }
