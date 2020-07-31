@@ -16,8 +16,7 @@ class CreateVersionCodesTable extends Migration
         Schema::create('version_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('version_code');
-            $table->string('version_name');
-            $table->timestamps();
+            $table->string('version_name')->nullable();
         });
     }
 
