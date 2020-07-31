@@ -312,7 +312,7 @@ class ApiAuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
-                //                'user_role' => 'required'
+                // 'user_role' => 'required'
             ]);
 
             if (!isset($request->user_role))
@@ -327,7 +327,7 @@ class ApiAuthController extends Controller
             $phoenix_user_id = 1;
 
             $flag = 0;
-            //	        Provider instance. To extract user details
+            // Provider instance. To extract user details
             $provider_obj = NULL;
             if ($provider == 'google') {
                 $config = [
