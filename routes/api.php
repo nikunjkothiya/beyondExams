@@ -9,9 +9,8 @@ Route::get('get_legacy_users', ['uses' => 'LegacyDataController@get_legacy_users
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 
 // Legacy Migrations API
-Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
-Route::post('insert_legacy_users', ['uses' => 'LegacyDataController@insert_legacy_users']);
-Route::post('insert_legacy_subscriptions', ['uses' => 'LegacyDataController@insert_legacy_subscriptions']);
+// Use tinker for this
+// Route::post('update_legacy_users', ['uses' => 'LegacyDataController@update_legacy_users']);
 
 // Login/Signup APi
 Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verifyAccessToken']);
@@ -30,6 +29,7 @@ Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp'])
 Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
+Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
 
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
