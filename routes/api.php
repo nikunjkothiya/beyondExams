@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 
+Route::get('get_legacy_users', ['uses' => 'LegacyDataController@get_legacy_users']);
+
+
 //M2M APIs
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 
@@ -20,6 +23,7 @@ Route::post('organisation/refresh', ['uses' => 'ApiAuthOrganisationController@re
 Route::get('get_all_languages', ['uses' => 'PreciselyController@get_language']);
 Route::get('get_filters', ['uses' => 'PreciselyController@get_filters']);
 Route::get('get_all_countries', ['uses' => 'PreciselyController@get_all_countries']);
+Route::get('get_all_domains', ['uses' => 'PreciselyController@get_all_domains']);
 
 // Misc APi
 Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp']);
@@ -45,6 +49,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
     Route::post('save_user_filters', ['uses' => 'PreciselyController@save_user_filters']);
     Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
+    Route::post('save_user_domains', ['uses' => 'PreciselyController@save_user_domains']);
+    Route::get('get_user_domains', ['uses' => 'PreciselyController@get_user_domains']);
 
     // Opportuinities APi
     Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);

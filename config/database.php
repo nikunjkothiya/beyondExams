@@ -63,6 +63,18 @@ return [
             ]) : [],
         ],
 
+        'mysql_legacy' => [
+            'driver'    => 'mysql',
+            'host'      => env('LEGACY_HOST', 'localhost'),
+            'database'  => env('LEGACY_DATABASE', 'forge'),
+            'username'  => env('LEGACYUSERNAME', 'forge'),
+            'password'  => env('LEGACYPASSWORD', ''),
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => '',
+            'strict'    => false,
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
