@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 
-Route::get('get_legacy_users', ['uses' => 'LegacyDataController@get_legacy_users']);
 
 
 //M2M APIs
@@ -10,7 +9,8 @@ Route::post('post/opportunity', 'UtilController@post_opportunity');
 
 // Legacy Migrations API
 // Use tinker for this
-// Route::post('update_legacy_users', ['uses' => 'LegacyDataController@update_legacy_users']);
+// Route::get('migrate_legacy_users', ['uses' => 'LegacyDataController@migrate_legacy_users']);
+Route::get('migrate_legacy_chats', ['uses' => 'LegacyDataController@migrate_legacy_chats']);
 
 // Login/Signup APi
 Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verifyAccessToken']);
