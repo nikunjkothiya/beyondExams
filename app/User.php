@@ -107,4 +107,16 @@ class User extends Authenticatable
     public function user_resource(){
         return $this->hasMany('App\UserResource');
     }
+
+    public function student_firebase_id(){
+        return $this->hasMany('App\StudentFirebase');
+    }
+
+    public function admin_firebase_id(){
+        return $this->hasMany('App\AdminFirebase');
+    }
+
+    public function is_admin(){
+        return $this->role()->is_admin;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Tag;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use App\Language;
@@ -10,7 +11,8 @@ use App\PlusTransaction;
 use Validator;
 use App\User;
 use Auth;
-use DB;
+
+
 use Carbon\Carbon;
 
 class ApiOpportunityController extends Controller
@@ -238,7 +240,20 @@ class ApiOpportunityController extends Controller
 
     public function get_opportunity_stack()
     {
-        $opportunities = Opportunity::with(['location', 'fund_type'])->where('deadline', '>', Carbon::now())->orderBy('deadline', 'asc')->take(6)->get();
-        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+        $tags = Tag::where('tag_type_id', 1)->get();
+        $opportunities = array();
+        foreach ($tags as $tag) {
+            $opportunity = $tag->opportunities()->with(['location', 'fund_type', 'tags' => function ($query){
+                $query->select('id', 'tag');
+            }])->latest()->first();
+
+            if (!is_null($opportunity))
+                $opportunities[$opportunity->id] = $opportunity;
+
+            if (count($opportunities) == 6)
+                break;
+        }
+
+        return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", array_values($opportunities));
     }
 }
