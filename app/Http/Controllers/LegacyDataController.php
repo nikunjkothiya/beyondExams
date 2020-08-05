@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
+use App\Chat;
+use App\ChatMessage;
 use App\PremiumValidity;
-use App\User;
+use App\Opportunity;
 use App\UserDetail;
 use Carbon\Carbon;
 use Exception;
 use DB;
-use Log;
 
 class LegacyDataController extends Controller
 {
@@ -20,7 +21,7 @@ class LegacyDataController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function update_legacy_users()
+    public function migrate_legacy_users()
     {
         try {
             $legacyDB = DB::connection('mysql_legacy');
@@ -113,27 +114,60 @@ class LegacyDataController extends Controller
         }
     }
 
-    public function insert_legacy_subscriptions(request $request)
+    
+    public function migrate_legacy_chats()
     {
         try {
-            if (!isset($request->subscriptions)) {
-                return $this->apiResponse->sendResponse(400, "No data given", null);
-            }
-            $invalidUsers = array();
-            foreach ($request->subscriptions as $subscription) {
-                $user = User::where('email', $subscription['email_id'])->first();
-                if (is_null($user)) {
-                    array_push($invalidUsers, $subscription);
-                } else {
-                    $insertPlan = new PremiumValidity();
-                    $insertPlan->user_id = $user['id'];
-                    $insertPlan->end_date = Carbon::parse($subscription['end_date']);
-                    $insertPlan->save();
+            $legacyDB = DB::connection('mysql_legacy');
+            $users = DB::table('legacy_users')->get();
+            $operatedChats = array();
+            foreach($users as $user){
+                $legacyChat = $legacyDB->table('guidance_chats')->where('user_id', $user->legacy_user_id)->first();
+                if(!is_null($legacyChat)){
+                    // Insert Chat
+                    if($legacyChat->opp_id == -108){
+                        $newChat = new Chat();
+                        $newChat->title = 'Precisely Support';
+                        $newChat->creator_id = $user->phoenix_user_id;
+                        $newChat->is_support = 1;
+                        $newChat->save();
+                    } else {
+                        $legacyTitle = $legacyDB->table('opportunities_English')->where('id', $legacyChat->opp_id)->first()->HEADLINE;
+                        $phoenixMap = DB::table('legacy_opportunities')->where('legacy_opportunity_id', $legacyChat->opp_id)->first();
+                        if(!is_null($phoenixMap)){
+                            $phoenixOpp = Opportunity::where('id', $phoenixMap->phoenix_opportunity_id)->first();
+                            $newChat = new Chat();
+                            $newChat->title = $legacyTitle;
+                            $newChat->creator_id = $user->phoenix_user_id;
+                            $newChat->opportunity_id = $phoenixOpp->id;
+                            $newChat->save();
+                        }
+                    }
+                    array_push($operatedChats, $newChat->id);
+
+                    // Insert Chat Messages
+                    $legacyChatMessages = $legacyDB->table('guidance_chat_messages')->where('chat_id', $legacyChat->id)->get();
+                    foreach($legacyChatMessages as $legacyMessage){
+                        $phoenix_user = DB::table('legacy_users')->where('legacy_user_id', $legacyMessage->user_id)->first();
+                        if(!is_null($phoenix_user)){
+                            $phoenixMessage = new ChatMessage();
+                            $phoenixMessage->chat_id = $newChat->id;
+                            $phoenixMessage->message = $legacyMessage->message;
+                            if($legacyMessage->user_id !== -1 && $legacyMessage->file == 1){
+                                $phoenixMessage->type_id = 5;
+                            }
+                            $phoenixMessage->sender_id = $phoenix_user->phoenix_user_id;
+                            $phoenixMessage->save();
+                        }
+                    }
+
                 }
             }
-            return $this->apiResponse->sendResponse(200, 'Operation Successful', $invalidUsers);
+
+            return $this->apiResponse->sendResponse(200, 'Operation Successful', $operatedChats);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
 }
