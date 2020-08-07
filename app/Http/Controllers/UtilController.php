@@ -23,6 +23,10 @@ use Illuminate\Support\Facades\Mail;
 use stdClass;
 use Illuminate\Support\Facades\Validator;
 
+use Spatie\Sitemap\SitemapGenerator;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
+
 class UtilController extends Controller
 {
     protected $code = array();
@@ -434,6 +438,60 @@ class UtilController extends Controller
         }
     }
 
+    public function generate_all_sitemap()
+    {
+        $apiResponse = new ApiResponse;
+        try {
+            // Get sitemap index
+            $lastOpp = Opportunity::latest('id')->first();
+            $index = floor($lastOpp->id / 1000);
+
+            for($i = 0;$i <= $index; $i++){
+                // Get Last 1000 Opportunity
+                $opportunities = Opportunity::where('id','>', ($i * 1000))->limit(1000)->get();
+                // Start making sitemap
+                resolve('url')->forceRootUrl('https://app.precisely.co.in');
+                $sitemap =  Sitemap::create();
+                // Loop through all opp 
+                foreach($opportunities as $opportunity){
+                    $sitemap->add(Url::create(trim($opportunity->slug))->setPriority(0.5));
+                }
+                // Write to disk
+                $path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
+                $sitemap->writeToDisk('public', $path);
+                resolve('url')->forceRootUrl(env('APP_URL'));
+            }
+            return  $apiResponse->sendResponse(200, "Success", $index);
+        } catch (\Exception $e) {
+            return  $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function generate_latest_sitemap()
+    {
+        $apiResponse = new ApiResponse;
+        try {
+            // Get sitemap index
+            $lastOpp = Opportunity::latest('id')->first();
+            $index = floor($lastOpp->id / 1000);
+            // Get Last 1000 Opportunity
+            $opportunities = Opportunity::where('id','>', ($index * 1000))->limit(1000)->get();
+            // Start making sitemap
+            resolve('url')->forceRootUrl('https://app.precisely.co.in');
+            $sitemap =  Sitemap::create();
+            // Loop through all opp 
+            foreach($opportunities as $opportunity){
+                $sitemap->add(Url::create(trim($opportunity->slug))->setPriority(0.5));
+            }
+            // Write to disk
+            $path = 'sitemaps/sitemap_' . ($index + 1) . '.xml';
+            $sitemap->writeToDisk('public', $path);
+            resolve('url')->forceRootUrl(env('APP_URL'));
+            return  $apiResponse->sendResponse(200, "Success", $index);
+        } catch (\Exception $e) {
+            return  $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
 
     public function add_version_code(Request $request)
     {
