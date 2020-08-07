@@ -454,7 +454,7 @@ class UtilController extends Controller
                 $sitemap =  Sitemap::create();
                 // Loop through all opp 
                 foreach($opportunities as $opportunity){
-                    $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
+                    $sitemap->add(Url::create(trim($opportunity->slug))->setPriority(0.5));
                 }
                 // Write to disk
                 $path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
@@ -481,7 +481,7 @@ class UtilController extends Controller
             $sitemap =  Sitemap::create();
             // Loop through all opp 
             foreach($opportunities as $opportunity){
-                $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
+                $sitemap->add(Url::create(trim($opportunity->slug))->setPriority(0.5));
             }
             // Write to disk
             $path = 'sitemaps/sitemap_' . ($index + 1) . '.xml';

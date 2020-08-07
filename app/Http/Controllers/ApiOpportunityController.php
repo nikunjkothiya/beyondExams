@@ -11,6 +11,7 @@ use App\PlusTransaction;
 use Validator;
 use App\User;
 use Auth;
+use DB;
 
 
 use Carbon\Carbon;
