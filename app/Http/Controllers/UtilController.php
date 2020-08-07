@@ -450,7 +450,7 @@ class UtilController extends Controller
                 // Get Last 1000 Opportunity
                 $opportunities = Opportunity::where('id','>', ($i * 1000))->limit(1000)->get();
                 // Start making sitemap
-                resolve('url')->forceRootUrl('https://app.precisely.co.in');
+                resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
                 $sitemap =  Sitemap::create();
                 // Loop through all opp 
                 foreach($opportunities as $opportunity){
@@ -477,7 +477,7 @@ class UtilController extends Controller
             // Get Last 1000 Opportunity
             $opportunities = Opportunity::where('id','>', ($index * 1000))->limit(1000)->get();
             // Start making sitemap
-            resolve('url')->forceRootUrl('https://app.precisely.co.in');
+            resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
             $sitemap =  Sitemap::create();
             // Loop through all opp 
             foreach($opportunities as $opportunity){
