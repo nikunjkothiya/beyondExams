@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Tag;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiResponse;
 use App\Language;
 use App\Opportunity;
-use App\PlusTransaction;
-use Validator;
+use App\UserViewedOpportunity;
 use App\User;
 use Auth;
-use DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 
 use Carbon\Carbon;
@@ -256,5 +256,46 @@ class ApiOpportunityController extends Controller
         }
 
         return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", array_values($opportunities));
+    }
+
+    public function save_user_views_opp(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'opp_ids' => 'required'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'No Opportunity ids were given', $validator->errors());
+            }
+            foreach($request->opp_ids as $opp){
+                $saved_user_views_opp = UserViewedOpportunity::where('user_id', Auth::user()->id)->where('opportunity_id', $opp)->first();
+                if(is_null($saved_user_views_opp)){
+                    $viewed_opp = new UserViewedOpportunity();
+                    $viewed_opp->user_id = Auth::user()->id;
+                    $viewed_opp->opportunity_id  = $opp;
+                    $viewed_opp->save();
+                }
+            }
+
+            return $this->apiResponse->sendResponse(200, 'User View opportunity added', null);
+
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+        }
+    }
+
+    public function get_user_views_opp()
+    {
+        try {
+            
+            $opportunities = UserViewedOpportunity::where('user_id', Auth::user()->id)->get();
+            if(!is_null($opportunities))
+                return $this->apiResponse->sendResponse(200, 'Success', $opportunities);
+
+            return $this->apiResponse->sendResponse(404, 'There is no user saved opportunity', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+        }
     }
 }
