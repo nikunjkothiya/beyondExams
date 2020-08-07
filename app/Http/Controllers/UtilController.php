@@ -445,21 +445,22 @@ class UtilController extends Controller
             // Get sitemap index
             $lastOpp = Opportunity::latest('id')->first();
             $index = floor($lastOpp->id / 1000);
-            
-            resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
+
             $sitemapIndex = SitemapIndex::create();
-            for($i = 0;$i <= $index; $i++){
+            for ($i = 0; $i <= $index; $i++) {
                 // Get Last 1000 Opportunity
-                $opportunities = Opportunity::where('id','>', ($i * 1000))->limit(1000)->get();
+                $opportunities = Opportunity::where('id', '>', ($i * 1000))->limit(1000)->get();
                 // Start making sitemap
                 $sitemap =  Sitemap::create();
                 // Loop through all opp 
-                foreach($opportunities as $opportunity){
+                foreach ($opportunities as $opportunity) {
+                    resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
                     $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
                 }
                 // Write to disk
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
                 $sitemap->writeToDisk('public', $sitemap_path);
+                resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
                 $sitemapIndex->add($sitemap_path);
             }
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
@@ -478,12 +479,12 @@ class UtilController extends Controller
             $lastOpp = Opportunity::latest('id')->first();
             $index = floor($lastOpp->id / 1000);
             // Get Last 1000 Opportunity
-            $opportunities = Opportunity::where('id','>', ($index * 1000))->limit(1000)->get();
+            $opportunities = Opportunity::where('id', '>', ($index * 1000))->limit(1000)->get();
             // Start making sitemap
             resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
             $sitemap =  Sitemap::create();
             // Loop through all opp 
-            foreach($opportunities as $opportunity){
+            foreach ($opportunities as $opportunity) {
                 $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
             }
             // Write to disk
@@ -491,8 +492,9 @@ class UtilController extends Controller
             $sitemap->writeToDisk('public', $path);
 
             // Generate Sitemap Index
+            resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
             $sitemapIndex = SitemapIndex::create();
-            for($i = 0;$i <= $index; $i++){
+            for ($i = 0; $i <= $index; $i++) {
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
                 $sitemapIndex->add($sitemap_path);
             }
