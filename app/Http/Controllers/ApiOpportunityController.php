@@ -290,7 +290,7 @@ class ApiOpportunityController extends Controller
         try {
             
             $opportunities = UserViewedOpportunity::where('user_id', Auth::user()->id)->get();
-            if(!is_null($opportunities))
+            if(count($opportunities) > 0)
                 return $this->apiResponse->sendResponse(200, 'Success', $opportunities);
 
             return $this->apiResponse->sendResponse(404, 'There is no user saved opportunity', null);
