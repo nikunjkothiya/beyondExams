@@ -33,4 +33,5 @@ class OpportunityController extends Controller
         }
         return view('pages.opportunity', ['opportunity' => $opportunity, 'languages' => $this->languages, 'txnflag' => $flag, 'plus_status' => $plus_status]);
     }
+
 }

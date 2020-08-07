@@ -62,6 +62,10 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Opportunity');
     }
 
+    public function viewed_opportunity(){
+        return $this->belongsToMany('App\UserViewedOpportunity');
+    }
+
     public function premium_subscription(){
         return $this->hasOne('App\Transaction');
     }
