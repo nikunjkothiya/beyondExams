@@ -91,6 +91,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
     Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
     Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
+    Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
+    Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
+    Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
 
     // Old Premium
