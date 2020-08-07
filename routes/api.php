@@ -61,6 +61,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
     Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
+    Route::get('get_user_views_opp', ['uses' => 'ApiOpportunityController@get_user_views_opp']);
+    Route::post('save_user_views_opp', ['uses' => 'ApiOpportunityController@save_user_views_opp']);
 
     // Resource Locking
     Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
