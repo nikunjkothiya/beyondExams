@@ -2,15 +2,13 @@
 
 use Illuminate\Http\Request;
 
-
-
 //M2M APIs
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 
 // Legacy Migrations API
 // Use tinker for this
 // Route::get('migrate_legacy_users', ['uses' => 'LegacyDataController@migrate_legacy_users']);
-Route::get('migrate_legacy_chats', ['uses' => 'LegacyDataController@migrate_legacy_chats']);
+// Route::get('migrate_legacy_chats', ['uses' => 'LegacyDataController@migrate_legacy_chats']);
 
 // Login/Signup APi
 Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verifyAccessToken']);
@@ -30,6 +28,8 @@ Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_loc
 Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
 Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
+Route::get('generate_all_sitemap', ['uses' => 'UtilController@generate_all_sitemap']);
+Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest_sitemap']);
 
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);

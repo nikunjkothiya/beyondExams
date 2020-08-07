@@ -24,7 +24,8 @@
         "php-ffmpeg/php-ffmpeg": "^0.16.0",
         "razorpay/razorpay": "2.*",
         "socialiteproviders/facebook": "^1.0",
-        "spatie/laravel-cors": "^1.6"
+        "spatie/laravel-cors": "^1.6",
+        "spatie/laravel-sitemap": "^5.7"
     },
     "require-dev": {
         "facade/ignition": "^1.4",
