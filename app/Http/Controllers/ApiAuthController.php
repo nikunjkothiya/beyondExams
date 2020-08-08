@@ -43,25 +43,6 @@ class ApiAuthController extends Controller
         $this->db = $app->make('db');
     }
 
-    public function logout(Request $request)
-    {
-        try {
-            $response = 1;
-            $user_id = $request->user()->id;
-            $accessTokens = $this->token($user_id);
-            foreach ($accessTokens as $accessToken) {
-                $response = $response * $this->proxyLogout($accessToken->id);
-            }
-            if ($response) {
-                return $this->apiResponse->sendResponse(200, 'Token successfully destroyed', $this->json_data);
-            }
-            $response_data["message"] = "Logout Error";
-            return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 4', $e);
-        }
-    }
-
     public function token($user_id)
     {
         try {
@@ -74,141 +55,6 @@ class ApiAuthController extends Controller
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 6', $e);
         }
-    }
-
-    public function proxyLogout($accessToken)
-    {
-        try {
-            $refreshToken = $this->db
-                ->table('oauth_refresh_tokens')
-                ->where('access_token_id', $accessToken)
-                ->update([
-                    'revoked' => true
-                ]);
-            if ($refreshToken) {
-                if ($this->revoke($accessToken)) {
-                    return 1;
-                }
-            }
-            return 0;
-        } catch (Exception $e) {
-        }
-    }
-
-    public function revoke($accessToken)
-    {
-        try {
-            $Token = $this->db
-                ->table('oauth_access_tokens')
-                ->where('id', $accessToken)
-                ->update([
-                    'revoked' => true
-                ]);
-            if ($Token) {
-                return 1;
-            }
-            return 0;
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 5', $e);
-        }
-    }
-
-    public function refresh(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'unique_id' => 'required',
-                'refresh_token' => 'required',
-                // 'user_role' => 'required'
-            ]);
-
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, $validator->errors(), null);
-            }
-
-            if (!isset($request->user_role))
-                $request->user_role = 1;
-
-            if (!User::where('unique_id', $request->unique_id)->first()) {
-                return $this->apiResponse->sendResponse(404, 'User not found.', null);
-            }
-
-            $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
-
-            if ($request->user_role == $this->user_role_id) {
-                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
-                if ($check_lang) {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
-                } else {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
-                }
-
-                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-                // Flags for user
-                if ($check_lang) {
-                    if ($check_detail) {
-                        if ($check_tag) {
-                            // If Category is filled
-                            $flag = 0;
-                        } else {
-                            // If Category is not filled
-                            $flag = 3;
-                        }
-                    } else {
-                        $flag = 2;
-                    }
-                } else {
-                    // No Language Selected
-                    $flag = 1;
-                }
-            } elseif ($request->user_role == $this->mentor_role_id) {
-                // Update Mentor Roles
-                $check_user_role = UserRole::where('user_id', $user_id)->first();
-                $check_user_role->is_mentor = 1;
-                $check_user_role->save();
-                // Flags for Mentor
-                $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
-                $verified = MentorVerification::where('user_id', $user_id)->first();
-                if (!$verified) {
-                    $newMentorVerification = new MentorVerification();
-                    $newMentorVerification->user_id = $user_id;
-                    $newMentorVerification->is_verified = 0;
-                    $newMentorVerification->save();
-                    $verified = MentorVerification::where('user_id', $user_id)->first();
-                }
-                if ($check_detail) {
-                    // Details Filled Now Check Verification
-                    if ($verified->is_verified == 0) {
-                        // Mentor Details filled but not verified
-                        $flag = 2;
-                    } elseif ($verified->is_verified == 1) {
-                        // Mentor Verified
-                        $flag = 0;
-                    } elseif ($verified->is_verified == 2) {
-                        // Mentor Verified
-                        $flag = 3;
-                    }
-                } else {
-                    // Details Not Filled ie New User
-                    $flag = 1;
-                }
-            }
-
-            $refreshToken = $request->get('refresh_token');
-            $unique_id = $request->get('unique_id');
-            $response = $this->proxyRefresh($refreshToken, $unique_id, $flag);
-            return $response;
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 7', $e);
-        }
-    }
-
-    public function proxyRefresh($refreshToken, $unique_id, $flag)
-    {
-        return $this->proxy('refresh_token', $flag, [
-            'refresh_token' => $refreshToken,
-            'username' => $unique_id
-        ]);
     }
 
     public function proxy($grantType, $flag, array $data = [])
@@ -284,27 +130,28 @@ class ApiAuthController extends Controller
             }
             $user = $provider_obj->stateless()->user();
 
-            $name_list = explode(" ", $user->user["name"]);
-            $last_name = "";
-
-            if (count($name_list) > 1) {
-                $last_name = join(" ", array_slice($name_list, 1, count($name_list)));
-            }
-
-            $email = "";
-            if (isset($user->email))
-                $email = $user->email;
+//            $name_list = explode(" ", $user->user["name"]);
+//            $last_name = "";
+//
+//            if (count($name_list) > 1) {
+//                $last_name = join(" ", array_slice($name_list, 1, count($name_list)));
+//            }
+//
+//            $email = "";
+//            if (isset($user->email))
+//                $email = $user->email;
 
             $request = new Request();
             $request->replace(['access_token' => $user->token]);
             return $this->verifyAccessToken($request, $provider);
-            //			$data = array("token"=>$user->token, "first_name"=>$name_list[0], "last_name"=>$last_name, "email"=>$email, "avatar"=>$user->avatar);
-            //
-            //			return $this->apiResponse->sendResponse(200,'Success', $data);
-            //    		dd($user);
+
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error', $e);
         }
+    }
+
+    public function loginWithMobileNumber(Request $request){
+
     }
 
     public function verifyAccessToken(Request $request, $provider)
@@ -336,10 +183,25 @@ class ApiAuthController extends Controller
                     'redirect' => env('GOOGLE_API_REDIRECT')
                 ];
                 $provider_obj = Socialite::buildProvider(GoogleProvider::class, $config);
+                $user = $provider_obj->userFromToken($request->access_token);
             } else if ($provider == 'facebook') {
                 $provider_obj = Socialite::driver($provider);
+                $user = $provider_obj->userFromToken($request->access_token);
+            } else if ($provider == 'phone') {
+                $auth = app('firebase.auth');
+//                gxDLU13HUuQeSJXSjbqAnwh9vzz2
+                $idTokenString = $request->access_token;
+
+                try{
+                    $user = $auth->verifyIdToken($idTokenString);
+                    $user->id = $user->getClaim('sub');
+                } catch (\InvalidArgumentException $e) { // If the token has the wrong format
+                    return $this->apiResponse->sendResponse(401, 'Couldnt parse token', null);
+                }catch (InvalidToken $e) { // If the token is invalid (expired ...)
+                    return $this->apiResponse->sendResponse(401, "Token is invalid", null);
+                }
             }
-            $user = $provider_obj->userFromToken($request->access_token);
+
             $email = $user->email;
             //    		Check account in own database
             $check_account = UserSocial::where('provider_id', $user->id)->first();
@@ -473,6 +335,8 @@ class ApiAuthController extends Controller
                     }
 
                     $phoenix_user_id = $new_user->id;
+                    $global_user_id = $user->id;
+                    $email = $user->email;
                 } elseif ($provider == 'facebook') {
                     $flag = 1;
                     $new_user = new User();
@@ -486,63 +350,36 @@ class ApiAuthController extends Controller
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
-                    switch ($request->user_role) {
-                        case $this->user_role_id:
-                            $new_user->role()->create(
-                                ['is_user' => 1, 'is_mentor' => 0]
-                            );
-                            break;
-                        case $this->mentor_role_id:
-                            $new_user->role()->create(
-                                ['is_mentor' => 1]
-                            );
-                            $new_user->mentor_verification()->create(
-                                ['is_verified' => 0]
-                            );
-                            break;
-                        case $this->admin_role_id:
-                            $new_user->role()->create(
-                                ['is_admin' => 1]
-                            );
-                            break;
-                        case $this->org_role_id:
-                            $new_user->role()->create(
-                                ['is_organisation' => 1]
-                            );
-                            break;
-                    }
+
                     $phoenix_user_id = $new_user->id;
+                    $global_user_id = $user->id;
+                    $email = $user->email;
+                } else if ($provider == 'phone') {
+
+                    $new_user = new User();
+                    $new_user->unique_id = $user->id;
+
+                    $new_user->save();
+                    $new_user->social_accounts()->create(
+                        ['provider_id' => $user->id, 'provider' => $provider]
+                    );
+
+                    $phoenix_user_id = $new_user->id;
+                    $global_user_id = $user->id;
+                    $email = null;
                 } else {
-                    return $this->apiResponse->sendResponse(500, 'Internal server error 1', null);
+                    return $this->apiResponse->sendResponse(500, 'Provider not supported}', null);
                 }
-
-                $global_user_id = $user->id;
-                $email = $user->email;
             }
-
-            $phoenix_user = User::where('unique_id', $global_user_id)->first();
-            $client = new Client();
-
-            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
-                'form_params' => [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'source' => $provider
-                ]
-            ]);
-
-            $result = $res->getBody()->getContents();
-            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id' => $phoenix_user->id, 'legacy_user_id' => $result));
 
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
             $data = json_decode($response->getContent(), true)["data"];
             $data["phoenix_user_id"] = $phoenix_user_id;
             $data["email"] = $email;
-            $data["legacy_user_id"] = $result;
             $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
-        } catch (BadResponseException $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e);
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTrace());
         }
     }
 
@@ -567,6 +404,161 @@ class ApiAuthController extends Controller
             ];
 
             return $this->apiResponse->sendResponse(401, 'The user credentials were incorrect.', $data);
+        }
+    }
+
+    public function refresh(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'unique_id' => 'required',
+                'refresh_token' => 'required',
+                // 'user_role' => 'required'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, $validator->errors(), null);
+            }
+
+            if (!isset($request->user_role))
+                $request->user_role = 1;
+
+            if (!User::where('unique_id', $request->unique_id)->first()) {
+                return $this->apiResponse->sendResponse(404, 'User not found.', null);
+            }
+
+            $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
+
+            if ($request->user_role == $this->user_role_id) {
+                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+                if ($check_lang) {
+                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                } else {
+                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                }
+
+                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
+                // Flags for user
+                if ($check_lang) {
+                    if ($check_detail) {
+                        if ($check_tag) {
+                            // If Category is filled
+                            $flag = 0;
+                        } else {
+                            // If Category is not filled
+                            $flag = 3;
+                        }
+                    } else {
+                        $flag = 2;
+                    }
+                } else {
+                    // No Language Selected
+                    $flag = 1;
+                }
+            } elseif ($request->user_role == $this->mentor_role_id) {
+                // Update Mentor Roles
+                $check_user_role = UserRole::where('user_id', $user_id)->first();
+                $check_user_role->is_mentor = 1;
+                $check_user_role->save();
+                // Flags for Mentor
+                $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                $verified = MentorVerification::where('user_id', $user_id)->first();
+                if (!$verified) {
+                    $newMentorVerification = new MentorVerification();
+                    $newMentorVerification->user_id = $user_id;
+                    $newMentorVerification->is_verified = 0;
+                    $newMentorVerification->save();
+                    $verified = MentorVerification::where('user_id', $user_id)->first();
+                }
+                if ($check_detail) {
+                    // Details Filled Now Check Verification
+                    if ($verified->is_verified == 0) {
+                        // Mentor Details filled but not verified
+                        $flag = 2;
+                    } elseif ($verified->is_verified == 1) {
+                        // Mentor Verified
+                        $flag = 0;
+                    } elseif ($verified->is_verified == 2) {
+                        // Mentor Verified
+                        $flag = 3;
+                    }
+                } else {
+                    // Details Not Filled ie New User
+                    $flag = 1;
+                }
+            }
+
+            $refreshToken = $request->get('refresh_token');
+            $unique_id = $request->get('unique_id');
+            $response = $this->proxyRefresh($refreshToken, $unique_id, $flag);
+            return $response;
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 7', $e);
+        }
+    }
+
+    public function proxyRefresh($refreshToken, $unique_id, $flag)
+    {
+        return $this->proxy('refresh_token', $flag, [
+            'refresh_token' => $refreshToken,
+            'username' => $unique_id
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            $response = 1;
+            $user_id = $request->user()->id;
+            $accessTokens = $this->token($user_id);
+            foreach ($accessTokens as $accessToken) {
+                $response = $response * $this->proxyLogout($accessToken->id);
+            }
+            if ($response) {
+                return $this->apiResponse->sendResponse(200, 'Token successfully destroyed', $this->json_data);
+            }
+            $response_data["message"] = "Logout Error";
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 4', $e);
+        }
+    }
+
+    public function proxyLogout($accessToken)
+    {
+        try {
+            $refreshToken = $this->db
+                ->table('oauth_refresh_tokens')
+                ->where('access_token_id', $accessToken)
+                ->update([
+                    'revoked' => true
+                ]);
+            if ($refreshToken) {
+                if ($this->revoke($accessToken)) {
+                    return 1;
+                }
+            }
+            return 0;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
+    public function revoke($accessToken)
+    {
+        try {
+            $Token = $this->db
+                ->table('oauth_access_tokens')
+                ->where('id', $accessToken)
+                ->update([
+                    'revoked' => true
+                ]);
+            if ($Token) {
+                return 1;
+            }
+            return 0;
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 5', $e);
         }
     }
 }
