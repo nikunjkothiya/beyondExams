@@ -91,8 +91,7 @@ class ApiAuthController extends Controller
                 'refresh_token' => '',
             ];
 
-            dd($e);
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal Server Error 2', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -169,6 +168,7 @@ class ApiAuthController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
             }
 
+
             $global_user_id = "";
             $email = "";
             $phoenix_user_id = 1;
@@ -195,6 +195,7 @@ class ApiAuthController extends Controller
                 try{
                     $user = $auth->verifyIdToken($idTokenString);
                     $user->id = $user->getClaim('sub');
+                    $user->email = null;
                 } catch (\InvalidArgumentException $e) { // If the token has the wrong format
                     return $this->apiResponse->sendResponse(401, 'Couldnt parse token', null);
                 }catch (InvalidToken $e) { // If the token is invalid (expired ...)
@@ -379,13 +380,14 @@ class ApiAuthController extends Controller
             $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
         } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function proxyLogin($unique_id, $password, $flag)
     {
         $user = User::where('unique_id', $unique_id)->first();
+
 
         //    	dd([$unique_id, $user]);
 
