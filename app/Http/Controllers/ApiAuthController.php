@@ -196,6 +196,7 @@ class ApiAuthController extends Controller
                     $user = $auth->verifyIdToken($idTokenString);
                     $user->id = $user->getClaim('sub');
                     $user->email = null;
+                    $user->name = null;
                 } catch (\InvalidArgumentException $e) { // If the token has the wrong format
                     return $this->apiResponse->sendResponse(401, 'Couldnt parse token', null);
                 }catch (InvalidToken $e) { // If the token is invalid (expired ...)
