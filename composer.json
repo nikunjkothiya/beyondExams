@@ -13,6 +13,7 @@
         "astrotomic/laravel-translatable": "^11.5",
         "doctrine/dbal": "^2.10",
         "fideloper/proxy": "^4.0",
+        "kreait/laravel-firebase": "^2.2",
         "laravel/framework": "^6.0",
         "laravel/passport": "^8.0",
         "laravel/socialite": "^4.3",
