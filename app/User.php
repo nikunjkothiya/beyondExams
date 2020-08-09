@@ -42,6 +42,10 @@ class User extends Authenticatable
         return $this->hasOne('App\UserRole');
     }
 
+    public function live_sessions(){
+        return $this->hasMany('App\UserLive');
+    }
+
     public function chats(){
         return $this->belongsToMany('App\Chat');
     }
