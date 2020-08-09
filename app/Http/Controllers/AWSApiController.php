@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\MessageType;
+use App\Note;
 use App\Playlist;
 use Auth;
 use App\User;
@@ -23,7 +25,6 @@ use FFMpeg;
 use GuzzleHttp\Client;
 
 
-
 class AWSApiController extends Controller
 {
     private $apiResponse;
@@ -31,11 +32,13 @@ class AWSApiController extends Controller
     private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/"];
     private $apiConsumer;
+    private $resourceLockController;
 
-    public function __construct(ApiResponse $apiResponse)
+    public function __construct(ApiResponse $apiResponse, ResourceLockController $resourceLockController)
     {
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
+        $this->resourceLockController = $resourceLockController;
     }
 
     public function save_thumbnail(Request $request)
@@ -43,7 +46,7 @@ class AWSApiController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'user_id' => 'required|integer',
-                'file' => 'required',
+                'file' => 'required|image',
                 'resource_id' => 'required|integer'
             ]);
 
@@ -90,7 +93,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $file = Resource::with('user:id,name,avatar')->where('slug', $request->slug)->get();
+            $file = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('slug', $request->slug)->get();
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
@@ -122,29 +125,29 @@ class AWSApiController extends Controller
 
         try {
             $flag = 2;
-            $user_resources = UserResource::where('user_id',$request->user_id)->get();
-            if(count($user_resources) === 0){
+            $user_resources = UserResource::where('user_id', $request->user_id)->get();
+            if (count($user_resources) === 0) {
                 // User has 2 free videos
                 $flag = 0;
-            } elseif(count($user_resources) === 1){
+            } elseif (count($user_resources) === 1) {
                 // User has 1 free video
                 $flag = 1;
             }
-            if (isset($request->author_id)){
+            if (isset($request->author_id)) {
                 if ($request->type == 0) {
-                    $all_files = Resource::with('user:id,name,avatar')->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
-                } else if ($request->type == 3){
-                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
+                } else if ($request->type == 3) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
                 } else {
-                    $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
                 }
             } else {
                 if ($request->type == 0) {
-                    $all_files = Resource::with('user:id,name,avatar')->where('duration', '>', 0)->get();
-                } else if ($request->type == 3){
-                    $all_files = Resource::with('user:id,name,avatar')->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('duration', '>', 0)->get();
+                } else if ($request->type == 3) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
                 } else {
-                    $all_files = Resource::with('user:id,name,avatar')->where('file_type_id', $request->type)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->get();
                 }
             }
 
@@ -157,25 +160,25 @@ class AWSApiController extends Controller
             $resp['flag'] = $flag;
 
 
-            foreach($all_files as $file){
+            foreach ($all_files as $file) {
                 $file['unlocked'] = false;
-                $user_keys = UserKey::where('user_id',$request->user_id)->get();
-                $keys = ResourceKey::where('resource_id',$file->id)->get();
-                if(count($keys) === 0){
+                $user_keys = UserKey::where('user_id', $request->user_id)->get();
+                $keys = ResourceKey::where('resource_id', $file->id)->get();
+                if (count($keys) === 0) {
                     $file['unlocked'] = true;
                 }
-                if($keys){
-                    foreach($keys as $key){
-                        foreach($user_keys as $user_key){
-                            if($user_key->key_id === $key->key_id){
+                if ($keys) {
+                    foreach ($keys as $key) {
+                        foreach ($user_keys as $user_key) {
+                            if ($user_key->key_id === $key->key_id) {
                                 $file['unlocked'] = true;
                             }
                         }
                         unset($key['id']);
                         unset($key['resource_id']);
-                        $k = Key::where('id',$key->key_id)->first();
-                        $kp = KeyPrice::where('key_id',$key->key_id)->first();
-                        $cur =  Currency::where('id',$kp->currency_id)->first();
+                        $k = Key::where('id', $key->key_id)->first();
+                        $kp = KeyPrice::where('key_id', $key->key_id)->first();
+                        $cur = Currency::where('id', $kp->currency_id)->first();
 
                         $key['name'] = $k->name;
                         $key['price'] = $kp->price;
@@ -230,6 +233,11 @@ class AWSApiController extends Controller
                 'title' => 'required|string',
                 'description' => 'required|string',
                 'type' => 'required|integer|min:1|max:' . FileType::count(),
+                'notes_doc' => 'file|mimes:pdf',
+                'notes_title' => 'string',
+                'notes_image' => 'image',
+                'price' => 'between:0,999.999',
+                'currency' => 'integer|min:1|max:' . Currency::count()
             ]);
 
             if ($validator->fails()) {
@@ -237,11 +245,11 @@ class AWSApiController extends Controller
             }
 
             $user = User::find($request->user_id);
-            $newRole = UserRole::where('user_id',$request->user_id)->first();
+            $newRole = UserRole::where('user_id', $request->user_id)->first();
             if ($newRole == null && $user->role_id === 1) {
                 return $this->apiResponse->sendResponse(400, 'Not a mentor 1', null);
             }
-            if($newRole && $newRole->is_mentor != 1){
+            if ($newRole && $newRole->is_mentor != 1) {
                 return $this->apiResponse->sendResponse(400, 'Not a mentor 2', null);
             }
 
@@ -269,19 +277,19 @@ class AWSApiController extends Controller
             $new_resource->description = $contents;
 
             if ($request->type == 1) {
-            // BLOGS
+                // BLOGS
 
                 $word = str_word_count(strip_tags($contents));
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
-            // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
+                // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
 
             } else if ($request->type == 2) {
-            // ARTICLES
+                // ARTICLES
                 $word = str_word_count(strip_tags($contents));
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
@@ -290,7 +298,7 @@ class AWSApiController extends Controller
                 $new_resource->duration = $duration;
                 $new_resource->save();
 
-            } else if ($request->type == 3) {
+            } else if ($request->type == 3 || $request->type == 4) {
                 // VIDEO
                 // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/videos/', $name);
@@ -314,11 +322,15 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
+            } else if ($request->type == 5) {
+                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
+                $new_resource->duration = 1;
+                $new_resource->save();
             } else {
                 return $this->apiResponse->sendResponse(400, 'File type not supported', null);
             }
 
-            if($request->thumbnail){
+            if ($request->thumbnail) {
                 $config = app()->make('config');
                 $this->apiConsumer->post(sprintf('%s/api/v1/save_resource_thumbnail', $config->get('app.url')), [
                     'multipart' => [
@@ -339,12 +351,88 @@ class AWSApiController extends Controller
                 ]);
             }
 
+            if ($request->notes_doc) {
 
+                if ($new_resource) {
+                    $file = $request->file('notes_doc');
+
+                    $ext = "." . pathinfo($_FILES["notes_doc"]["name"])['extension'];
+
+
+                    $name = time() . uniqid() . $ext;
+
+
+                    $contents = file_get_contents($file);
+
+                    $filePath = "notes/" . $name;
+
+                    Storage::disk('s3')->put($filePath, $contents);
+
+                    $note = new Note();
+                    $note->url = $filePath;
+                    $note->type_id = MessageType::where('type', 'document')->value('id');
+                    if ($request->notes_title)
+                        $note->title = $request->notes_title;
+                    $new_resource->notes()->save($note);
+
+                    $note->save();
+
+                }
+            } else if ($request->notes_image) {
+
+                if ($new_resource) {
+                    $file = $request->file('notes_image');
+
+                    $ext = "." . pathinfo($_FILES["notes_image"]["name"])['extension'];
+
+                    $name = time() . uniqid() . $ext;
+
+                    $contents = file_get_contents($file);
+
+                    $filePath = "notes/" . $name;
+
+                    Storage::disk('s3')->put($filePath, $contents);
+
+                    $note = new Note();
+                    $note->url = $filePath;
+                    $note->type_id = MessageType::where('type', 'image')->value('id');
+                    if ($request->notes_title)
+                        $note->title = $request->notes_title;
+                    $new_resource->notes()->save($note);
+                    $note->save();
+
+                }
+            }
+
+            if ($request->price) {
+                $new_request = new Request();
+                $new_request->name = (string)$request->price;
+                $new_request->author_id = $user->id;
+                $new_request->price = $request->price;
+                $new_request->currency = $request->currency;
+
+                $newKey = new Key();
+                $newKey->name = $new_request->name;
+                $newKey->author_id = $new_request->author_id;
+                $newKey->save();
+
+                $newKey->key_price()->create(
+                    [
+                        'price' => $new_request->price,
+                        'currency_id' => $new_request->currency,
+                    ]
+                );
+
+                $resourceKey = new ResourceKey();
+                $resourceKey->resource_id = $new_resource->id;
+                $resourceKey->key_id = $newKey->id;
+                $resourceKey->save();
+            }
 
             return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
         } catch (\Exception $e) {
 
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -369,7 +457,8 @@ class AWSApiController extends Controller
         $playlist->save();
     }
 
-    public function get_recommendations(Request $request){
+    public function get_recommendations(Request $request)
+    {
         try {
             $playlist = Playlist::where('resource_id', $request->origin)->first();
             return $this->apiResponse->sendResponse(200, 'Success', $playlist->structure);

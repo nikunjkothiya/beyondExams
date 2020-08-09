@@ -11,11 +11,15 @@ class FileTypeTableSeeder extends Seeder
      */
     public function run()
     {
+//        DB::table('file_types')->delete();
+
         $types = array(
             array('type' => 'blogs'),
             array('type' => 'articles'),
             array('type' => 'videos'),
+            array('type' => 'playlist'),
         );
+
         DB::table('file_types')->insert($types);
     }
 }
