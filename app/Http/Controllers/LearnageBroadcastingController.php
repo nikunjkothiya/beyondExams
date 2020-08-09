@@ -15,7 +15,7 @@ class LearnageBroadcastingController extends Controller
     {
         $this->apiResponse = $apiResponse;
     }
-    
+
     public function get_live_mentors(){
         try {
             $live_users = UserLive::where('live', 1)->get();
@@ -24,7 +24,7 @@ class LearnageBroadcastingController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $live_users);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
@@ -38,12 +38,14 @@ class LearnageBroadcastingController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
             $live_user = new UserLive();
-            $live_user->user_id = Auth::user()->id;
+            // $live_user->user_id = Auth::user()->id;
+            $live_user->user_id = $request->user_id;
+            $live_user->name = $request->name;
             $live_user->peer_id = $request->peer_id;
             $live_user->save();
             return $this->apiResponse->sendResponse(200, 'User is now broadcasting live.', $live_user);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 
@@ -67,7 +69,7 @@ class LearnageBroadcastingController extends Controller
             $live_user->save();
             return $this->apiResponse->sendResponse(200, 'Broadcasting details updated.', $live_user);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
         }
     }
 }
