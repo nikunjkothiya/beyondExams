@@ -255,7 +255,7 @@ class AWSApiController extends Controller
 
 
             $contents = $request->description;
-            if ($request->type == 3) {
+            if ($request->type == 3 || $request->type == 5) {
                 $file = $request->file('file');
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -298,7 +298,7 @@ class AWSApiController extends Controller
                 $new_resource->duration = $duration;
                 $new_resource->save();
 
-            } else if ($request->type == 3 || $request->type == 4) {
+            } else if ($request->type == 3 || $request->type == 5) {
                 // VIDEO
                 // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/videos/', $name);
@@ -322,7 +322,7 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-            } else if ($request->type == 5) {
+            } else if ($request->type == 6) {
                 Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
                 $new_resource->save();

@@ -234,7 +234,7 @@ class ResourceController extends Controller
                     $note = new Note();
                     $note->url = $filePath;
                     $note->type_id = MessageType::where('type', 'document')->value('id');
-                    if ($request->notes_title)
+                    if ($request->title)
                         $note->title = $request->title;
 
                     $resource->notes()->save($note);
