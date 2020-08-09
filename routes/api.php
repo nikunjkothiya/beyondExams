@@ -94,17 +94,17 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
     Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
 
-    // Learnage Broadcasting
-    Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
-    Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
-    Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
-
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
     // Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
     // Route::post('success', ['uses' => 'SubscriptionController@success']);
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
+
+// Learnage Broadcasting
+Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
+Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
+Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
 
 // Resource Locking
 Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);

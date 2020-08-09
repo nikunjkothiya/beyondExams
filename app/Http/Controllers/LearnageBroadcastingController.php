@@ -38,7 +38,9 @@ class LearnageBroadcastingController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
             $live_user = new UserLive();
-            $live_user->user_id = Auth::user()->id;
+            // $live_user->user_id = Auth::user()->id;
+            $live_user->user_id = $request->user_id;
+            $live_user->name = $request->name;
             $live_user->peer_id = $request->peer_id;
             $live_user->save();
             return $this->apiResponse->sendResponse(200, 'User is now broadcasting live.', $live_user);
