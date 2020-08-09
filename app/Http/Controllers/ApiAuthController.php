@@ -149,10 +149,6 @@ class ApiAuthController extends Controller
         }
     }
 
-    public function loginWithMobileNumber(Request $request){
-
-    }
-
     public function verifyAccessToken(Request $request, $provider)
     {
         try {
@@ -461,6 +457,7 @@ class ApiAuthController extends Controller
             } elseif ($request->user_role == $this->mentor_role_id) {
                 // Update Mentor Roles
                 $check_user_role = UserRole::where('user_id', $user_id)->first();
+//                TODO: User shouldn't be allowed to simply modify one param and achieve mentor status
                 $check_user_role->is_mentor = 1;
                 $check_user_role->save();
                 // Flags for Mentor
@@ -492,8 +489,7 @@ class ApiAuthController extends Controller
             }
 
             $refreshToken = $request->get('refresh_token');
-            $unique_id = $request->get('unique_id');
-            $response = $this->proxyRefresh($refreshToken, $unique_id, $flag);
+            $response = $this->proxyRefresh($refreshToken, $request->get('unique_id'), $flag);
             return $response;
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 7', $e);
