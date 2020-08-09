@@ -97,6 +97,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
     Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
+    // Learnage Broadcasting
+    Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
+    Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
+    Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
