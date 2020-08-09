@@ -11,6 +11,11 @@ use Auth;
 
 class LearnageBroadcastingController extends Controller
 {
+    public function __construct(ApiResponse $apiResponse)
+    {
+        $this->apiResponse = $apiResponse;
+    }
+    
     public function get_live_mentors(){
         try {
             $live_users = UserLive::where('live', 1)->get();
