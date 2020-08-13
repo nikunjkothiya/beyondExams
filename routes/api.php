@@ -23,7 +23,7 @@ Route::get('get_all_countries', ['uses' => 'PreciselyController@get_all_countrie
 Route::get('get_all_domains', ['uses' => 'PreciselyController@get_all_domains']);
 
 // Misc APi
-Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp']);
+Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp_by_slug']);
 Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
@@ -54,6 +54,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     // Opportuinities APi
     Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
+    Route::get('test_opportunities', ['uses' => 'ApiOpportunityController@get_test_opportunities']);
     Route::post('unsave_opportunity', ['uses' => 'PreciselyController@unsave_opportunity']);
     Route::post('save_opportunity', ['uses' => 'PreciselyController@save_opportunity']);
     Route::get('show_saved_opportunity', ['uses' => 'PreciselyController@show_saved_opportunity']);
