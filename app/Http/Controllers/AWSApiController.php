@@ -237,7 +237,7 @@ class AWSApiController extends Controller
                 'notes_title' => 'string',
                 'notes_image' => 'image',
                 'price' => 'between:0,999.999',
-                'currency' => 'integer|min:1|max:' . Currency::count()
+                'currency_id' => 'integer|min:1|max:' . Currency::count()
             ]);
 
             if ($validator->fails()) {
@@ -409,7 +409,7 @@ class AWSApiController extends Controller
                 $new_request->name = (string)$request->price;
                 $new_request->author_id = $user->id;
                 $new_request->price = $request->price;
-                $new_request->currency = $request->currency;
+                $new_request->currency_id = $request->currency_id;
 
                 $newKey = new Key();
                 $newKey->name = $new_request->name;
@@ -419,7 +419,7 @@ class AWSApiController extends Controller
                 $newKey->key_price()->create(
                     [
                         'price' => $new_request->price,
-                        'currency_id' => $new_request->currency,
+                        'currency_id' => $new_request->currency_id,
                     ]
                 );
 

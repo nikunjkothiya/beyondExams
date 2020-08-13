@@ -362,6 +362,32 @@ class ApiAuthController extends Controller
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
 
+switch ($request->user_role) {
+                        case $this->user_role_id:
+                            $new_user->role()->create(
+                                ['is_user' => 1, 'is_mentor' => 0]
+                            );
+                            break;
+                        case $this->mentor_role_id:
+                            $new_user->role()->create(
+                                ['is_mentor' => 1]
+                            );
+                            $new_user->mentor_verification()->create(
+                                ['is_verified' => 0]
+                            );
+                            break;
+                        case $this->admin_role_id:
+                            $new_user->role()->create(
+                                ['is_admin' => 1]
+                            );
+                            break;
+                        case $this->org_role_id:
+                            $new_user->role()->create(
+                                ['is_organisation' => 1]
+                            );
+                            break;
+                    }
+
                     $phoenix_user_id = $new_user->id;
                     $global_user_id = $user->id;
                     $email = null;
