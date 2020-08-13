@@ -97,6 +97,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
     Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
     Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
+    // Chat Categories
+    Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
+    Route::post('add_category', ['uses' => 'ChatController@add_category']);
+    Route::post('assign_category', ['uses' => 'ChatController@assign_category']);
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);

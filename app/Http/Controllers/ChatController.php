@@ -19,7 +19,9 @@ use Carbon\Carbon;
 // Models
 use App\Role;
 use App\UserRole;
+use App\Category;
 use App\Chat;
+use App\ChatCategory;
 use App\ChatGroup;
 use App\ChatMessage;
 use App\ChatOperator;
@@ -97,6 +99,13 @@ class ChatController extends Controller
                             $query->select('name');
                         }])->orderByDesc('updated_at')->get();
                         foreach ($chats as $chat) {
+                            $chat_category = ChatCategory::where('chat_id', $chat->id)->first();
+                            if(is_null($chat_category)){
+                                $chat["category"] = "normal";
+                            } else {
+                                $category = Category::where('id', $chat_category->category_id)->first();
+                                $chat["category"] = $category->name;
+                            }
                             $chat["mentor"] = $chat->users()->whereHas('role', function ($query) {
                                 $query->where('is_mentor', 1);
                             })->select('name')->first();
@@ -388,10 +397,10 @@ class ChatController extends Controller
             $chat->updated_at = Carbon::now();
             $chat->save();
 
-//            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
-//            foreach ($chatusers as $chatuser){
-//                $chatuser->unread += 1;
-//            }
+            // $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
+            // foreach ($chatusers as $chatuser){
+            //     $chatuser->unread += 1;
+            // }
 
             // Send Notifications via get firebaseIDs
             $this->get_firebaseIds($request->chat_id, $chat_message->id, Auth::user()->id, Auth::user()->name);
@@ -409,9 +418,9 @@ class ChatController extends Controller
     public function get_firebaseIds($chat_id, $message_id, $user_id, $sender_name)
     {
         $studentIds = StudentFirebase::whereIn('user_id', Chat::find($chat_id)->users()->pluck('user_id'))->where('user_id', '!=', Auth::user()->id)->pluck('firebaseId');
-//        $studentIds = StudentFirebase::with("user")->whereHas("user", function ($query) use ($user_id, $chat_id) {
-//            $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
-//        })->get()->pluck('firebaseId');
+        // $studentIds = StudentFirebase::with("user")->whereHas("user", function ($query) use ($user_id, $chat_id) {
+        //     $query->whereIn('id', Chat::find($chat_id))->where("user_id", '!=', $user_id);
+        // })->get()->pluck('firebaseId');
 
         // $studentIds = StudentFirebase::whereIn('user_id', ChatUser::where('chat_id', $chat_id)->where('user_id', '!=', $user_id)->get()->pluck('user_id'))->pluck('firebaseId');
         $adminIds = AdminFirebase::all()->pluck('firebaseId');
@@ -749,5 +758,67 @@ class ChatController extends Controller
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
+    }
+
+    public function get_categories(){
+        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
+        }
+
+        $categories = Chategory::all();
+        if(count($categories) == 0)
+            return $this->apiResponse->sendResponse(404, 'No Category is Saved', null);
+
+        return $this->apiResponse->sendResponse(200, 'Success', $categories);
+    }
+
+    public function add_category(Request $request){
+        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
+        }
+
+        if(!isset($request->name))
+            return $this->apiResponse->sendResponse(400, 'Category name is required.', null);
+ 
+        $category = new Category();
+        $category->name = $request->name;
+        $category->save();
+
+        return $this->apiResponse->sendResponse(200, 'Category saved', $category);
+    }
+
+    public function assign_category(Request $request){
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|integer',
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user_role = UserRole::where('user_id', Auth::user()->id)->first();
+
+        if ($user_role->is_admin == 0) {
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
+        }
+
+        $chat = Chat::where('id', $request->chat_id)->first();
+        $category = Category::where('id', $request->category_id)->first();
+        if(is_null($chat))
+            return $this->apiResponse->sendResponse(404, 'Chat does not exist', null);
+        if(is_null($category))
+            return $this->apiResponse->sendResponse(404, 'Category does not exist', null);
+
+        $chat_category = new ChatCategory();
+        $chat_category->chat_id = $request->chat_id;
+        $chat_category->category_id = $request->category_id;
+        $chat_category->save();
+
+        return $this->apiResponse->sendResponse(200, 'Category assigned to the chat', null);
     }
 }
