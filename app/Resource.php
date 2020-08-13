@@ -24,4 +24,16 @@ class Resource extends Model
     public function user_resource(){
         return $this->hasOne('App\UserResource');
     }
+
+    public function comments(){
+        return $this->hasMany('App\Comment');
+    }
+
+    public function notes(){
+        return $this->hasMany('App\Note');
+    }
+
+    public function tests(){
+        return $this->hasMany('App\Test');
+    }
 }

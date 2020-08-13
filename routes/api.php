@@ -66,11 +66,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('save_user_views_opp', ['uses' => 'ApiOpportunityController@save_user_views_opp']);
 
     // Resource Locking
-    Route::get('get_user_keys', ['uses' => 'ResourceLockController@get_user_keys']);
-    // Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
-    // Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
-    // Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
-    Route::post('resource_checkout', ['uses' => 'ResourceLockController@resource_checkout']);
+    Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
+    // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
+    // Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
+    // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
+    Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
+    Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
 
     // Premium Subscription
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
@@ -94,6 +95,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
     Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
     Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
+    Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
+    Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
+    Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
@@ -108,9 +112,9 @@ Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_li
 Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
 
 // Resource Locking
-Route::get('get_author_keys', ['uses' => 'ResourceLockController@get_author_keys']);
-Route::post('save_new_key', ['uses' => 'ResourceLockController@save_new_key']);
-Route::post('lock_resource', ['uses' => 'ResourceLockController@lock_resource']);
+Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
+Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
+Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
 
 
 //AWS API

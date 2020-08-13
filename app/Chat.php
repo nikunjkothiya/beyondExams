@@ -33,4 +33,12 @@ class Chat extends Model
     public function messages(){
         return $this->hasMany('App\ChatMessage');
     }
+
+    public function hash(){
+        return $this->belongsTo('App\ChatHash');
+    }
+
+    public function hash_users(){
+        return $this->belongsToMany('App\HashFirebase');
+    }
 }

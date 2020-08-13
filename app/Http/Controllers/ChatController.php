@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\AdminFirebase;
+use App\ChatHash;
+use App\HashFirebase;
 use App\Http\Controllers\ApiResponse;
 use App\MessageType;
 use Illuminate\Support\Facades\Validator;
@@ -30,6 +32,7 @@ use App\User;
 class ChatController extends Controller
 {
     private $apiResponse;
+    private $default_user_id = 35;
     private $user_role_id = 1;
     private $mentor_role_id = 2;
     private $admin_role_id = 3;
@@ -58,7 +61,9 @@ class ChatController extends Controller
                 case $this->user_role_id:
                     $chats = Auth::user()->chats()->where('is_support', false)->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
                     foreach ($chats as $chat) {
-                        $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+                        $chat["mentor"] = $chat->users()->whereHas('role', function ($query) {
+                            $query->where('is_mentor', 1);
+                        })->select('name')->first();
                         if (!$chat["is_group"])
                             $chat["group_id"] = ChatGroup::where("opportunity_id", $chat["opportunity_id"])->value("chat_id");
                         else
@@ -73,8 +78,10 @@ class ChatController extends Controller
                     break;
                 case $this->mentor_role_id:
                     $chats = Auth::user()->chats()->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
-                    foreach ($chats as $chat){
-                        $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
+                    foreach ($chats as $chat) {
+                        $chat["mentor"] = $chat->users()->whereHas('role', function ($query) {
+                            $query->where('is_mentor', 1);
+                        })->select('name')->first();
                     }
                     // Requested Role is Mentor
                     if ($user_role->is_mentor == 1) {
@@ -89,10 +96,12 @@ class ChatController extends Controller
                         $chats = Chat::with(['users' => function ($query) {
                             $query->select('name');
                         }])->orderByDesc('updated_at')->get();
-                        foreach ($chats as $chat){
-                            $chat["mentor"] = $chat->users()->whereHas('role', function($query){$query->where('is_mentor', 1);})->select('name')->first();
-			    $chat["unread"] = ChatUser::where("role_id", $this->admin_role_id)->where("chat_id", $chat["id"])->pluck("unread");
-			    $chat["message_count"] = ChatMessage::where("chat_id", $chat["id"])->count();
+                        foreach ($chats as $chat) {
+                            $chat["mentor"] = $chat->users()->whereHas('role', function ($query) {
+                                $query->where('is_mentor', 1);
+                            })->select('name')->first();
+                            $chat["unread"] = ChatUser::where("role_id", $this->admin_role_id)->where("chat_id", $chat["id"])->pluck("unread");
+                            $chat["message_count"] = ChatMessage::where("chat_id", $chat["id"])->count();
                         }
                         return $this->apiResponse->sendResponse(200, 'Success', $chats);
                     } else {
@@ -353,7 +362,6 @@ class ChatController extends Controller
 
     public function send_message(request $request)
     {
-        // TODO: Integrate fcm
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
             'message' => 'required|string',
@@ -378,7 +386,7 @@ class ChatController extends Controller
             $chat_message->save();
 
             $chat->updated_at = Carbon::now();
-	    $chat->save();
+            $chat->save();
 
 //            $chatusers = ChatUser::where('chat_id', $request->chat_id)->where('user_id', '!=', Auth::user()->id)->get();
 //            foreach ($chatusers as $chatuser){
@@ -521,17 +529,17 @@ class ChatController extends Controller
         }
 
         try {
-	    if (StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
-		$firebase = StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
-		$firebase->firebaseId = $request->firebase_id;
+            if (StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
+                $firebase = StudentFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
+                $firebase->firebaseId = $request->firebase_id;
                 $firebase->save();
-	    } else {
-            $firebase = new StudentFirebase();
-            $firebase->user_id = Auth::user()->id;
-            $firebase->deviceId = $request->device_id;
-            $firebase->firebaseId = $request->firebase_id;
-            $firebase->save();
-	    }
+            } else {
+                $firebase = new StudentFirebase();
+                $firebase->user_id = Auth::user()->id;
+                $firebase->deviceId = $request->device_id;
+                $firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+            }
 
             return $this->apiResponse->sendResponse(200, 'Success.', $firebase);
         } catch (Exception $e) {
@@ -551,17 +559,17 @@ class ChatController extends Controller
         }
 
         try {
-	    if (AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
-		$firebase = AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
+            if (AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->count() > 0) {
+                $firebase = AdminFirebase::where('user_id', Auth::user()->id)->where('deviceId', $request->device_id)->first();
                 $firebase->firebaseId = $request->firebase_id;
                 $firebase->save();
-	    } else {
+            } else {
                 $firebase = new AdminFirebase();
                 $firebase->user_id = Auth::user()->id;
                 $firebase->deviceId = $request->device_id;
                 $firebase->firebaseId = $request->firebase_id;
                 $firebase->save();
-	    }
+            }
 
             return $this->apiResponse->sendResponse(200, 'Success.', $firebase);
         } catch (Exception $e) {
@@ -569,7 +577,8 @@ class ChatController extends Controller
         }
     }
 
-    public function change_chat_title(Request $request){
+    public function change_chat_title(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|int',
             'title' => 'required|string',
@@ -589,15 +598,19 @@ class ChatController extends Controller
         return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
     }
 
-    public function get_all_mentors(Request $request){
-	if (Auth::user()->role()->pluck('is_admin')[0] != 1)
+    public function get_all_mentors(Request $request)
+    {
+        if (Auth::user()->role()->pluck('is_admin')[0] != 1)
             return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
-        $mentors = User::whereHas('role', function($query){$query->where("is_mentor", 1);})->select('id', 'name', 'email')->get();
+        $mentors = User::whereHas('role', function ($query) {
+            $query->where("is_mentor", 1);
+        })->select('id', 'name', 'email')->get();
 
         return $this->apiResponse->sendResponse(200, 'Mentors fetched successfully.', $mentors);
     }
 
-    public function assign_mentor(Request $request){
+    public function assign_mentor(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|int',
             'mentor_id' => 'required|int',
@@ -608,11 +621,133 @@ class ChatController extends Controller
         }
 
         $chat = Chat::find($request->chat_id);
+
         $chat->users()->attach([Auth::user()->id => ['role_id' => $this->mentor_role_id]]);
         $chat->save();
 
         return $this->apiResponse->sendResponse(200, "Mentor assigned successfully", null);
     }
 
+    public function create_anonymous_chat(Request $request)
+    {
+        if (Auth::user()->role()->pluck('is_admin')[0] != 1)
+            return $this->apiResponse->sendResponse(403, 'User is not a admin.', null);
 
+        $chat = new Chat();
+        $chat->title = "Precisely Support";
+        $chat->creator_id = Auth::user()->id;
+        $chat->is_support = true;
+        $chat->is_anonymous = true;
+        $chat->save();
+
+        $chat_hash = new ChatHash();
+        $chat_hash->hashcode = substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+        $chat_hash->chat_id = $chat->id;
+        $chat_hash->save();
+
+        $chat->users()->attach([Auth::user()->id => ['role_id' => $this->admin_role_id]]);
+
+        return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat_hash);
+    }
+
+    public function get_chat_from_hash(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'hashcode' => 'required|string',
+            'device_id' => 'required|string',
+            'firebase_id' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (HashFirebase::where('deviceId', $request->device_id)->count() > 0) {
+                $firebase = HashFirebase::where('deviceId', $request->device_id)->first();
+                $firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+            } else {
+                $firebase = new HashFirebase();
+                $firebase->deviceId = $request->device_id;
+                $firebase->firebaseId = $request->firebase_id;
+                $firebase->save();
+            }
+
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+
+        $messages = ChatMessage::with(['sender' => function ($query) {
+            $query->select('id', 'name', 'avatar');
+        }])->where('chat_id', ChatHash::where('hashcode', 'fc25443d61d8be7d')->value('chat_id'))->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+
+        return $this->apiResponse->sendResponse(200, 'Success', $messages);
+    }
+
+    public function send_message_through_hash(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'hashcode' => 'required|string',
+            'message' => 'required|string',
+            'role_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+        try {
+            $chat = Chat::where('id', ChatHash::where('hashcode', $request->hashcode)->value('chat_id'))->first();
+            if (is_null($chat)) {
+                return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
+            }
+
+            if ($request->role_id == $this->admin_role_id) {
+                $sender_id = Auth::user()->id;
+                $firebase_ids = $chat->hash_users()->pluck('firebaseId');
+
+                $config_firebase = array(
+                    "key: AIzaSyDovLKo3djdRbs963vqKdbj-geRWyzMTrg",
+                    "Authorization: key=" . "AAAAOjqNmFY:APA91bFaHsWDfwZqlt2uYKo7Lufj_4ZfP9tNK57HSZHIOD8kW-Rca-GlDbTyDBAAG3LacvqxUmgPK3zIzxoL6r6wwKWx_I7WEsqvYpjvhiZaCoK8CZtgDdmi8Gwp-xXtSruDgt_qKpWI",
+                    "Content-Type: application/json"
+                );
+
+
+            } else if ($request->role_id == $this->user_role_id) {
+                $sender_id = $this->default_user_id;
+                $firebase_ids = AdminFirebase::all()->pluck('firebaseId');
+
+                $config_firebase = array(
+                    "key: AIzaSyBwTH4gMhdWKZd5dlxYbvY3SIYMREOzGZY",
+                    "Authorization: key=" . "AAAAgvxGJqg:APA91bHQCC7Av_6k-DhytBf0-lhgbO_omK2nfbThcwz4C49VF1EK500EnrK1HmxGTRpixPBVIxojkRmoys2U1FV4KfmIhTn-hFURrYSS9BIRS_-Op6E3Y4k7IQ-qirLKqyS8iw7qyv6v",
+                    "Content-Type: application/json"
+                );
+            } else {
+                return $this->apiResponse->sendResponse(404, 'User does not exist', null);
+            }
+
+            $chat_message = new ChatMessage();
+            $chat_message->message = $request->message;
+            $chat_message->chat_id = $chat->id;
+            $chat_message->role_id = $request->role_id;
+            $chat_message->type_id = 1;
+            $chat_message->sender_id = $sender_id;
+            $chat_message->save();
+
+            $chat->updated_at = Carbon::now();
+            $chat->save();
+
+
+            $chat_message = ChatMessage::with(['sender' => function ($query) {
+                $query->select('id', 'name', 'avatar');
+            }])->find($chat_message->id);
+
+            $this->send_user_notification($chat_message, $firebase_ids, "User", $config_firebase);
+
+            return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
 }
