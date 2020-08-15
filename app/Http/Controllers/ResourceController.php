@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Comment;
 use App\Currency;
 use App\FileType;
 use App\Key;
 use App\KeyPrice;
 use App\MessageType;
 use App\Note;
+use App\Reply;
 use App\Resource;
 use App\ResourceKey;
 use App\Test;
+use App\TestScore;
 use App\Transaction;
 use App\User;
 use App\UserKey;
@@ -307,5 +310,94 @@ class ResourceController extends Controller
             return $this->apiResponse->sendResponse(200, 'Test added successfully', null);
 
         }
+    }
+
+    public function add_resource_comment(Request $request){
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string',
+            'resource_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $resource = Resource::find($request->resource_id);
+
+        $comment = new Comment();
+        $comment->message = $request->message;
+        $comment->user_id = $user->id;
+
+        $resource->comments()->save($comment);
+        $comment->save();
+
+        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
+    }
+
+    public function add_resource_reply(Request $request){
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string',
+            'resource_id' => 'required|integer',
+            'comment_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $comment = Comment::find($request->comment_id);
+
+        $reply = new Reply();
+        $reply->message = $request->message;
+        $reply->user_id = $user->id;
+
+
+        $comment->replies()->save($reply);
+        $reply->save();
+
+        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
+    }
+
+    public function get_test_scores(Request $request){
+        $validator = Validator::make($request->all(), [
+            'test_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        if ($user->role()->value('is_mentor') != 1){
+            return $this->apiResponse->sendResponse(403, 'User is not authorized', null);
+        } else {
+            $test = Test::find($request->test_id);
+            return $this->apiResponse->sendResponse(200, 'Test scores fetched successfully', $test->scores()->with('user')->get());
+        }
+    }
+
+    public function submit_test_score(Request $request){
+        $validator = Validator::make($request->all(), [
+            'score' => 'required|integer',
+            'test_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $test = Test::find($request->test_id);
+
+        $test_score = new TestScore();
+        $test_score->score = $request->score;
+        $test_score->user_id = $user->id;
+
+        $test->scores()->save($test_score);
+        $test_score->save();
+
+        return $this->apiResponse->sendResponse(200, 'Test score added successfully', null);
     }
 }

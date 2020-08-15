@@ -71,6 +71,10 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
     Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
     Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
+    Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
+    Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
+    Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);
+    Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
 
     // Premium Subscription
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);

@@ -135,19 +135,19 @@ class AWSApiController extends Controller
             }
             if (isset($request->author_id)) {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
                 }
             } else {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('duration', '>', 0)->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->get();
                 }
             }
 

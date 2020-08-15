@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\AdminFirebase;
 use App\ChatHash;
+use App\Comment;
 use App\HashFirebase;
 use App\Http\Controllers\ApiResponse;
 use App\MessageType;
+use App\Reply;
+use App\Resource;
+use App\Test;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
@@ -783,7 +787,7 @@ class ChatController extends Controller
 
         if(!isset($request->name))
             return $this->apiResponse->sendResponse(400, 'Category name is required.', null);
- 
+
         $category = new Category();
         $category->name = $request->name;
         $category->save();

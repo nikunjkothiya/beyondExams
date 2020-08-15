@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddIsAnonymousToChats extends Migration
+class AddUserToReplies extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,12 @@ class AddIsAnonymousToChats extends Migration
      */
     public function up()
     {
-        Schema::table('chats', function (Blueprint $table) {
-            $table->boolean('is_anonymous')->default(0);
+        Schema::table('replies', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id');
+        });
+
+        Schema::table('replies',function($table) {
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 
@@ -25,7 +29,7 @@ class AddIsAnonymousToChats extends Migration
      */
     public function down()
     {
-        Schema::table('chats', function (Blueprint $table) {
+        Schema::table('replies', function (Blueprint $table) {
             //
         });
     }
