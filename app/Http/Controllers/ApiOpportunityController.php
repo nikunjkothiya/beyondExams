@@ -12,7 +12,7 @@ use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Pagination\LengthAwarePaginator;
 
 use Carbon\Carbon;
 
@@ -28,7 +28,7 @@ class ApiOpportunityController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function get_opp($slug)
+    public function get_opp_by_slug($slug)
     {
         try {
             $hyphen_index = strrpos($slug, "-");
@@ -117,45 +117,42 @@ class ApiOpportunityController extends Controller
         }
     }
 
-    public function get_opportunities(Request $request)
+    public function get_opportunities()
     {
         try {
-            //            $user_id = $request->user_id;
+            $user = Auth::user();
+            
+            $gopportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+                $query->whereNotIn('tags.id', $user->tags);
+            });
 
-            //            if (!is_null(User::find($user_id)->id)) {
-            if (Auth::check()) {
-                $user = Auth::user();
-                //                $user = User::find($user_id);
-                //            $tags = $user->tags;
-                $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
-                    $query->where('locale', 'en');
-                }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
-                    $query->whereIn('tags.id', $user->tags);
-                })->paginate(10);
-                //                })->whereDate('deadline', '>=',Carbon::now())->paginate(10);
+            // return $user->tags;
+            $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+                $query->whereIn('tags.id', $user->tags);
+            })->union($gopportunities)->paginate(10);
 
-
-                if (count($user->saved_opportunities) > 0) {
-                    $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
-                    foreach ($opportunities as $opportunity) {
-                        if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
-                            $opportunity['saved'] = 1;
-                        else
-                            $opportunity['saved'] = 0;
-                    }
-                } else {
-                    foreach ($opportunities as $opportunity) {
+            if (count($user->saved_opportunities) > 0) {
+                $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
+                foreach ($opportunities as $opportunity) {
+                    if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
+                        $opportunity['saved'] = 1;
+                    else
                         $opportunity['saved'] = 0;
-                    }
                 }
-
-                return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
             } else {
-                return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
+                foreach ($opportunities as $opportunity) {
+                    $opportunity['saved'] = 0;
+                }
             }
+
+            return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
         } catch (Exception $e) {
-            //    return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
-            //abort(404);
+            // return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
+            // abort(404);
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
         }
     }

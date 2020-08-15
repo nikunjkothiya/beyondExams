@@ -23,7 +23,7 @@ Route::get('get_all_countries', ['uses' => 'PreciselyController@get_all_countrie
 Route::get('get_all_domains', ['uses' => 'PreciselyController@get_all_domains']);
 
 // Misc APi
-Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp']);
+Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp_by_slug']);
 Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
@@ -101,6 +101,14 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
     Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
     Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
+    
+    // Chat Categories
+    Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
+    Route::post('add_category', ['uses' => 'ChatController@add_category']);
+    Route::post('assign_category', ['uses' => 'ChatController@assign_category']);
+
+    // Notifications
+    Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 
     // Old Premium
     // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
