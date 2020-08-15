@@ -259,7 +259,7 @@ class ChatController extends Controller
                 $chat->save();
 
                 $this->add_opportunity_admin_message("Hey! We have got a match!", $chat->id, 3);
-                $this->add_opportunity_admin_message("I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find($opportunity_id)->value("link"), $chat->id, 2);
+                $this->add_opportunity_admin_message("I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find($opportunity_id)["link"], $chat->id, 2);
                 $this->add_opportunity_admin_message("Please feel free to ask me anything.", $chat->id, 1);
 
                 $chat->users()->attach([Auth::user()->id => ['role_id' => $this->user_role_id]]);
