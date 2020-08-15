@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\AdminFirebase;
 use App\ChatHash;
+use App\Comment;
 use App\HashFirebase;
 use App\Http\Controllers\ApiResponse;
 use App\MessageType;
+use App\Reply;
+use App\Resource;
+use App\Test;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
@@ -748,6 +752,14 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_chat_messages(Request $request){
+        $chat_messages = ChatMessage::where('message', 'like','%the official link you requested:%')->get();
+        foreach ($chat_messages as $chat_message){
+            $chat_message->message = "I have been assigned as your mentor. Here is the official link you requested:\n" . Opportunity::find(Chat::find($chat_message->chat_id)->opportunity_id)["link"];
+            $chat_message->save();
         }
     }
 }

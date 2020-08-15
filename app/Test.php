@@ -13,4 +13,8 @@ class Test extends Model
     public function resource(){
         return $this->belongsTo('App\Resource');
     }
+
+    public function scores(){
+        return $this->hasMany('App\TestScore');
+    }
 }
