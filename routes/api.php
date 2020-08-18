@@ -130,6 +130,7 @@ Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
 
 //AWS API
 Route::get('list_s3_files', ['uses' => 'AWSApiController@list_s3_files']);
+Route::get('list_paginated_s3_files', ['uses' => 'AWSApiController@list_paginated_s3_files']);
 Route::get('get_recommendations', ['uses' => 'AWSApiController@get_recommendations']);
 Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
 Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);

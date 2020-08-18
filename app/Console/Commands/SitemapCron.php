@@ -37,7 +37,7 @@ class SitemapCron extends Command
      */
     public function handle()
     {
-        \Log::info("Sitemap cron job triggered");
+    //    \Log::info("Sitemap cron job triggered");
         $controller = app()->make('App\Http\Controllers\UtilController');
         app()->call([$controller, 'generate_latest_sitemap']);
 
