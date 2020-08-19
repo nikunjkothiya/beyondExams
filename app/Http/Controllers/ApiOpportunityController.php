@@ -124,6 +124,8 @@ class ApiOpportunityController extends Controller
             
             $gopportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
+            }, 'tags' => function ($query){
+                $query->select('id', 'tag');
             }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereNotIn('tags.id', $user->tags);
             });
@@ -131,6 +133,8 @@ class ApiOpportunityController extends Controller
             // return $user->tags;
             $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
+            },'tags' => function ($query){
+                $query->select('id', 'tag');
             }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereIn('tags.id', $user->tags);
             })->union($gopportunities)->paginate(10);
