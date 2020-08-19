@@ -74,6 +74,7 @@ class PreciselyController extends Controller
                     'firstname' => 'required|string|max:255',
                     'lastname' => 'required|string|max:255',
                     'email' => 'required|email',
+                    'phone' => 'string',
                     'designation' => 'required|string|max:255',
                     'organisation' => 'required|string|max:255',
                     'profile_link' => 'required|string|max:1024',
@@ -93,6 +94,8 @@ class PreciselyController extends Controller
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
                     $record->email = $request->email;
+                    if(isset($request->phone))
+                        $record->phone = $request->phone;
                     $record->designation = $request->designation;
                     $record->organisation = $request->organisation;
                     $record->profile_link = $request->profile_link;
@@ -120,6 +123,8 @@ class PreciselyController extends Controller
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
                     $check->email = $request->email;
+                    if(isset($request->phone))
+                        $check->phone = $request->phone;
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
                     $check->profile_link = $request->profile_link;
@@ -165,6 +170,7 @@ class PreciselyController extends Controller
                     'city' => 'required|string|max:255',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'email' => 'required|email',
+                    'phone' => 'string',
                 ]);
                 //  dd($validator);
 
@@ -181,6 +187,8 @@ class PreciselyController extends Controller
                     $record->user_id = $user_id;
                     $record->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                     $record->email = $request->email;
+                    if(isset($request->phone))
+                        $record->phone = $request->phone;
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
                     $record->college = $request->college;
@@ -215,6 +223,8 @@ class PreciselyController extends Controller
                     }
                 } else {
                     $check->email = $request->email;
+                    if(isset($request->phone))
+                        $check->phone = $request->phone;
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
                     $check->college = $request->college;
