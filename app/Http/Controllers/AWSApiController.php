@@ -135,19 +135,19 @@ class AWSApiController extends Controller
             }
             if (isset($request->author_id)) {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('author_id', $request->author_id)->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 }
             } else {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('file_type_id', $request->type)->get();
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->get();
                 }
             }
 
@@ -192,7 +192,93 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
 
         } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function list_paginated_s3_files(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'type' => 'required|integer|min:0|max:' . FileType::count(),
+            'author_id' => 'integer'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+	    $per_page = 10;
+            $flag = 2;
+            $user_resources = UserResource::where('user_id', $request->user_id)->get();
+            if (count($user_resources) === 0) {
+                // User has 2 free videos
+                $flag = 0;
+            } elseif (count($user_resources) === 1) {
+                // User has 1 free video
+                $flag = 1;
+            }
+            if (isset($request->author_id)) {
+                if ($request->type == 0) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                } else if ($request->type == 3) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
+                } else {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
+                }
+            } else {
+                if ($request->type == 0) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                } else if ($request->type == 3) {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                } else {
+                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
+                }
+            }
+
+            foreach ($all_files as $file) {
+                if (!is_null($file["thumbnail_url"]))
+                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+                if ($file["file_type_id"] == 3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
+            }
+            $resp['flag'] = $flag;
+
+
+            foreach ($all_files as $file) {
+                $file['unlocked'] = false;
+                $user_keys = UserKey::where('user_id', $request->user_id)->get();
+                $keys = ResourceKey::where('resource_id', $file->id)->get();
+                if (count($keys) === 0) {
+                    $file['unlocked'] = true;
+                }
+                if ($keys) {
+                    foreach ($keys as $key) {
+                        foreach ($user_keys as $user_key) {
+                            if ($user_key->key_id === $key->key_id) {
+                                $file['unlocked'] = true;
+                            }
+                        }
+                        unset($key['id']);
+                        unset($key['resource_id']);
+                        $k = Key::where('id', $key->key_id)->first();
+                        $kp = KeyPrice::where('key_id', $key->key_id)->first();
+                        $cur = Currency::where('id', $kp->currency_id)->first();
+
+                        $key['name'] = $k->name;
+                        $key['price'] = $kp->price;
+                        $key['currency'] = $cur->name;
+                    }
+                }
+                $file['keys'] = $keys;
+            }
+
+            $resp['data'] = $all_files;
+            return $this->apiResponse->sendResponse(200, 'Success', $resp);
+
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 

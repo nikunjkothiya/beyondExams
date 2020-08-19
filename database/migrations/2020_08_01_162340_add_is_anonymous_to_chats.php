@@ -14,9 +14,7 @@ class AddIsAnonymousToChats extends Migration
     public function up()
     {
         Schema::table('chats', function (Blueprint $table) {
-            Schema::table('chats', function (Blueprint $table) {
-                $table->boolean('is_anonymous')->default(0);
-            });
+            $table->boolean('is_anonymous')->default(0);
         });
     }
 

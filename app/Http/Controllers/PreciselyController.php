@@ -72,12 +72,12 @@ class PreciselyController extends Controller
                 $user_id = $user->id;
                 $validator = Validator::make($request->all(), [
                     'firstname' => 'required|string|max:255',
-                    'lastname' => 'required|string|max:255',
+                    'lastname' => 'string|max:255',
                     'email' => 'required|email',
                     'phone' => 'string',
-                    'designation' => 'required|string|max:255',
-                    'organisation' => 'required|string|max:255',
-                    'profile_link' => 'required|string|max:1024',
+                    'designation' => 'string|max:255',
+                    'organisation' => 'string|max:255',
+                    'profile_link' => 'string|max:1024',
                 ]);
 
                 if ($validator->fails()) {
@@ -149,8 +149,9 @@ class PreciselyController extends Controller
                     }
                 }
             }
+	    return $this->apiResponse->sendResponse(401, "User not found", null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -296,8 +297,7 @@ class PreciselyController extends Controller
 
     public function get_mentor_profile()
     {
-        if (Auth::check()) {
-            $user = User::find(Auth::user()->id);
+            $user = Auth::user();
             try {
                 $pcheck = MentorDetail::where('user_id', $user->id)->first();
             } catch (Exception $e) {
@@ -311,13 +311,12 @@ class PreciselyController extends Controller
                     $data['avatar'] = $ava->avatar;
                     break;
                 }
-                #$data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+//                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
-            }
-        } else {
-            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
-        }
+            } else {
+		return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
+	    }
     }
 
     public function save_opportunity(Request $request)

@@ -127,4 +127,12 @@ class User extends Authenticatable
     public function is_admin(){
         return $this->role()->is_admin;
     }
+
+    public function comments(){
+        return $this->hasMany('App\Comment');
+    }
+
+    public function test_scores(){
+        return $this->hasMany('App\TestScore');
+    }
 }
