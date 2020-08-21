@@ -94,7 +94,7 @@ class PreciselyController extends Controller
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
                     $record->email = $request->email;
-                    if(isset($request->phone))
+                    if (isset($request->phone))
                         $record->phone = $request->phone;
                     $record->designation = $request->designation;
                     $record->organisation = $request->organisation;
@@ -123,7 +123,7 @@ class PreciselyController extends Controller
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
                     $check->email = $request->email;
-                    if(isset($request->phone))
+                    if (isset($request->phone))
                         $check->phone = $request->phone;
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
@@ -149,7 +149,7 @@ class PreciselyController extends Controller
                     }
                 }
             }
-	    return $this->apiResponse->sendResponse(401, "User not found", null);
+            return $this->apiResponse->sendResponse(401, "User not found", null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -188,7 +188,7 @@ class PreciselyController extends Controller
                     $record->user_id = $user_id;
                     $record->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                     $record->email = $request->email;
-                    if(isset($request->phone))
+                    if (isset($request->phone))
                         $record->phone = $request->phone;
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
@@ -210,8 +210,8 @@ class PreciselyController extends Controller
                         $responseArray = [
                             'new' => $flag
                         ];
-                        if(isset($request->domain_ids)){
-                            foreach($request->domain_ids as $domain){
+                        if (isset($request->domain_ids)) {
+                            foreach ($request->domain_ids as $domain) {
                                 $domain_user = new DomainUser();
                                 $domain_user->user_id = Auth::user()->id;
                                 $domain_user->domain_id = $domain;
@@ -224,7 +224,7 @@ class PreciselyController extends Controller
                     }
                 } else {
                     $check->email = $request->email;
-                    if(isset($request->phone))
+                    if (isset($request->phone))
                         $check->phone = $request->phone;
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
@@ -246,8 +246,8 @@ class PreciselyController extends Controller
                         $responseArray = [
                             'new' => $flag
                         ];
-                        if(isset($request->domain_ids)){
-                            foreach($request->domain_ids as $domain){
+                        if (isset($request->domain_ids)) {
+                            foreach ($request->domain_ids as $domain) {
                                 $domain_user = new DomainUser();
                                 $domain_user->user_id = Auth::user()->id;
                                 $domain_user->domain_id = $domain;
@@ -297,26 +297,26 @@ class PreciselyController extends Controller
 
     public function get_mentor_profile()
     {
-            $user = Auth::user();
-            try {
-                $pcheck = MentorDetail::where('user_id', $user->id)->first();
-            } catch (Exception $e) {
-                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+        $user = Auth::user();
+        try {
+            $pcheck = MentorDetail::where('user_id', $user->id)->first();
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+        }
+
+        if ($pcheck) {
+            $data['mentor_details'] = $pcheck;
+            $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
+            foreach ($avatar as $ava) {
+                $data['avatar'] = $ava->avatar;
+                break;
             }
+            //                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
-            if ($pcheck) {
-                $data['mentor_details'] = $pcheck;
-                $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
-                foreach ($avatar as $ava) {
-                    $data['avatar'] = $ava->avatar;
-                    break;
-                }
-//                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
-
-                return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
-            } else {
-		return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
-	    }
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
+        }
     }
 
     public function save_opportunity(Request $request)
@@ -550,7 +550,7 @@ class PreciselyController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'No domain ids were given', $validator->errors());
             }
-            foreach($request->domain_ids as $domain){
+            foreach ($request->domain_ids as $domain) {
                 $domain_user = new DomainUser();
                 $domain_user->user_id = Auth::user()->id;
                 $domain_user->domain_id = $domain;
@@ -560,33 +560,33 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(200, 'User domain added', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }        
+        }
     }
 
     public function get_user_domains()
     {
         try {
-            $userdomains = DomainUser::with('domains')->where('user_id',Auth::user()->id)->get();
-            if(count($userdomains) > 0){
+            $userdomains = DomainUser::with('domains')->where('user_id', Auth::user()->id)->get();
+            if (count($userdomains) > 0) {
                 return $this->apiResponse->sendResponse(200, 'Success', $userdomains);
             }
             return $this->apiResponse->sendResponse(404, 'No Domain linked with user', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }        
+        }
     }
 
     public function get_all_domains()
     {
         try {
             $domains = Domain::all();
-            if(count($domains) > 0){
+            if (count($domains) > 0) {
                 return $this->apiResponse->sendResponse(200, 'Success', $domains);
             }
             return $this->apiResponse->sendResponse(404, 'No Domains found.', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }        
+        }
     }
 
     public function get_all_countries(Request $request)
@@ -658,27 +658,29 @@ class PreciselyController extends Controller
 
     public function segment_analytics(Request $request)
     {
-        /*
+
         try {
-        // Create new Analytics, connect it to user, connect it to opportunity
-
-
-	    $user = User::find($request->userId);
+            // Create new Analytics, connect it to user, connect it to opportunity
+            $user = User::find($request->userId);
             $is_view_action = strcmp($request->event, "Views");
 
-            $opportunity = null;
             if (array_key_exists("opp_id", $request->properties)) {
                 $opportunity = Opportunity::find($request->properties["opp_id"]);
+            } else {
+                $opportunity = null;
             }
 
             $action = Action::where('event', $request->event)->first();
 
             if ($is_view_action == 0) {
-                if ($opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->exists())
-                    $opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->increment('views');
-                else
-                    $opportunity->views()->create([1]);
-                $opportunity->save();
+                if (!is_null($opportunity)){
+                    if ($opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->exists()){
+                        $opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->increment('views');
+                    }else{
+                        $opportunity->views()->create([1]);
+                    }
+                    $opportunity->save();
+                }
 
                 if ($request->properties["duration"] > 5000) {
                     $analytics = new Analytics;
@@ -686,12 +688,12 @@ class PreciselyController extends Controller
                     $analytics->value = $request->properties["duration"];
                     $analytics->action()->associate($action);
                     $analytics->user()->associate($user);
-                    $analytics->opportunity()->associate($opportunity);
+                    if (!is_null($opportunity))
+                        $analytics->opportunity()->associate($opportunity);
 
                     $analytics->save();
                 }
             } else {
-
                 foreach ($request->properties as $key => $val) {
                     if (strcmp($key, "opp_id") == 0) {
                         if (count($request->properties) == 1) {
@@ -705,7 +707,6 @@ class PreciselyController extends Controller
                         }
                         continue;
                     }
-
                     $analytics = new Analytics;
                     $analytics->key = $key;
                     $analytics->value = $val;
@@ -719,9 +720,7 @@ class PreciselyController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
         } catch (\Exception $e) {
-
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-	    }
-	 */
+        }
     }
 }
