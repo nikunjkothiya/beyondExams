@@ -284,7 +284,9 @@ class ResourceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
-            'resource_id' => 'required|integer'
+            'resource_id' => 'required|integer',
+            'test_doc' => 'file|mimes:pdf',
+            'test_image' => 'image'
 //            'json_content'
         ]);
 
@@ -301,7 +303,49 @@ class ResourceController extends Controller
             $test->title = $request->title;
             if ($request->json_content)
                 $test->json_content = $request->json_content;
-            else
+            else if ($request->test_doc) {
+                if ($resource) {
+                    $file = $request->file('test_doc');
+
+                    $ext = "." . pathinfo($_FILES["test_doc"]["name"])['extension'];
+
+                    $name = time() . uniqid() . $ext;
+
+                    $contents = file_get_contents($file);
+
+                    $filePath = "tests/" . $name;
+
+                    Storage::disk('s3')->put($filePath, $contents);
+
+                    $test->url = $filePath;
+                    $test->type_id = MessageType::where('type', 'document')->value('id');
+
+                } else {
+                    return $this->apiResponse->sendResponse(404, 'Resource doesnt exist', null);
+                }
+            } else if ($request->test_image) {
+
+                if ($resource) {
+                    $file = $request->file('test_image');
+
+                    $ext = "." . pathinfo($_FILES["test_image"]["name"])['extension'];
+
+                    $name = time() . uniqid() . $ext;
+
+                    $contents = file_get_contents($file);
+
+                    $filePath = "tests/" . $name;
+
+                    Storage::disk('s3')->put($filePath, $contents);
+
+                    $test->url = $filePath;
+                    $test->type_id = MessageType::where('type', 'image')->value('id');
+
+                    return $this->apiResponse->sendResponse(200, 'Test added successfully', null);
+                } else {
+                    return $this->apiResponse->sendResponse(404, 'Resource doesnt exist', null);
+                }
+            } else
                 return $this->apiResponse->sendResponse(500, 'Question not found', null);
 
             $resource->tests()->save($test);
@@ -312,7 +356,8 @@ class ResourceController extends Controller
         }
     }
 
-    public function add_resource_comment(Request $request){
+    public function add_resource_comment(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'message' => 'required|string',
             'resource_id' => 'required|integer',
@@ -335,7 +380,8 @@ class ResourceController extends Controller
         return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
     }
 
-    public function add_resource_reply(Request $request){
+    public function add_resource_reply(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'message' => 'required|string',
             'resource_id' => 'required|integer',
@@ -360,7 +406,8 @@ class ResourceController extends Controller
         return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
     }
 
-    public function get_test_scores(Request $request){
+    public function get_test_scores(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'test_id' => 'required|integer',
         ]);
@@ -370,7 +417,7 @@ class ResourceController extends Controller
         }
 
         $user = Auth::user();
-        if ($user->role()->value('is_mentor') != 1){
+        if ($user->role()->value('is_mentor') != 1) {
             return $this->apiResponse->sendResponse(403, 'User is not authorized', null);
         } else {
             $test = Test::find($request->test_id);
@@ -378,7 +425,8 @@ class ResourceController extends Controller
         }
     }
 
-    public function submit_test_score(Request $request){
+    public function submit_test_score(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'score' => 'required|integer',
             'test_id' => 'required|integer',
