@@ -664,13 +664,13 @@ class PreciselyController extends Controller
             $user = User::find($request->userId);
             $is_view_action = strcmp($request->event, "Views");
 
+            $action = Action::where('event', $request->event)->first();
+
             if (array_key_exists("opp_id", $request->properties)) {
                 $opportunity = Opportunity::find($request->properties["opp_id"]);
             } else {
                 $opportunity = null;
             }
-
-            $action = Action::where('event', $request->event)->first();
 
             if ($is_view_action == 0) {
                 if (!is_null($opportunity)){

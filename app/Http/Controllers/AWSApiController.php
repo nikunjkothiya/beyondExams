@@ -30,7 +30,7 @@ class AWSApiController extends Controller
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
     private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
-    private $file_types = ["all", "blogs/", "articles/", "videos/"];
+    private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
     private $resourceLockController;
 
@@ -152,9 +152,15 @@ class AWSApiController extends Controller
             }
 
             foreach ($all_files as $file) {
+		foreach ($file["notes"] as $note) {
+		    $note["url"] = $this->base_url . $note["url"];
+		}
+		foreach ($file["tests"] as $test) {
+		    $test["url"] = $this->base_url . $test["url"];
+		}
                 if (!is_null($file["thumbnail_url"]))
                     $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                if ($file["file_type_id"] == 3)
+                if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
             $resp['flag'] = $flag;
@@ -387,13 +393,13 @@ class AWSApiController extends Controller
             } else if ($request->type == 3 || $request->type == 5) {
                 // VIDEO
                 // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
-                $file->move(storage_path() . '/app/public/videos/', $name);
+                $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name);
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
                 // 'public/', $file, $filePath
                 // );
                 // Storage::disk('s3')->put($filePath, $contents);
-                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/videos/' . $name));
+                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/' . $this->file_types[$request->type] . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
                     'ffmpeg.binaries' => '/usr/bin/ffmpeg',
@@ -408,6 +414,7 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
+		Storage::delete("public/" . $this->file_types[$request->type] . $name);
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
