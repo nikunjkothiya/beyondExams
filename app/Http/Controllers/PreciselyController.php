@@ -419,13 +419,14 @@ class PreciselyController extends Controller
     public function show_saved_opportunity()
     {
         if (Auth::check()) {
-            $user = User::find(Auth::user()->id);
-            $opp_ids = DB::table('opportunity_user')->select('opportunity_id')->where('user_id', $user->id)->get();
-            $opp_slug = [];
-            foreach ($opp_ids as $opp_id) {
-                $opp_slug[] = array('title' => DB::table('opportunity_translations')->select('title')->where([['opportunity_id', $opp_id->opportunity_id], ['locale', 'en']])->first(), 'desc' => DB::table('opportunities')->select('*')->where('id', $opp_id->opportunity_id)->get());
-            }
-            return $this->apiResponse->sendResponse(200, 'Success', $opp_slug);
+            $user = Auth::user();
+            $saved_opportunities = $user->saved_opportunities()->with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            }, 'tags' => function ($query){
+                $query->select('id', 'tag');
+            }])->paginate(10);
+
+            return $this->apiResponse->sendResponse(200, 'Success', $saved_opportunities);
         } else {
             return $this->apiResponse->sendResponse(500, 'Unauthorized', null);
         }
