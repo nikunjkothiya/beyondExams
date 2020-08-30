@@ -99,8 +99,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
     Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
     Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
-    Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
-    Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
     
     // Chat Categories
     Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
@@ -116,6 +114,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('success', ['uses' => 'SubscriptionController@success']);
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
+
+Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
+Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
 // Learnage Broadcasting
 Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
