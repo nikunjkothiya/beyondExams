@@ -115,6 +115,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
 
+// Social
+Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
+Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
+Route::post('start_following', ['uses' => 'SocialController@start_following']);
+
+  
 Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 

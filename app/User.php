@@ -88,6 +88,14 @@ class User extends Authenticatable
         return $this->hasMany('App\UserSocial');
     }
 
+    public function followers(){
+        return $this->hasMany('App\UserFollower', 'user_id');
+    }
+
+    public function influencers(){
+        return $this->hasMany('App\UserFollower', 'influencer_id');
+    }
+
     public function opportunities(){
         return $this->belongsToMany('App\Opportunity');
     }
