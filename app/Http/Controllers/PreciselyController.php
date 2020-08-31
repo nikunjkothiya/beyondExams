@@ -261,7 +261,7 @@ class PreciselyController extends Controller
                 }
             }
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
