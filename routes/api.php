@@ -131,6 +131,11 @@ Route::post('add_session', ['uses' => 'LearnageBroadcastingController@add_sessio
 Route::post('update_session', ['uses' => 'LearnageBroadcastingController@update_session']);
 Route::post('verify_user', ['uses' => 'LearnageBroadcastingController@verify_user']);
 
+Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
+Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
+Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
+
+
 // Resource Locking
 Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
 Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
