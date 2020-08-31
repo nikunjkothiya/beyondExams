@@ -26,7 +26,8 @@
         "razorpay/razorpay": "2.*",
         "socialiteproviders/facebook": "^1.0",
         "spatie/laravel-cors": "^1.6",
-        "spatie/laravel-sitemap": "^5.7"
+        "spatie/laravel-sitemap": "^5.7",
+        "symfony/process": "4.3.4"
     },
     "require-dev": {
         "facade/ignition": "^1.4",

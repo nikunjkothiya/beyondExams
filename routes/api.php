@@ -119,9 +119,11 @@ Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
 // Learnage Broadcasting
-Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
-Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
-Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
+Route::get('get_broadcast_sessions', ['uses' => 'LearnageBroadcastingController@get_broadcast_sessions']);
+Route::get('get_scheduled_sessions', ['uses' => 'LearnageBroadcastingController@get_scheduled_sessions']);
+Route::post('add_session', ['uses' => 'LearnageBroadcastingController@add_session']);
+Route::post('update_session', ['uses' => 'LearnageBroadcastingController@update_session']);
+Route::post('verify_user', ['uses' => 'LearnageBroadcastingController@verify_user']);
 
 // Resource Locking
 Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);

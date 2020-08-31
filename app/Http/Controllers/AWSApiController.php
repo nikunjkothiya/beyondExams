@@ -109,7 +109,7 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
         } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -561,7 +561,7 @@ class AWSApiController extends Controller
             $playlist = Playlist::where('resource_id', $request->origin)->first();
             return $this->apiResponse->sendResponse(200, 'Success', $playlist->structure);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }

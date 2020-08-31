@@ -560,7 +560,7 @@ class PreciselyController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'User domain added', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -573,7 +573,7 @@ class PreciselyController extends Controller
             }
             return $this->apiResponse->sendResponse(404, 'No Domain linked with user', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -586,7 +586,7 @@ class PreciselyController extends Controller
             }
             return $this->apiResponse->sendResponse(404, 'No Domains found.', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -721,7 +721,7 @@ class PreciselyController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
         } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }
