@@ -125,7 +125,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(400, 'No such user role.', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
