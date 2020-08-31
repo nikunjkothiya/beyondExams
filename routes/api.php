@@ -81,6 +81,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
     Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
 
+    // Social
+    Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
+    Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
+    Route::post('start_following', ['uses' => 'SocialController@start_following']);
+    
     // Chats Integration
     Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
     Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
@@ -114,11 +119,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('success', ['uses' => 'SubscriptionController@success']);
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
-
-// Social
-Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
-Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
-Route::post('start_following', ['uses' => 'SocialController@start_following']);
 
   
 Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
