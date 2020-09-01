@@ -245,13 +245,14 @@ class AWSApiController extends Controller
                     $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
                 }
             }
-
+/*
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
                     $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
                 if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
+*/
             $resp['flag'] = $flag;
 
 
@@ -382,6 +383,9 @@ class AWSApiController extends Controller
                 $duration = $s + $m * 60;
                 // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
+		if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+
                 $new_resource->duration = $duration;
                 $new_resource->save();
 
@@ -416,6 +420,9 @@ class AWSApiController extends Controller
                     ->videos()
                     ->first()
                     ->get('duration');
+
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
