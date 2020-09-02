@@ -151,6 +151,7 @@ Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 Route::post('save_playlist', ['uses' => 'AWSApiController@save_playlist']);
 Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
 Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
+Route::post('upload_single_image', ['uses' => 'AWSApiController@upload_single_image']);
 
 
 // Opportuinity Navigation
