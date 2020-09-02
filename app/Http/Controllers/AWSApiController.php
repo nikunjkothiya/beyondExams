@@ -29,7 +29,7 @@ class AWSApiController extends Controller
 {
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
-    private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
+    private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
     private $resourceLockController;
@@ -39,6 +39,30 @@ class AWSApiController extends Controller
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
         $this->resourceLockController = $resourceLockController;
+    }
+
+    public function upload_single_image(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|image',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+	        $aws_root = "public/";
+            $file = $request->file('file');
+            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+            $name = time() . uniqid() . $ext;
+            $contents = file_get_contents($file);
+            $filePath = "thumbnails/" . $name;
+            Storage::disk('s3')->put($aws_root . $filePath, $contents);
+
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
+        }
     }
 
     public function save_thumbnail(Request $request)
