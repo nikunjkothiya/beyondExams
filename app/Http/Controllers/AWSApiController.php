@@ -381,6 +381,8 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
+		if ($duration == 0 && $word > 3)
+		    $duration = 1;
                 // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
 		if (is_null($duration) || $duration == 0)
@@ -395,6 +397,9 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
+
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
@@ -534,7 +539,7 @@ class AWSApiController extends Controller
                 $resourceKey->save();
             }
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->find($new_resource->id));
         } catch (\Exception $e) {
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());

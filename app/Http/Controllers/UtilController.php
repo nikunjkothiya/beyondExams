@@ -408,6 +408,7 @@ class UtilController extends Controller
             // $user = User::find($request->user_id);
 
             $user = Auth::user();
+/*
             $legacy_opportunity_id = DB::table('legacy_opportunities')->where('phoenix_opportunity_id', $request->id)->select('legacy_opportunity_id')->get();
             if (count($legacy_opportunity_id) == 0) {
                 return $apiResponse->sendResponse(400, 'Opportunity not found in legacy', null);
@@ -432,7 +433,8 @@ class UtilController extends Controller
             ]);
 
             $result = $res->getBody()->getContents();
-            return $apiResponse->sendResponse(200, 'Guidance request placed', json_decode($result, true));
+*/
+            return $apiResponse->sendResponse(200, 'Guidance request placed', null);
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
