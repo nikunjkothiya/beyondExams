@@ -64,6 +64,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_user_views_opp', ['uses' => 'ApiOpportunityController@get_user_views_opp']);
     Route::post('save_user_views_opp', ['uses' => 'ApiOpportunityController@save_user_views_opp']);
 
+    Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
+
     // Resource Locking
     Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
     // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
@@ -101,7 +103,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
     Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
     Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
-    
+
     // Chat Categories
     Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
     Route::post('add_category', ['uses' => 'ChatController@add_category']);
