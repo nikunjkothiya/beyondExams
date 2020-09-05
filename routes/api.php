@@ -83,6 +83,11 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
     Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
 
+    // Social
+    Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
+    Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
+    Route::post('start_following', ['uses' => 'SocialController@start_following']);
+
     // Chats Integration
     Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
     Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
@@ -101,8 +106,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
     Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
     Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
-    Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
-    Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
     // Chat Categories
     Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
@@ -119,10 +122,21 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
 
+
+Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
+Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
+
 // Learnage Broadcasting
+Route::get('get_broadcast_sessions', ['uses' => 'LearnageBroadcastingController@get_broadcast_sessions']);
+Route::get('get_scheduled_sessions', ['uses' => 'LearnageBroadcastingController@get_scheduled_sessions']);
+Route::post('add_session', ['uses' => 'LearnageBroadcastingController@add_session']);
+Route::post('update_session', ['uses' => 'LearnageBroadcastingController@update_session']);
+Route::post('verify_user', ['uses' => 'LearnageBroadcastingController@verify_user']);
+
 Route::get('get_live_mentors', ['uses' => 'LearnageBroadcastingController@get_live_mentors']);
 Route::post('add_live_mentor', ['uses' => 'LearnageBroadcastingController@add_live_mentor']);
 Route::post('update_live_mentor', ['uses' => 'LearnageBroadcastingController@update_live_mentor']);
+
 
 // Resource Locking
 Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
@@ -139,6 +153,7 @@ Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 Route::post('save_playlist', ['uses' => 'AWSApiController@save_playlist']);
 Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
 Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
+Route::post('upload_single_image', ['uses' => 'AWSApiController@upload_single_image']);
 
 
 // Opportuinity Navigation

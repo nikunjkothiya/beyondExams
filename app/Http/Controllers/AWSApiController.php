@@ -29,7 +29,7 @@ class AWSApiController extends Controller
 {
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
-    private $base_url = 'https://precisely-test1.s3.ap-south-1.amazonaws.com/';
+    private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
     private $resourceLockController;
@@ -39,6 +39,30 @@ class AWSApiController extends Controller
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
         $this->resourceLockController = $resourceLockController;
+    }
+
+    public function upload_single_image(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'file' => 'required|image',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+	        $aws_root = "public/";
+            $file = $request->file('file');
+            $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
+            $name = time() . uniqid() . $ext;
+            $contents = file_get_contents($file);
+            $filePath = "thumbnails/" . $name;
+            Storage::disk('s3')->put($aws_root . $filePath, $contents);
+
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
+        }
     }
 
     public function save_thumbnail(Request $request)
@@ -54,6 +78,8 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
+	    $aws_root = "public/";
+
             $resource = Resource::find($request->resource_id);
             if ($resource) {
                 $file = $request->file('file');
@@ -68,7 +94,7 @@ class AWSApiController extends Controller
 
                 $filePath = "thumbnails/" . $name;
 
-                Storage::disk('s3')->put($filePath, $contents);
+                Storage::disk('s3')->put($aws_root . $filePath, $contents);
 
                 $resource->thumbnail_url = $filePath;
                 $resource->save();
@@ -107,7 +133,7 @@ class AWSApiController extends Controller
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
         } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -151,7 +177,7 @@ class AWSApiController extends Controller
                 }
             }
 
-            foreach ($all_files as $file) {
+/*            foreach ($all_files as $file) {
 		foreach ($file["notes"] as $note) {
 		    $note["url"] = $this->base_url . $note["url"];
 		}
@@ -163,6 +189,7 @@ class AWSApiController extends Controller
                 if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
+*/
             $resp['flag'] = $flag;
 
 
@@ -242,13 +269,14 @@ class AWSApiController extends Controller
                     $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
                 }
             }
-
+/*
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
                     $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
                 if ($file["file_type_id"] == 3)
                     $file["file_url"] = $this->base_url . $file["file_url"];
             }
+*/
             $resp['flag'] = $flag;
 
 
@@ -332,6 +360,8 @@ class AWSApiController extends Controller
                 'currency_id' => 'integer|min:1|max:' . Currency::count()
             ]);
 
+	    $aws_root = "public/";
+
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
@@ -375,7 +405,12 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
+		if ($duration == 0 && $word > 3)
+		    $duration = 1;
                 // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
+
+		if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
@@ -386,6 +421,9 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
+
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
@@ -399,7 +437,7 @@ class AWSApiController extends Controller
                 // 'public/', $file, $filePath
                 // );
                 // Storage::disk('s3')->put($filePath, $contents);
-                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/' . $this->file_types[$request->type] . $name));
+                Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/' . $this->file_types[$request->type] . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
                     'ffmpeg.binaries' => '/usr/bin/ffmpeg',
@@ -412,11 +450,14 @@ class AWSApiController extends Controller
                     ->first()
                     ->get('duration');
 
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+
                 $new_resource->duration = $duration;
                 $new_resource->save();
 		Storage::delete("public/" . $this->file_types[$request->type] . $name);
             } else if ($request->type == 6) {
-                Storage::disk('s3')->put($filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
+                Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
                 $new_resource->save();
             } else {
@@ -459,7 +500,7 @@ class AWSApiController extends Controller
 
                     $filePath = "notes/" . $name;
 
-                    Storage::disk('s3')->put($filePath, $contents);
+                    Storage::disk('s3')->put($aws_root . $filePath, $contents);
 
                     $note = new Note();
                     $note->url = $filePath;
@@ -484,7 +525,7 @@ class AWSApiController extends Controller
 
                     $filePath = "notes/" . $name;
 
-                    Storage::disk('s3')->put($filePath, $contents);
+                    Storage::disk('s3')->put($aws_root . $filePath, $contents);
 
                     $note = new Note();
                     $note->url = $filePath;
@@ -522,7 +563,7 @@ class AWSApiController extends Controller
                 $resourceKey->save();
             }
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->find($new_resource->id));
         } catch (\Exception $e) {
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -556,7 +597,7 @@ class AWSApiController extends Controller
             $playlist = Playlist::where('resource_id', $request->origin)->first();
             return $this->apiResponse->sendResponse(200, 'Success', $playlist->structure);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }

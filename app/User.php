@@ -42,8 +42,8 @@ class User extends Authenticatable
         return $this->hasOne('App\UserRole');
     }
 
-    public function live_sessions(){
-        return $this->hasMany('App\UserLive');
+    public function session(){
+        return $this->hasMany('App\Session');
     }
 
     public function chats(){
@@ -86,6 +86,14 @@ class User extends Authenticatable
 
     public function social_accounts(){
         return $this->hasMany('App\UserSocial');
+    }
+
+    public function followers(){
+        return $this->hasMany('App\UserFollower', 'user_id');
+    }
+
+    public function influencers(){
+        return $this->hasMany('App\UserFollower', 'influencer_id');
     }
 
     public function opportunities(){

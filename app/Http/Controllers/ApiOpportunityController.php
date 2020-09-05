@@ -84,7 +84,7 @@ class ApiOpportunityController extends Controller
 
             return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTrace());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
 
@@ -113,7 +113,7 @@ class ApiOpportunityController extends Controller
 
             return $this->apiResponse->sendResponse(401, 'User unauthenticated', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTrace());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getTraceAsString());
         }
     }
 
@@ -296,7 +296,7 @@ class ApiOpportunityController extends Controller
 
             return $this->apiResponse->sendResponse(404, 'There is no user saved opportunity', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal server error 3.', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }

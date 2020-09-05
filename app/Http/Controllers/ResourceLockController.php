@@ -54,7 +54,7 @@ class ResourceLockController extends Controller
             $newKey['currency'] = $cur->name;
             return $this->apiResponse->sendResponse(200, 'Key Added Succesfully', $newKey);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 

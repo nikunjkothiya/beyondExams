@@ -30,7 +30,7 @@ class ApiResponse extends Controller
     	}
     	else{
 			Log::error($message);
-			Log::error($data);
+			Log::error(json_encode($data));
     		return response([
     			'status' => 'error',
     			'status_code' => $code,

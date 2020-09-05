@@ -53,7 +53,7 @@ class ApiAuthController extends Controller
                 ->get(['id']);
             return $token;
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 6', $e);
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -438,7 +438,7 @@ switch ($request->user_role) {
             $validator = Validator::make($request->all(), [
                 'unique_id' => 'required',
                 'refresh_token' => 'required',
-                // 'user_role' => 'required'
+                'user_role' => 'integer'
             ]);
 
             if ($validator->fails()) {
@@ -518,7 +518,7 @@ switch ($request->user_role) {
             $response = $this->proxyRefresh($refreshToken, $request->get('unique_id'), $flag);
             return $response;
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 7', $e);
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -545,7 +545,7 @@ switch ($request->user_role) {
             $response_data["message"] = "Logout Error";
             return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 4', $e);
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -583,7 +583,7 @@ switch ($request->user_role) {
             }
             return 0;
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error 5', $e);
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
         }
     }
 }
