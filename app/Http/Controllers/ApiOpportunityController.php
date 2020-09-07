@@ -126,7 +126,7 @@ class ApiOpportunityController extends Controller
                 $query->where('locale', 'en');
             }, 'tags' => function ($query){
                 $query->select('id', 'tag');
-            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereNotIn('tags.id', $user->tags);
             });
 
@@ -135,7 +135,7 @@ class ApiOpportunityController extends Controller
                 $query->where('locale', 'en');
             },'tags' => function ($query){
                 $query->select('id', 'tag');
-            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereIn('tags.id', $user->tags);
             })->union($gopportunities)->paginate(10);
 
