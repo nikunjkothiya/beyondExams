@@ -51,7 +51,7 @@ class AWSApiController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-	        $aws_root = "public/";
+            $aws_root = "public/";
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
             $name = time() . uniqid() . $ext;
@@ -59,7 +59,7 @@ class AWSApiController extends Controller
             $filePath = "thumbnails/" . $name;
             Storage::disk('s3')->put($aws_root . $filePath, $contents);
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $aws_root . $filePath);
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
         }
@@ -78,31 +78,23 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-	    $aws_root = "public/";
+            $aws_root = "public/";
 
             $resource = Resource::find($request->resource_id);
             if ($resource) {
                 $file = $request->file('file');
-
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
-
-
                 $name = time() . uniqid() . $ext;
-
-
                 $contents = file_get_contents($file);
-
                 $filePath = "thumbnails/" . $name;
-
                 Storage::disk('s3')->put($aws_root . $filePath, $contents);
-
                 $resource->thumbnail_url = $filePath;
                 $resource->save();
             } else {
                 return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
             }
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', $filePath);
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
         }
@@ -131,7 +123,6 @@ class AWSApiController extends Controller
                 $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -177,7 +168,7 @@ class AWSApiController extends Controller
                 }
             }
 
-/*            foreach ($all_files as $file) {
+            /*            foreach ($all_files as $file) {
 		foreach ($file["notes"] as $note) {
 		    $note["url"] = $this->base_url . $note["url"];
 		}
@@ -223,7 +214,6 @@ class AWSApiController extends Controller
 
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -242,7 +232,7 @@ class AWSApiController extends Controller
         }
 
         try {
-	    $per_page = 10;
+            $per_page = 10;
             $flag = 2;
             $user_resources = UserResource::where('user_id', $request->user_id)->get();
             if (count($user_resources) === 0) {
@@ -269,7 +259,7 @@ class AWSApiController extends Controller
                     $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
                 }
             }
-/*
+            /*
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
                     $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
@@ -310,7 +300,6 @@ class AWSApiController extends Controller
 
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -360,7 +349,7 @@ class AWSApiController extends Controller
                 'currency_id' => 'integer|min:1|max:' . Currency::count()
             ]);
 
-	    $aws_root = "public/";
+            $aws_root = "public/";
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
@@ -405,16 +394,15 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
-		if ($duration == 0 && $word > 3)
-		    $duration = 1;
+                if ($duration == 0 && $word > 3)
+                    $duration = 1;
                 // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-		if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-
             } else if ($request->type == 2) {
                 // ARTICLES
                 $word = str_word_count(strip_tags($contents));
@@ -423,20 +411,21 @@ class AWSApiController extends Controller
                 $duration = $s + $m * 60;
 
                 if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-
             } else if ($request->type == 3 || $request->type == 5) {
                 // VIDEO
                 // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name);
+                
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
                 // 'public/', $file, $filePath
                 // );
                 // Storage::disk('s3')->put($filePath, $contents);
+
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/' . $this->file_types[$request->type] . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
@@ -444,18 +433,23 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
+                $ffmpeg = FFMpeg\FFMpeg::create(array(
+                    'ffmpeg.binaries' => '/usr/bin/ffmpeg',
+                    'ffprobe.binaries' => '/usr/bin/ffprobe'
+                ));
+
                 $duration = $ffprobe
-                    ->streams(storage_path('app/public/' . $filePath))
+                    ->streams(storage_path('app/public/converted/' . $filePath))
                     ->videos()
                     ->first()
                     ->get('duration');
 
                 if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-		Storage::delete("public/" . $this->file_types[$request->type] . $name);
+                Storage::delete("public/" . $this->file_types[$request->type] . $name);
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
@@ -510,7 +504,6 @@ class AWSApiController extends Controller
                     $new_resource->notes()->save($note);
 
                     $note->save();
-
                 }
             } else if ($request->notes_image) {
 
@@ -534,7 +527,6 @@ class AWSApiController extends Controller
                         $note->title = $request->notes_title;
                     $new_resource->notes()->save($note);
                     $note->save();
-
                 }
             }
 

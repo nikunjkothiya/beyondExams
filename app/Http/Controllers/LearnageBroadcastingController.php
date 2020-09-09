@@ -22,7 +22,7 @@ class LearnageBroadcastingController extends Controller
 
     public function get_live_mentors(){
         try {
-            $live_users = UserLive::where('live', 1)->get();
+            $live_users = UserLive::where('live', 1)->with('user:id,name,avatar')->get();
             if(count($live_users) == 0)
                 return $this->apiResponse->sendResponse(404, 'No user is broadcasting.', null);
 
@@ -84,7 +84,7 @@ class LearnageBroadcastingController extends Controller
             $unrestricted_sessions = Session::where('session_type', 1)->where('live', 1)->where('restricted', 0);
             $restricted_sessions = Session::where('session_type', 1)->where('live', 1)->where('restricted', 1)->whereHas('user', function ($q) use ($user_id) {
                 $q->where('user_id', $user_id);
-            })->union($unrestricted_sessions)->get();
+            })->union($unrestricted_sessions)->with('host:id,name,avatar')->get();
 
             return $this->apiResponse->sendResponse(200, 'Test', $restricted_sessions);
         } catch (Exception $e) {
@@ -104,7 +104,7 @@ class LearnageBroadcastingController extends Controller
             $upcoming_public_sessions = Session::where('session_type', 2)->where('live', 0)->where('live_time', '>', Carbon::now())->where('restricted', 0);
             $sessions = Session::where('session_type', 2)->where('live', 0)->where('live_time', '>', Carbon::now())->where('restricted', 1)->whereHas('user', function ($q) use ($user_id) {
                 $q->where('user_id', $user_id);
-            })->union($live_public_sessions)->union($live_private_sessions)->union($upcoming_public_sessions)->get();
+            })->union($live_public_sessions)->union($live_private_sessions)->union($upcoming_public_sessions)->with('host:id,name,avatar')->get();
 
             if (count($sessions) == 0)
                 return $this->apiResponse->sendResponse(404, 'No Scheduled session.', null);
@@ -214,13 +214,17 @@ class LearnageBroadcastingController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'email' => 'required'
+                'email' => 'email',
+                'id' => 'integer',
             ]);
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-            }
 
-            $user = User::where('email', $request->email)->first();
+            if(isset($request->email)){
+                $user = User::where('email', $request->email)->first();
+            } elseif (isset($request->id)){
+                $user = User::where('id', $request->id)->first();
+            } else {
+                return $this->apiResponse->sendResponse(400, 'Need a id of email to find user', null);
+            }
 
             if (is_null($user))
                 return $this->apiResponse->sendResponse(404, 'User not found', null);

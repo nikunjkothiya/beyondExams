@@ -12,7 +12,7 @@ class Session extends Model
         return $this->belongsToMany('App\User');
     }
     public function host(){
-        return $this->hasOne('App\User', 'host_id');
+        return $this->hasOne('App\User', 'id', 'host_id');
     }
     public function type(){
         return $this->hasOne('App\SessionType', 'session_type');
