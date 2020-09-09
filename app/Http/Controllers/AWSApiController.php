@@ -119,17 +119,17 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $file = Resource::with(['user:id,name,avatar', 'notes', 'tests'])->where('slug', $request->slug)->get();
+            $file = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('slug', $request->slug)->get();
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
-            if (!is_null($file[0]["thumbnail_url"]))
+/*            if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
             if ($file[0]["file_type_id"] == 3)
                 $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
-
+*/
             return $this->apiResponse->sendResponse(200, 'Success', $file);
 
         } catch (\Exception $e) {
