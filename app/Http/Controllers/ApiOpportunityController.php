@@ -121,7 +121,7 @@ class ApiOpportunityController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             $gopportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
             }, 'tags' => function ($query){
@@ -289,7 +289,7 @@ class ApiOpportunityController extends Controller
     public function get_user_views_opp()
     {
         try {
-            
+
             $opportunities = UserViewedOpportunity::where('user_id', Auth::user()->id)->get();
             if(count($opportunities) > 0)
                 return $this->apiResponse->sendResponse(200, 'Success', $opportunities);

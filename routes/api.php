@@ -182,3 +182,4 @@ Route::get('analytics', ['uses' => 'OrganisationController@analytics']);
 // Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
 
 Route::get('get_opportunity_stack', ['uses' => 'ApiOpportunityController@get_opportunity_stack']);
+Route::get('get_resource_stack', ['uses' => 'AWSApiController@get_resource_stack']);
