@@ -59,7 +59,7 @@ class AWSApiController extends Controller
             $filePath = "thumbnails/" . $name;
             Storage::disk('s3')->put($aws_root . $filePath, $contents);
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $aws_root . $filePath);
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
         }
@@ -83,26 +83,18 @@ class AWSApiController extends Controller
             $resource = Resource::find($request->resource_id);
             if ($resource) {
                 $file = $request->file('file');
-
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
-
-
                 $name = time() . uniqid() . $ext;
-
-
                 $contents = file_get_contents($file);
-
                 $filePath = "thumbnails/" . $name;
-
                 Storage::disk('s3')->put($aws_root . $filePath, $contents);
-
                 $resource->thumbnail_url = $filePath;
                 $resource->save();
             } else {
                 return $this->apiResponse->sendResponse(400, 'Resource does not exist', null);
             }
 
-            return $this->apiResponse->sendResponse(200, 'Success', $this->base_url . $filePath);
+            return $this->apiResponse->sendResponse(200, 'Success', $filePath);
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e);
         }
@@ -131,7 +123,6 @@ class AWSApiController extends Controller
                 $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
 
             return $this->apiResponse->sendResponse(200, 'Success', $file);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -223,7 +214,6 @@ class AWSApiController extends Controller
 
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -260,7 +250,6 @@ class AWSApiController extends Controller
 
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -307,12 +296,12 @@ class AWSApiController extends Controller
                 }
             }
             /*
-                        foreach ($all_files as $file) {
-                            if (!is_null($file["thumbnail_url"]))
-                                $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                            if ($file["file_type_id"] == 3)
-                                $file["file_url"] = $this->base_url . $file["file_url"];
-                        }
+            foreach ($all_files as $file) {
+                if (!is_null($file["thumbnail_url"]))
+                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+                if ($file["file_type_id"] == 3)
+                    $file["file_url"] = $this->base_url . $file["file_url"];
+            }
             */
             $resp['flag'] = $flag;
 
@@ -347,7 +336,6 @@ class AWSApiController extends Controller
 
             $resp['data'] = $all_files;
             return $this->apiResponse->sendResponse(200, 'Success', $resp);
-
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -451,7 +439,6 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-
             } else if ($request->type == 2) {
                 // ARTICLES
                 $word = str_word_count(strip_tags($contents));
@@ -464,16 +451,17 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-
             } else if ($request->type == 3 || $request->type == 5) {
                 // VIDEO
                 // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name);
+
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
                 // 'public/', $file, $filePath
                 // );
                 // Storage::disk('s3')->put($filePath, $contents);
+
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/' . $this->file_types[$request->type] . $name));
 
                 $ffprobe = FFMpeg\FFProbe::create(array(
@@ -481,8 +469,13 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
+                $ffmpeg = FFMpeg\FFMpeg::create(array(
+                    'ffmpeg.binaries' => '/usr/bin/ffmpeg',
+                    'ffprobe.binaries' => '/usr/bin/ffprobe'
+                ));
+
                 $duration = $ffprobe
-                    ->streams(storage_path('app/public/' . $filePath))
+                    ->streams(storage_path('app/public/converted/' . $filePath))
                     ->videos()
                     ->first()
                     ->get('duration');
@@ -547,7 +540,6 @@ class AWSApiController extends Controller
                     $new_resource->notes()->save($note);
 
                     $note->save();
-
                 }
             } else if ($request->notes_image) {
 
@@ -571,7 +563,6 @@ class AWSApiController extends Controller
                         $note->title = $request->notes_title;
                     $new_resource->notes()->save($note);
                     $note->save();
-
                 }
             }
 

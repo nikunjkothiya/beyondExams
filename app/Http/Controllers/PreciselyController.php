@@ -25,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\ApiResponse;
+use Illuminate\Support\Facades\Storage;
 use Auth;
 
 /**
@@ -33,6 +34,7 @@ use Auth;
 class PreciselyController extends Controller
 {
     protected $txnflag;
+    private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
 
     public function __construct(ApiResponse $apiResponse)
     {
@@ -78,13 +80,25 @@ class PreciselyController extends Controller
                     'designation' => 'string|max:255',
                     'organisation' => 'string|max:255',
                     'profile_link' => 'string|max:1024',
+                    'avatar' => 'image',
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                //$user_id = $request->user_id;
+                // Save avatar if its given
+                if(isset($request->avatar)){
+                    $aws_root = "public/";
+                    $file = $request->file('avatar');
+                    $ext = "." . pathinfo($_FILES["avatar"]["name"])['extension'];
+                    $name = time() . uniqid() . $ext;
+                    $contents = file_get_contents($file);
+                    $filePath = "avatars/" . $name;
+                    Storage::disk('s3')->put($aws_root . $filePath, $contents);
+                    $user->avatar = $this->base_url . $aws_root . $filePath;
+                    $user->save();
+                }
 
                 $check = MentorDetail::where('user_id', $user_id)->first();
 
@@ -100,6 +114,7 @@ class PreciselyController extends Controller
                     $record->organisation = $request->organisation;
                     $record->profile_link = $request->profile_link;
                     $record->save();
+                    // Send Flags
                     if ($record) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
@@ -311,7 +326,7 @@ class PreciselyController extends Controller
                 $data['avatar'] = $ava->avatar;
                 break;
             }
-            //                $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+            // $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
         } else {
