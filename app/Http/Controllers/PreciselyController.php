@@ -667,6 +667,9 @@ class PreciselyController extends Controller
 
             $action = Action::where('event', $request->event)->first();
 
+            if(is_null($user) || is_null($action))
+                return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
+
             if (array_key_exists("opp_id", $request->properties)) {
                 $opportunity = Opportunity::find($request->properties["opp_id"]);
             } else {
