@@ -51,7 +51,7 @@ class AWSApiController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-	        $aws_root = "public/";
+            $aws_root = "public/";
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
             $name = time() . uniqid() . $ext;
@@ -78,7 +78,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-	    $aws_root = "public/";
+            $aws_root = "public/";
 
             $resource = Resource::find($request->resource_id);
             if ($resource) {
@@ -177,19 +177,19 @@ class AWSApiController extends Controller
                 }
             }
 
-/*            foreach ($all_files as $file) {
-		foreach ($file["notes"] as $note) {
-		    $note["url"] = $this->base_url . $note["url"];
-		}
-		foreach ($file["tests"] as $test) {
-		    $test["url"] = $this->base_url . $test["url"];
-		}
-                if (!is_null($file["thumbnail_url"]))
-                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
-                    $file["file_url"] = $this->base_url . $file["file_url"];
-            }
-*/
+            /*            foreach ($all_files as $file) {
+                    foreach ($file["notes"] as $note) {
+                        $note["url"] = $this->base_url . $note["url"];
+                    }
+                    foreach ($file["tests"] as $test) {
+                        $test["url"] = $this->base_url . $test["url"];
+                    }
+                            if (!is_null($file["thumbnail_url"]))
+                                $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+                            if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
+                                $file["file_url"] = $this->base_url . $file["file_url"];
+                        }
+            */
             $resp['flag'] = $flag;
 
 
@@ -229,6 +229,43 @@ class AWSApiController extends Controller
         }
     }
 
+    public function get_resource_stack(Request $request)
+    {
+        try {
+            $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])
+                ->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)
+                ->orderBy('id', 'DESC')->take(9)->get();
+
+
+            foreach ($all_files as $file) {
+                $file['unlocked'] = false;
+                $keys = ResourceKey::where('resource_id', $file->id)->get();
+                if (count($keys) === 0) {
+                    $file['unlocked'] = true;
+                } else {
+                    foreach ($keys as $key) {
+                        unset($key['id']);
+                        unset($key['resource_id']);
+                        $k = Key::where('id', $key->key_id)->first();
+                        $kp = KeyPrice::where('key_id', $key->key_id)->first();
+                        $cur = Currency::where('id', $kp->currency_id)->first();
+
+                        $key['name'] = $k->name;
+                        $key['price'] = $kp->price;
+                        $key['currency'] = $cur->name;
+                    }
+                }
+                $file['keys'] = $keys;
+            }
+
+            $resp['data'] = $all_files;
+            return $this->apiResponse->sendResponse(200, 'Success', $resp);
+
+        } catch (\Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function list_paginated_s3_files(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -242,7 +279,7 @@ class AWSApiController extends Controller
         }
 
         try {
-	    $per_page = 10;
+            $per_page = 10;
             $flag = 2;
             $user_resources = UserResource::where('user_id', $request->user_id)->get();
             if (count($user_resources) === 0) {
@@ -269,14 +306,14 @@ class AWSApiController extends Controller
                     $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
                 }
             }
-/*
-            foreach ($all_files as $file) {
-                if (!is_null($file["thumbnail_url"]))
-                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                if ($file["file_type_id"] == 3)
-                    $file["file_url"] = $this->base_url . $file["file_url"];
-            }
-*/
+            /*
+                        foreach ($all_files as $file) {
+                            if (!is_null($file["thumbnail_url"]))
+                                $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+                            if ($file["file_type_id"] == 3)
+                                $file["file_url"] = $this->base_url . $file["file_url"];
+                        }
+            */
             $resp['flag'] = $flag;
 
 
@@ -360,7 +397,7 @@ class AWSApiController extends Controller
                 'currency_id' => 'integer|min:1|max:' . Currency::count()
             ]);
 
-	    $aws_root = "public/";
+            $aws_root = "public/";
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
@@ -405,12 +442,12 @@ class AWSApiController extends Controller
                 $m = floor($word / 200);
                 $s = floor($word % 200 / (200 / 60));
                 $duration = $s + $m * 60;
-		if ($duration == 0 && $word > 3)
-		    $duration = 1;
+                if ($duration == 0 && $word > 3)
+                    $duration = 1;
                 // $duration = $m . ' minute' . ($m == 1 ? '' : 's') . ', ' . $s . ' second' . ($s == 1 ? '' : 's');
 
-		if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                if (is_null($duration) || $duration == 0)
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
@@ -423,7 +460,7 @@ class AWSApiController extends Controller
                 $duration = $s + $m * 60;
 
                 if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
@@ -451,11 +488,11 @@ class AWSApiController extends Controller
                     ->get('duration');
 
                 if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null); 
+                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-		Storage::delete("public/" . $this->file_types[$request->type] . $name);
+                Storage::delete("public/" . $this->file_types[$request->type] . $name);
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
