@@ -20,63 +20,6 @@ class LearnageBroadcastingController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
-    public function get_live_mentors(){
-        try {
-            $live_users = UserLive::where('live', 1)->get();
-            if(count($live_users) == 0)
-                return $this->apiResponse->sendResponse(404, 'No user is broadcasting.', null);
-
-            return $this->apiResponse->sendResponse(200, 'Success', $live_users);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }
-    }
-    public function add_live_mentor(Request $request){
-        try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string',
-                'peer_id' => 'required'
-            ]);
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-            }
-            $live_user = new UserLive();
-            // $live_user->user_id = Auth::user()->id;
-            $live_user->user_id = $request->user_id;
-            $live_user->name = $request->name;
-            $live_user->peer_id = $request->peer_id;
-            $live_user->save();
-            return $this->apiResponse->sendResponse(200, 'User is now broadcasting live.', $live_user);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }
-    }
-
-    public function update_live_mentor(Request $request){
-        try {
-            $validator = Validator::make($request->all(), [
-                'id' => 'required'
-            ]);
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-            }
-            $live_user = UserLive::where('id', $request->id)->first();
-            if(is_null($live_user))
-                return $this->apiResponse->sendResponse(404, 'No broadcasting session found with given id.', null);
-            if(isset($request->peer_id))
-                $live_user->peer_id = $request->peer_id;
-            if(isset($request->name))
-                $live_user->name = $request->name;
-            if(isset($request->live))
-                $live_user->live = $request->live;
-            $live_user->save();
-            return $this->apiResponse->sendResponse(200, 'Broadcasting details updated.', $live_user);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTrace());
-        }
-    }
-
-
     public function get_broadcast_sessions(Request $request)
     {
         try {
@@ -84,7 +27,7 @@ class LearnageBroadcastingController extends Controller
             $unrestricted_sessions = Session::where('session_type', 1)->where('live', 1)->where('restricted', 0);
             $restricted_sessions = Session::where('session_type', 1)->where('live', 1)->where('restricted', 1)->whereHas('user', function ($q) use ($user_id) {
                 $q->where('user_id', $user_id);
-            })->union($unrestricted_sessions)->get();
+            })->union($unrestricted_sessions)->with('host:id,name,avatar')->get();
 
             return $this->apiResponse->sendResponse(200, 'Test', $restricted_sessions);
         } catch (Exception $e) {
@@ -104,10 +47,10 @@ class LearnageBroadcastingController extends Controller
             $upcoming_public_sessions = Session::where('session_type', 2)->where('live', 0)->where('live_time', '>', Carbon::now())->where('restricted', 0);
             $sessions = Session::where('session_type', 2)->where('live', 0)->where('live_time', '>', Carbon::now())->where('restricted', 1)->whereHas('user', function ($q) use ($user_id) {
                 $q->where('user_id', $user_id);
-            })->union($live_public_sessions)->union($live_private_sessions)->union($upcoming_public_sessions)->get();
+            })->union($live_public_sessions)->union($live_private_sessions)->union($upcoming_public_sessions)->with('host:id,name,avatar')->get();
 
             if (count($sessions) == 0)
-                return $this->apiResponse->sendResponse(404, 'No Scheduled session.', null);
+                return $this->apiResponse->sendResponse(200, 'No Scheduled session.', []);
 
             return $this->apiResponse->sendResponse(200, 'Success', $sessions);
         } catch (Exception $e) {
@@ -214,13 +157,17 @@ class LearnageBroadcastingController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'email' => 'required'
+                'email' => 'email',
+                'id' => 'integer',
             ]);
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-            }
 
-            $user = User::where('email', $request->email)->first();
+            if(isset($request->email)){
+                $user = User::where('email', $request->email)->first();
+            } elseif (isset($request->id)){
+                $user = User::where('id', $request->id)->first();
+            } else {
+                return $this->apiResponse->sendResponse(400, 'Need a id of email to find user', null);
+            }
 
             if (is_null($user))
                 return $this->apiResponse->sendResponse(404, 'User not found', null);
