@@ -107,6 +107,10 @@ class PreciselyController extends Controller
                     $record->user_id = $user_id;
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
+                    // Set user name and email
+                    $user->name = $request->firstname . ' ' . $request->lastname;
+                    $user->email = $request->email;
+
                     $record->email = $request->email;
                     if (isset($request->phone))
                         $record->phone = $request->phone;
@@ -114,10 +118,17 @@ class PreciselyController extends Controller
                     $record->organisation = $request->organisation;
                     $record->profile_link = $request->profile_link;
                     $record->save();
+                    $user->save();
                     // Send Flags
                     if ($record) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
+                        if(isset($request->refer_code)){
+                            if($request->refer_code == 'PRECISELY-TUTOR-PASS'){
+                                $verified->is_verified = 1;
+                                $verified->save();
+                            }
+                        }
                         if ($verified->is_verified == 0) {
                             // Mentor Details filled but not verified
                             $flag = 2;
@@ -125,7 +136,7 @@ class PreciselyController extends Controller
                             // Mentor Verified
                             $flag = 0;
                         } elseif ($verified->is_verified == 2) {
-                            // Mentor Verified
+                            // Mentor Rejected
                             $flag = 3;
                         }
                         $record['new'] = $flag;
@@ -138,15 +149,27 @@ class PreciselyController extends Controller
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
                     $check->email = $request->email;
+
+                    // Set user name and email
+                    $user->name = $request->firstname . ' ' . $request->lastname;
+                    $user->email = $request->email;
+
                     if (isset($request->phone))
                         $check->phone = $request->phone;
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
                     $check->profile_link = $request->profile_link;
                     $check->save();
+                    $user->save();
                     if ($check) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
+                        if(isset($request->refer_code)){
+                            if($request->refer_code == 'PRECISELY-TUTOR-PASS'){
+                                $verified->is_verified = 1;
+                                $verified->save();
+                            }
+                        }
                         if ($verified->is_verified == 0) {
                             // Mentor Details filled but not verified
                             $flag = 2;
