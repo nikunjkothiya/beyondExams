@@ -129,6 +129,7 @@ Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message
 // Learnage Broadcasting
 Route::get('get_broadcast_sessions', ['uses' => 'LearnageBroadcastingController@get_broadcast_sessions']);
 Route::get('get_scheduled_sessions', ['uses' => 'LearnageBroadcastingController@get_scheduled_sessions']);
+Route::get('get_session_by_peer', ['uses' => 'LearnageBroadcastingController@get_session_by_peer']);
 Route::post('add_session', ['uses' => 'LearnageBroadcastingController@add_session']);
 Route::post('update_session', ['uses' => 'LearnageBroadcastingController@update_session']);
 Route::post('verify_user', ['uses' => 'LearnageBroadcastingController@verify_user']);
