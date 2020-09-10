@@ -58,6 +58,33 @@ class LearnageBroadcastingController extends Controller
         }
     }
 
+    public function get_session_by_peer(Request $request)
+    {
+        try {
+            if(!isset($request->peer_id)){
+                return $this->apiResponse->sendResponse(400, 'Need a Peer/Room id to find session', null);
+            }
+
+            $user_id = $request->user_id;
+            $session = Session::where('peer_id', $request->peer_id)->with('host:id,name,avatar')->first();
+
+            if(is_null($session)){
+                return $this->apiResponse->sendResponse(404, 'Session does not exist', null);
+            }
+
+            if($session->restricted == 1){
+                $access = SessionUser::where('session_id', $session->id)->where('user_id', $user_id)->first();
+                if(is_null($access)){
+                    return $this->apiResponse->sendResponse(402, 'You do not have access to view this session', []);
+                }
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Success', $session);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function add_session(Request $request)
     {
         try {
