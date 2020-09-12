@@ -136,6 +136,12 @@ class LearnageBroadcastingController extends Controller
             $session->save();
 
             if ($session->restricted == 1) {
+                // Add host for access
+                $session_user = new SessionUser();
+                $session_user->session_id = $session->id;
+                $session_user->user_id = $request->host_id;
+                $session_user->save();
+                // Add other user for access
                 foreach ($request->users as $user) {
                     $session_user = new SessionUser();
                     $session_user->session_id = $session->id;
