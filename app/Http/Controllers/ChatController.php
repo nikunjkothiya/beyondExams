@@ -694,7 +694,7 @@ class ChatController extends Controller
 
         $messages = ChatMessage::with(['sender' => function ($query) {
             $query->select('id', 'name', 'avatar');
-        }])->where('chat_id', ChatHash::where('hashcode', 'fc25443d61d8be7d')->value('chat_id'))->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+        }])->where('chat_id', ChatHash::where('hashcode', $request->hashcode)->value('chat_id'))->orderByDesc('created_at')->paginate($this->num_entries_per_page);
 
         return $this->apiResponse->sendResponse(200, 'Success', $messages);
     }
@@ -717,7 +717,7 @@ class ChatController extends Controller
             }
 
             if ($request->role_id == $this->admin_role_id) {
-                $sender_id = Auth::user()->id;
+                $sender_id = 1;
                 $firebase_ids = $chat->hash_users()->pluck('firebaseId');
 
                 $config_firebase = array(
