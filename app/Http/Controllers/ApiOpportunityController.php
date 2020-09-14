@@ -117,6 +117,50 @@ class ApiOpportunityController extends Controller
         }
     }
 
+    public function get_new_opportunities()
+    {
+        try {
+            $user = Auth::user();
+
+            $gopportunities = Opportunity::with(['new_location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            }, 'tags' => function ($query){
+                $query->select('id', 'tag');
+            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+                $query->whereNotIn('tags.id', $user->tags);
+            });
+
+            // return $user->tags;
+            $opportunities = Opportunity::with(['new_location', 'fund_type', 'opportunity_translations' => function ($query) {
+                $query->where('locale', 'en');
+            },'tags' => function ($query){
+                $query->select('id', 'tag');
+            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+                $query->whereIn('tags.id', $user->tags);
+            })->union($gopportunities)->paginate(10);
+
+            if (count($user->saved_opportunities) > 0) {
+                $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
+                foreach ($opportunities as $opportunity) {
+                    if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
+                        $opportunity['saved'] = 1;
+                    else
+                        $opportunity['saved'] = 0;
+                }
+            } else {
+                foreach ($opportunities as $opportunity) {
+                    $opportunity['saved'] = 0;
+                }
+            }
+
+            return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);
+        } catch (Exception $e) {
+            // return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", null);
+            // abort(404);
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+        }
+    }
+
     public function get_opportunities()
     {
         try {
