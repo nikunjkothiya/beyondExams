@@ -54,6 +54,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     // Opportuinities APi
     Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
+    Route::get('new_opportunities', ['uses' => 'ApiOpportunityController@get_new_opportunities']);
     Route::post('unsave_opportunity', ['uses' => 'PreciselyController@unsave_opportunity']);
     Route::post('save_opportunity', ['uses' => 'PreciselyController@save_opportunity']);
     Route::get('show_saved_opportunity', ['uses' => 'PreciselyController@show_saved_opportunity']);
