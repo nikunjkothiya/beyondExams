@@ -13,6 +13,18 @@ class Opportunity extends Model implements TranslatableContract
     public $translatedAttributes = ['title', 'description'];
     protected $fillable = ['image','link','deadline','fund_type_id','opportunity_location_id','slug'];
 
+    public function keywords(){
+        return $this->belongsToMany('App\Keyword');
+    }
+
+    public function new_location(){
+    	return $this->belongsToMany('App\Country', 'opportunity_location', 'opportunity_id', 'country_id');
+    }
+
+    public function new_eligible_regions(){
+    	return $this->belongsToMany('App\Country', 'opportunity_eligibility', 'opportunity_id', 'country_id');
+    }
+
     public function organisation(){
         return $this->belongsTo('App\Organisation', '', '');
     }
@@ -58,8 +70,9 @@ class Opportunity extends Model implements TranslatableContract
     }
 
     public function relevance(){
-        return $this->hasOne('App\OpportunityRelevance')->withDefault(function () {
-            return new OpportunityRelevance();
-        });
+        // return $this->hasOne('App\OpportunityRelevance')->withDefault(function () {
+        //     return new OpportunityRelevance();
+        // });
+        return $this->hasOne('App\OpportunityRelevance');
     }
 }
