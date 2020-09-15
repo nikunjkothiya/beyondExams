@@ -80,7 +80,6 @@ class PreciselyController extends Controller
                     'organisation' => 'string|max:255',
                     'profile_link' => 'string|max:1024',
                     'avatar' => 'image',
-                    'slug' => 'string',
                 ]);
 
                 if ($validator->fails()) {
@@ -112,8 +111,10 @@ class PreciselyController extends Controller
                     $user->email = $request->email;
 
                     $record->email = $request->email;
-                    if (isset($request->slug))
-                        $record->slug = $request->slug;
+        
+                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+
+                    $record->slug = $slug;
                     $record->designation = $request->designation;
                     $record->organisation = $request->organisation;
                     $record->profile_link = $request->profile_link;
@@ -154,8 +155,9 @@ class PreciselyController extends Controller
                     $user->name = $request->firstname . ' ' . $request->lastname;
                     $user->email = $request->email;
 
-                    if (isset($request->slug))
-                        $check->slug = $request->slug;
+                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);         
+                    $check->slug = $slug;
+
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
                     $check->profile_link = $request->profile_link;
@@ -211,7 +213,6 @@ class PreciselyController extends Controller
                     'email' => 'required|email',
                     'phone' => 'string',
                     'profile_link' => 'string',
-                    'slug' => 'string',
                 ]);
                 //  dd($validator);
 
@@ -232,8 +233,10 @@ class PreciselyController extends Controller
                         $record->phone = $request->phone;
                     if (isset($request->profile_url))
                         $record->profile_url = $request->profile_url;
-                    if (isset($request->slug))
-                        $record->slug = $request->slug;
+
+                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                    $record->slug = $slug;
+
                     $record->firstname = $request->firstname;
                     $record->lastname = $request->lastname;
                     $record->college = $request->college;
@@ -272,8 +275,10 @@ class PreciselyController extends Controller
                         $check->phone = $request->phone;
                     if (isset($request->profile_url))
                     $check->profile_url = $request->profile_url;
-                    if (isset($request->slug))
-                        $check->slug = $request->slug;
+
+                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                    $check->slug = $slug;
+
                     $check->firstname = $request->firstname;
                     $check->lastname = $request->lastname;
                     $check->college = $request->college;
