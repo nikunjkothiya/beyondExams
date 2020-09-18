@@ -475,7 +475,7 @@ class AWSApiController extends Controller
                 ));
 
                 $duration = $ffprobe
-                    ->streams(storage_path('app/public/converted/' . $filePath))
+                    ->streams(storage_path('app/public/' . $filePath))
                     ->videos()
                     ->first()
                     ->get('duration');
