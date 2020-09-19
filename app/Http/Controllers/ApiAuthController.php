@@ -125,6 +125,7 @@ class ApiAuthController extends Controller
                     'client_secret' => env('GOOGLE_API_SECRET'),
                     'redirect' => env('GOOGLE_API_REDIRECT')
                 ];
+		$provider_obj = Socialite::buildProvider(GoogleProvider::class, $config);
 
                 $user = $provider_obj->userFromToken($request->access_token);
             } else if ($provider == 'facebook') {
