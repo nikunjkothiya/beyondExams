@@ -13,6 +13,10 @@ Route::post('post/opportunity', 'UtilController@post_opportunity');
 // Login/Signup APi
 Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verifyAccessToken']);
 Route::post('refresh', ['uses' => 'ApiAuthController@refresh']);
+
+Route::post('verifyFirebaseAccessToken', ['uses' => 'AuthFirebaseController@verifyAccessToken']);
+Route::post('refreshFirebase', ['uses' => 'AuthFirebaseController@refresh']);
+
 Route::post('organisation/{provider}/verifyAccessToken', ['uses' => 'ApiAuthOrganisationController@verifyAccessToken']);
 Route::post('organisation/refresh', ['uses' => 'ApiAuthOrganisationController@refresh']);
 
