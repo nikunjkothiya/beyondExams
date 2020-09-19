@@ -43,58 +43,6 @@ class ApiAuthController extends Controller
         $this->db = $app->make('db');
     }
 
-    public function token($user_id)
-    {
-        try {
-            $token = $this->db
-                ->table('oauth_access_tokens')
-                ->where('user_id', $user_id)
-                ->where('revoked', 0)
-                ->get(['id']);
-            return $token;
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function proxy($grantType, $flag, array $data = [])
-    {
-        //    	Get Laravel app config
-        //$details = User::where('email',$data['username'])->first();
-        $config = app()->make('config');
-        $data = array_merge($data, [
-            'client_id' => env('PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
-            'grant_type' => $grantType
-        ]);
-        try {
-            //$user = User::where('email',$data['username'])->first();
-            $response = $this->apiConsumer->post(sprintf('%s/oauth/token', $config->get('app.url')), [
-                'form_params' => $data
-            ]);
-
-            $data_response = json_decode($response->getBody());
-
-            $token_data = [
-                'unique_id' => $data["username"],
-                'new' => $flag,
-                'access_token' => $data_response->access_token,
-                'expires_in' => $data_response->expires_in,
-                'refresh_token' => $data_response->refresh_token,
-            ];
-            return $this->apiResponse->sendResponse(200, 'Login Successful', $token_data);
-        } catch (BadResponseException $e) {
-            $response = json_decode($e->getResponse()->getBody());
-            $data = [
-                'access_token' => '',
-                'expires_in' => '',
-                'refresh_token' => '',
-            ];
-
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
     public function auth($provider)
     {
         if ($provider == 'google') {
@@ -177,7 +125,7 @@ class ApiAuthController extends Controller
                     'client_secret' => env('GOOGLE_API_SECRET'),
                     'redirect' => env('GOOGLE_API_REDIRECT')
                 ];
-                $provider_obj = Socialite::buildProvider(GoogleProvider::class, $config);
+
                 $user = $provider_obj->userFromToken($request->access_token);
             } else if ($provider == 'facebook') {
                 $provider_obj = Socialite::driver($provider);
@@ -431,6 +379,44 @@ class ApiAuthController extends Controller
         }
     }
 
+    public function proxy($grantType, $flag, array $data = [])
+    {
+        //    	Get Laravel app config
+        //$details = User::where('email',$data['username'])->first();
+        $config = app()->make('config');
+        $data = array_merge($data, [
+            'client_id' => env('PASSWORD_CLIENT_ID'),
+            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
+            'grant_type' => $grantType
+        ]);
+        try {
+            //$user = User::where('email',$data['username'])->first();
+            $response = $this->apiConsumer->post(sprintf('%s/oauth/token', $config->get('app.url')), [
+                'form_params' => $data
+            ]);
+
+            $data_response = json_decode($response->getBody());
+
+            $token_data = [
+                'unique_id' => $data["username"],
+                'new' => $flag,
+                'access_token' => $data_response->access_token,
+                'expires_in' => $data_response->expires_in,
+                'refresh_token' => $data_response->refresh_token,
+            ];
+            return $this->apiResponse->sendResponse(200, 'Login Successful', $token_data);
+        } catch (BadResponseException $e) {
+            $response = json_decode($e->getResponse()->getBody());
+            $data = [
+                'access_token' => '',
+                'expires_in' => '',
+                'refresh_token' => '',
+            ];
+
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function refresh(Request $request)
     {
         try {
@@ -543,6 +529,20 @@ class ApiAuthController extends Controller
             }
             $response_data["message"] = "Logout Error";
             return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function token($user_id)
+    {
+        try {
+            $token = $this->db
+                ->table('oauth_access_tokens')
+                ->where('user_id', $user_id)
+                ->where('revoked', 0)
+                ->get(['id']);
+            return $token;
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
         }
