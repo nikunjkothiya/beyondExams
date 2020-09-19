@@ -173,7 +173,7 @@ class AuthFirebaseController extends Controller
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
         } catch (\InvalidArgumentException $e) { // If the token has the wrong format
-            return $this->apiResponse->sendResponse(401, 'Couldnt parse token', null);
+            return $this->apiResponse->sendResponse(401, $e->getMessage(), $e->getTraceAsString());
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
