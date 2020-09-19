@@ -77,21 +77,20 @@ class ApiAuthController extends Controller
             }
             $user = $provider_obj->stateless()->user();
 
-//            $name_list = explode(" ", $user->user["name"]);
-//            $last_name = "";
-//
-//            if (count($name_list) > 1) {
-//                $last_name = join(" ", array_slice($name_list, 1, count($name_list)));
-//            }
-//
-//            $email = "";
-//            if (isset($user->email))
-//                $email = $user->email;
+            //            $name_list = explode(" ", $user->user["name"]);
+            //            $last_name = "";
+            //
+            //            if (count($name_list) > 1) {
+            //                $last_name = join(" ", array_slice($name_list, 1, count($name_list)));
+            //            }
+            //
+            //            $email = "";
+            //            if (isset($user->email))
+            //                $email = $user->email;
 
             $request = new Request();
             $request->replace(['access_token' => $user->token]);
             return $this->verifyAccessToken($request, $provider);
-
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse($e->getCode(), 'Internal server error', $e);
         }
@@ -133,7 +132,7 @@ class ApiAuthController extends Controller
                 $user = $provider_obj->userFromToken($request->access_token);
             } else if ($provider == 'phone') {
                 $auth = app('firebase.auth');
-//                gxDLU13HUuQeSJXSjbqAnwh9vzz2
+                //                gxDLU13HUuQeSJXSjbqAnwh9vzz2
                 $idTokenString = $request->access_token;
 
                 try {
@@ -469,7 +468,7 @@ class ApiAuthController extends Controller
             } elseif ($request->user_role == $this->mentor_role_id) {
                 // Update Mentor Roles
                 $check_user_role = UserRole::where('user_id', $user_id)->first();
-//                TODO: User shouldn't be allowed to simply modify one param and achieve mentor status
+                //                TODO: User shouldn't be allowed to simply modify one param and achieve mentor status
                 $check_user_role->is_mentor = 1;
                 $check_user_role->save();
                 // Flags for Mentor
