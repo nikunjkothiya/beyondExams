@@ -15,6 +15,7 @@ use App\UserSocial;
 use App\UserDetail;
 use App\MentorDetail;
 use App\MentorVerification;
+use App\StudentDetail;
 use App\UserRole;
 use GuzzleHttp\Client;
 use Illuminate\Foundation\Application;
@@ -149,7 +150,7 @@ class ApiAuthController extends Controller
             }
 
             $email = $user->email;
-            //    		Check account in own database
+            // Check account in own database
             $check_account = UserSocial::where('provider_id', $user->id)->first();
             if ($check_account) {
                 $user_id = UserSocial::where('provider_id', $user->id)->select('user_id')->first()->user_id;
@@ -182,9 +183,9 @@ class ApiAuthController extends Controller
                     // Return Flag for user
                     $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                     if ($check_lang) {
-                        $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                        $check_detail = StudentDetail::where('user_id', $user_id)->first();
                     } else {
-                        $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                        $check_detail = StudentDetail::where('user_id', $user_id)->first();
                     }
 
                     $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
@@ -211,7 +212,7 @@ class ApiAuthController extends Controller
                     $check_user_role->is_mentor = 1;
                     $check_user_role->save();
                     // Flags for Mentor
-                    $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                    $check_detail = MentorDetail::where('user_id', $user_id)->first();
                     $verified = MentorVerification::where('user_id', $user_id)->first();
                     if (!$verified) {
                         $newMentorVerification = new MentorVerification();
@@ -252,6 +253,18 @@ class ApiAuthController extends Controller
                     $new_user->social_accounts()->create(
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
+
+                    // Save user generic details
+                    $break_name = explode(" ",$user->name, 2);
+                    $new_details = new UserDetail();
+                    $new_details->user_id = $new_user->id;
+                    $new_details->firstname = $break_name[0];
+                    if(!is_null($break_name[1])){
+                        $new_details->lastname = $break_name[1];
+                    }
+                    $new_details->email = $user->email;
+                    $new_details->save();
+
 
 
                     switch ($request->user_role) {
@@ -300,6 +313,18 @@ class ApiAuthController extends Controller
                     $phoenix_user_id = $new_user->id;
                     $global_user_id = $user->id;
                     $email = $user->email;
+
+                    // Save user generic details
+                    $break_name = explode(" ",$user->name, 2);
+                    $new_details = new UserDetail();
+                    $new_details->user_id = $new_user->id;
+                    $new_details->firstname = $break_name[0];
+                    if(!is_null($break_name[1])){
+                        $new_details->lastname = $break_name[1];
+                    }
+                    $new_details->email = $user->email;
+                    $new_details->save();
+
                 } else if ($provider == 'phone') {
 
                     $new_user = new User();
@@ -443,9 +468,9 @@ class ApiAuthController extends Controller
             if ($request->user_role == $this->user_role_id) {
                 $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
                 if ($check_lang) {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first()->email;
+                    $check_detail = UserDetail::where('user_id', $user_id)->first()->email;
                 } else {
-                    $check_detail = UserDetail::select('email')->where('user_id', $user_id)->first();
+                    $check_detail = UserDetail::where('user_id', $user_id)->first();
                 }
 
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
@@ -473,7 +498,7 @@ class ApiAuthController extends Controller
                 $check_user_role->is_mentor = 1;
                 $check_user_role->save();
                 // Flags for Mentor
-                $check_detail = MentorDetail::select('email')->where('user_id', $user_id)->first();
+                $check_detail = MentorDetail::where('user_id', $user_id)->first();
                 $verified = MentorVerification::where('user_id', $user_id)->first();
                 if (!$verified) {
                     $newMentorVerification = new MentorVerification();

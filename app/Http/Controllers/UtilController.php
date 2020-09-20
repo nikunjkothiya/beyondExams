@@ -53,38 +53,6 @@ class UtilController extends Controller
         }
     }
 
-    public function migrate_eligible_regions_data(){
-        $old_data = DB::table('eligible_region_opportunity')->get();
-        foreach($old_data as $data){
-            if(!is_null(Opportunity::find($data->opportunity_id))){
-                DB::table('opportunity_eligibility')->insert(
-                    array(
-                        'opportunity_id' => $data->opportunity_id,
-                        'country_id' => $data->eligible_region_id
-                    ),
-                );
-            }
-        }
-        return count($old_data);
-    }
-
-    public function migrate_opp_location_data(){
-        $old_data = Opportunity::all(['id', 'opportunity_location_id']);
-        foreach($old_data as $data){
-                $id = $data->opportunity_location_id;
-                if($data->opportunity_location_id == 243){
-                    $id = 245;
-                }
-                DB::table('opportunity_location')->insert(
-                    array(
-                        'opportunity_id' => $data->id,
-                        'country_id' => $id
-                    ),
-                );
-        }
-        return count($old_data);
-    }
-
     public function save_opportunity(Request $request)
     {
         try {
