@@ -121,7 +121,7 @@ class PreciselyController extends Controller
                     $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                     $details->slug = $slug;
 		}
-		if (isset($request->profile_link){
+		if (isset($request->profile_link)){
                     $details->profile_link = $request->profile_link;
 		}
                 if(isset($request->avatar) && !is_null($img)){
