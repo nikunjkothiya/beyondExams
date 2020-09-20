@@ -171,6 +171,17 @@ class AuthFirebaseController extends Controller
                 }
             }
 
+            // Save user generic details
+            $break_name = explode(" ",$new_user->name, 2);
+            $new_details = new UserDetail();
+            $new_details->user_id = $new_user->id;
+            $new_details->firstname = $break_name[0];
+            if(count($break_name) > 1){
+                $new_details->lastname = $break_name[1];
+            }
+            $new_details->email = $new_user->email;
+            $new_details->save();
+
             $response = $this->proxyLogin($firebase_user->id, 'password', $flag);
             $data = json_decode($response->getContent(), true)["data"];
             $data["unique_id"] = $firebase_user->id;
