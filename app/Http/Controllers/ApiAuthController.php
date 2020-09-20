@@ -259,7 +259,7 @@ class ApiAuthController extends Controller
                     $new_details = new UserDetail();
                     $new_details->user_id = $new_user->id;
                     $new_details->firstname = $break_name[0];
-                    if(!is_null($break_name[1])){
+                    if(count($break_name) > 1){
                         $new_details->lastname = $break_name[1];
                     }
                     $new_details->email = $user->email;
@@ -319,7 +319,7 @@ class ApiAuthController extends Controller
                     $new_details = new UserDetail();
                     $new_details->user_id = $new_user->id;
                     $new_details->firstname = $break_name[0];
-                    if(!is_null($break_name[1])){
+                    if(count($break_name) > 1){
                         $new_details->lastname = $break_name[1];
                     }
                     $new_details->email = $user->email;
