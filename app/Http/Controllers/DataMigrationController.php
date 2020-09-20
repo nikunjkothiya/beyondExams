@@ -52,7 +52,7 @@ class DataMigrationController extends Controller
                 $detail_table->save();
 
             } else {
-                if(!is_null($user->name) || !is_null($user->email)){
+                // if(!is_null($user->name) || !is_null($user->email)){
                     $new = new UserDetail();
                     $new->user_id = $user->id;
                     $new->email = $user->email;
@@ -76,7 +76,7 @@ class DataMigrationController extends Controller
                     }
                     
                     $new->save();
-                }
+                // }
             }
         }
 
