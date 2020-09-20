@@ -106,24 +106,24 @@ class PreciselyController extends Controller
 
                 // Set commono data to user_details table
                 $details = UserDetail::where('user_id', $user_id)->first();
-/*                $details->user_id = $user_id;*/
-		if (isset($request->firstname))
+                /* $details->user_id = $user_id;*/
+                if (isset($request->firstname))
                     $details->firstname = $request->firstname;
-		if (isset($request->lastname))
+                if (isset($request->lastname))
                     $details->lastname = $request->lastname;
-		if (isset($request->email))
+                if (isset($request->email))
                     $details->email = $request->email;
                 if (isset($request->phone))
                     $details->phone = $request->phone;
-		if (isset($request->profile_link))
+                if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
-		if (isset($request->firstname) && isset($request->lastname)) {
+                if (isset($request->firstname) && isset($request->lastname)) {
                     $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                     $details->slug = $slug;
-		}
-		if (isset($request->profile_link)){
+                }
+                if (isset($request->profile_link)){
                     $details->profile_link = $request->profile_link;
-		}
+                }
                 if(isset($request->avatar) && !is_null($img)){
                     $details->avatar = $img;
                 }
