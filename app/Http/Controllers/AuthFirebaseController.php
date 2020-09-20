@@ -91,10 +91,10 @@ class AuthFirebaseController extends Controller
                 $new_user = User::find($check_account->user_id);
                 $new_user->name = $firebase_user->name;
                 $new_user->email = $firebase_user->email;
-//                $new_user->phone = $firebase_user->phone;
+                // $new_user->phone = $firebase_user->phone;
                 $new_user->unique_id = $firebase_user->id;
                 $new_user->avatar = $firebase_user->avatar;
-		$new_user->save();
+		        $new_user->save();
 
                 // Assign Role Entry if not existing
                 if (!$new_user->role()) {
@@ -134,7 +134,7 @@ class AuthFirebaseController extends Controller
                 $new_user = new User();
                 $new_user->name = $firebase_user->name;
                 $new_user->email = $firebase_user->email;
-//                $new_user->phone = $firebase_user->phone;
+                //  $new_user->phone = $firebase_user->phone;
                 $new_user->unique_id = $firebase_user->id;
                 $new_user->avatar = $firebase_user->avatar;
 

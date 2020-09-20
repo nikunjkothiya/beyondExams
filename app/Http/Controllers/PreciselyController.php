@@ -157,14 +157,13 @@ class PreciselyController extends Controller
                         $record->flag = $flag;
                         $record->save();
                         $record['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $record);
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $record->toArray() ));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
                 } else {
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
-                    // $check->profile_link = $request->profile_link;
                     $check->save();
 
                     if ($check) {
@@ -228,17 +227,20 @@ class PreciselyController extends Controller
                 // Updating Common User Details
                 $details = UserDetail::where('user_id', $user_id)->first();
                 $details->user_id = $user_id;
-                $details->firstname = $request->firstname;
-                $details->lastname = $request->lastname;
-                $details->email = $request->email;
-                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                if(isset($request->firstname))
+                    $details->firstname = $request->firstname;
+                if(isset($request->lastname))
+                    $details->lastname = $request->lastname;
+                if(isset($request->lastname))
+                    $details->email = $request->email;
                 if (isset($request->phone))
                     $details->phone = $request->phone;
-                if (isset($request->profile_url))
+                if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
+
+                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                 $details->slug = $slug;
-                $details->profile_link = $request->profile_link;
                 $details->save();
 
                 // Updating Student Specific details
@@ -246,12 +248,19 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new StudentDetail();
                     $record->user_id = $user_id;
-                    $record->college = $request->college;
-                    $record->city = $request->city;
-                    $record->gpa = $request->gpa;
-                    $record->qualification_id = $request->qualification;
-                    $record->discipline_id = $request->discipline;
-                    $record->country_id = $request->country;
+                    if(isset($request->college))
+                        $record->college = $request->college;
+                    if(isset($request->city))
+                        $record->city = $request->city;
+                    if(isset($request->gpa))
+                        $record->gpa = $request->gpa;
+                    if(isset($request->qualification_id))
+                        $record->qualification_id = $request->qualification;
+                    if(isset($request->discipline_id))
+                        $record->discipline_id = $request->discipline;
+                    if(isset($request->country_id))
+                        $record->country_id = $request->country;
+                
                     $record->save();
                     if ($record) {
                         // Check if tags are filled if filled then 0 else 3
@@ -280,12 +289,19 @@ class PreciselyController extends Controller
                     }
                 } else {
                     $check->user_id = $user_id;
-                    $check->college = $request->college;
-                    $check->city = $request->city;
-                    $check->gpa = $request->gpa;
-                    $check->qualification_id = $request->qualification;
-                    $check->discipline_id = $request->discipline;
-                    $check->country_id = $request->country;
+                    if(isset($request->college))
+                        $check->college = $request->college;
+                    if(isset($request->city))
+                        $check->city = $request->city;
+                    if(isset($request->gpa))
+                        $check->gpa = $request->gpa;
+                    if(isset($request->qualification_id))
+                        $check->qualification_id = $request->qualification;
+                    if(isset($request->discipline_id))
+                        $check->discipline_id = $request->discipline;
+                    if(isset($request->country_id))
+                        $check->country_id = $request->country;
+                    
                     $check->save();
                     if ($check) {
                         // Check if tags are filled if filled then 0 else 3
@@ -340,30 +356,36 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                // Updating Common User Details
-                $details = UserDetail::where('user_id', $user_id)->first();
-                $details->user_id = $user_id;
-                $details->firstname = $request->firstname;
-                $details->lastname = $request->lastname;
-                $details->email = $request->email;
-                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                if (isset($request->phone))
-                    $details->phone = $request->phone;
-                if (isset($request->profile_url))
-                    $details->profile_link = $request->profile_link;
-                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                $details->slug = $slug;
-                $details->profile_link = $request->profile_link;
-                $details->save();
+                 // Updating Common User Details
+                 $details = UserDetail::where('user_id', $user_id)->first();
+                 $details->user_id = $user_id;
+                 if(isset($request->firstname))
+                     $details->firstname = $request->firstname;
+                 if(isset($request->lastname))
+                     $details->lastname = $request->lastname;
+                 if(isset($request->lastname))
+                     $details->email = $request->email;
+                 if (isset($request->phone))
+                     $details->phone = $request->phone;
+                 if (isset($request->profile_link))
+                     $details->profile_link = $request->profile_link;
+ 
+                 $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                 $details->slug = $slug;
+                 $details->save();
 
                 // Updating Student Specific details
                 $check = OrganisationDetail::where('user_id', $user_id)->first();
                 if (is_null($check)) {
                     $record = new OrganisationDetail();
                     $record->user_id = $user_id;
-                    $record->contact_person = $request->contact_person;
-                    $record->branch = $request->branch;
-                    $record->country_id = $request->country_id;
+                    if (isset($request->contact_person))
+                        $record->contact_person = $request->contact_person;
+                    if (isset($request->branch))
+                        $record->branch = $request->branch;
+                    if (isset($request->country_id))
+                        $record->country_id = $request->country_id;
                     $record->save();
                     if($record){
                     return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
@@ -372,9 +394,12 @@ class PreciselyController extends Controller
                     }
                 } else {
                     $check->user_id = $user_id;
-                    $check->contact_person = $request->contact_person;
-                    $check->branch = $request->branch;
-                    $check->country_id = $request->country_id;
+                    if (isset($request->contact_person))
+                        $check->contact_person = $request->contact_person;
+                    if (isset($request->branch))
+                        $check->branch = $request->branch;
+                    if (isset($request->country_id))
+                        $check->country_id = $request->country_id;
                     $check->save();
                     if ($check) {
                         return $this->apiResponse->sendResponse(200, 'Org details saved.', array_merge($check->toArray(), $details->toArray()));
