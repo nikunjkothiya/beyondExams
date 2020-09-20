@@ -140,9 +140,6 @@ class PreciselyController extends Controller
                         } elseif ($verified->is_verified == 1) {
                             // Mentor Verified
                             $flag = 1;
-                        } elseif ($verified->is_verified == 2) {
-                            // Mentor Rejected
-                            $flag = 3;
                         }
                         $record->flag = $flag;
                         $record->save();
@@ -391,17 +388,16 @@ class PreciselyController extends Controller
 
             if ($pcheck) {
                 $dcheck = StudentDetail::where('user_id', $user->id)->first();
-                $countries = Country::all();
-                $disciplines = Discipline::all();
-                $qualifications = Qualification::all();
-
-                $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+                if($dcheck){
+                    $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+                } else {
+                    $data['user_details']= $pcheck;
+                }
                 $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
                 foreach ($avatar as $ava) {
                     $data['avatar'] = $ava->avatar;
                     break;
                 }
-                #$data['txnflag']=$this->txnflag->check_subscription($request->user_id);
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
             }
@@ -421,13 +417,32 @@ class PreciselyController extends Controller
 
         if ($pcheck) {
             $dcheck = MentorDetail::where('user_id', $user->id)->first();
-            $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+            if($dcheck){
+                $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+            } else {
+                $data['user_details']= $pcheck;
+            }
             $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
             foreach ($avatar as $ava) {
                 $data['avatar'] = $ava->avatar;
                 break;
             }
-            // $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+
+            // Update Flags
+            if($dcheck){
+                $verified = MentorVerification::where('user_id', $user->id)->first();
+                $flag;
+                if ($verified->is_verified == 0) {
+                    // Mentor Details filled but not verified
+                    $flag = 2;
+                } elseif ($verified->is_verified == 1) {
+                    // Mentor Verified
+                    $flag = 1;
+                }
+                $dcheck->flag = $flag;
+                $dcheck->save();
+            }
+
 
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
         } else {
@@ -446,7 +461,11 @@ class PreciselyController extends Controller
 
         if ($pcheck) {
             $dcheck = OrganisationDetail::where('user_id', $user->id)->first();
-            $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+            if($dcheck){
+                $data['user_details'] = array_merge( $pcheck->toArray(), $dcheck->toArray());
+            } else {
+                $data['user_details'] = $pcheck;
+            }
             $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
             foreach ($avatar as $ava) {
                 $data['avatar'] = $ava->avatar;
