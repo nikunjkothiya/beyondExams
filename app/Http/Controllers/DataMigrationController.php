@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class DataMigrationController extends Controller
 {
-    
+
     public function migrate_user_info(){
         $users = DB::table('users')->get();
         foreach($users as $u){
