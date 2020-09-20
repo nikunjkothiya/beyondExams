@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Validator;
+use DB;
 
 class AuthFirebaseController extends Controller
 {
@@ -88,6 +89,12 @@ class AuthFirebaseController extends Controller
             $new_user = null;
             if ($check_account) {
                 $new_user = User::find($check_account->user_id);
+                $new_user->name = $firebase_user->name;
+                $new_user->email = $firebase_user->email;
+//                $new_user->phone = $firebase_user->phone;
+                $new_user->unique_id = $firebase_user->id;
+                $new_user->avatar = $firebase_user->avatar;
+		$new_user->save();
 
                 // Assign Role Entry if not existing
                 if (!$new_user->role()) {
