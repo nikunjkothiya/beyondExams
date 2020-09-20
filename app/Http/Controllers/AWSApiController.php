@@ -469,16 +469,13 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
-                $ffmpeg = FFMpeg\FFMpeg::create(array(
-                    'ffmpeg.binaries' => '/usr/bin/ffmpeg',
-                    'ffprobe.binaries' => '/usr/bin/ffprobe'
-                ));
-
                 $duration = $ffprobe
                     ->streams(storage_path('app/public/' . $filePath))
                     ->videos()
                     ->first()
                     ->get('duration');
+                // $duration = 180;
+
 
                 if (is_null($duration) || $duration == 0)
                     return $this->apiResponse->sendResponse(400, 'File content not valid', null);

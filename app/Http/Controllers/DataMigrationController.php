@@ -11,11 +11,10 @@ use Illuminate\Support\Facades\DB;
 class DataMigrationController extends Controller
 {
     
-    public function migrate_user_details_to_student_details(){
+    public function migrate_user_details(){
         $old_data = DB::table('user_details')->get();
         foreach($old_data as $data){
             $role = UserRole::where('user_id', $data->user_id)->first();
-
             if(is_null($role) ||  $role->is_user === 1){
                 DB::table('student_details')->insert(
                     array(
@@ -32,14 +31,10 @@ class DataMigrationController extends Controller
                 );
             }
         }
-        return count($old_data);
-    }
 
-    public function migrate_mentor_details_to_user_details(){
         $old_data = DB::table('mentor_details')->get();
         foreach($old_data as $data){
             $role = UserRole::where('user_id', $data->user_id)->first();
-
             if(is_null($role) || $role->is_mentor === 1){
                 DB::table('user_details')->insert(
                     array(
@@ -55,6 +50,7 @@ class DataMigrationController extends Controller
                 );
             }
         }
+
         return count($old_data);
     }
 

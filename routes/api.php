@@ -47,6 +47,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
     Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
     Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
+    Route::post('submit_org_profile', ['uses' => 'PreciselyController@submit_org_profile']);
+    Route::get('get_org_profile', ['uses' => 'PreciselyController@get_org_profile']);
 
     // User Misc Data
     Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);

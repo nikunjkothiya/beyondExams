@@ -25,6 +25,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\ApiResponse;
+use App\Organisation;
+use App\OrganisationDetail;
 use App\StudentDetail;
 use Illuminate\Support\Facades\Storage;
 use Auth;
@@ -307,6 +309,75 @@ class PreciselyController extends Controller
         }
     }
 
+    public function submit_org_profile(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user = User::find(Auth::user()->id);
+                $user_id = $user->id;
+                $validator = Validator::make($request->all(), [
+                    'firstname' => 'required|string|max:255',
+                    'lastname' => 'required|string|max:255',
+                    'contact_person' => 'required|string|max:1024',
+                    'branch' => 'required|numeric|between:0,10.00',
+                    'country_id' => 'required|integer|min:1|max:' . Country::count(),
+                    'email' => 'required|email',
+                    'phone' => 'string',
+                    'profile_link' => 'string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                // Updating Common User Details
+                $details = UserDetail::where('user_id', $user_id)->first();
+                $details->user_id = $user_id;
+                $details->firstname = $request->firstname;
+                $details->lastname = $request->lastname;
+                $details->email = $request->email;
+                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                if (isset($request->phone))
+                    $details->phone = $request->phone;
+                if (isset($request->profile_url))
+                    $details->profile_link = $request->profile_link;
+                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $details->slug = $slug;
+                $details->profile_link = $request->profile_link;
+                $details->save();
+
+                // Updating Student Specific details
+                $check = OrganisationDetail::where('user_id', $user_id)->first();
+                if (is_null($check)) {
+                    $record = new OrganisationDetail();
+                    $record->user_id = $user_id;
+                    $record->contact_person = $request->contact_person;
+                    $record->branch = $request->branch;
+                    $record->country_id = $request->country_id;
+                    $record->save();
+                    if($record){
+                    return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
+                    }
+                } else {
+                    $check->user_id = $user_id;
+                    $check->contact_person = $request->contact_person;
+                    $check->branch = $request->branch;
+                    $check->country_id = $request->country_id;
+                    $check->save();
+                    if ($check) {
+                        return $this->apiResponse->sendResponse(200, 'Org details saved.', array_merge($check->toArray(), $details->toArray()));
+                    } else {
+                        return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     //    TODO: CORRECT RETURN TYPE
     public function get_user_profile()
     {
@@ -361,6 +432,31 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
         } else {
             return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
+        }
+    }
+
+    public function get_org_profile()
+    {
+        $user = Auth::user();
+        try {
+            $pcheck = UserDetail::where('user_id', $user->id)->first();
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
+        }
+
+        if ($pcheck) {
+            $dcheck = OrganisationDetail::where('user_id', $user->id)->first();
+            $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+            $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
+            foreach ($avatar as $ava) {
+                $data['avatar'] = $ava->avatar;
+                break;
+            }
+            // $data['txnflag']=$this->txnflag->check_subscription($request->user_id);
+
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched org profile.', $data);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'Org profile needs to be filled', null);
         }
     }
 
