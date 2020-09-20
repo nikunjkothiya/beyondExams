@@ -90,6 +90,7 @@ class PreciselyController extends Controller
                 }
 
                 // Save avatar if its given
+                $img = null;
                 if(isset($request->avatar)){
                     $aws_root = "public/";
                     $file = $request->file('avatar');
@@ -100,6 +101,7 @@ class PreciselyController extends Controller
                     Storage::disk('s3')->put($aws_root . $filePath, $contents);
                     $user->avatar = $this->base_url . $aws_root . $filePath;
                     $user->save();
+                    $img = $this->base_url . $aws_root . $filePath;
                 }
 
                 // Set commono data to user_details table
@@ -114,6 +116,9 @@ class PreciselyController extends Controller
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                 $details->slug = $slug;
                 $details->profile_link = $request->profile_link;
+                if(isset($request->avatar) && !is_null($img)){
+                    $details->avatar = $img;
+                }
                 $details->save();
 
                 // Updating Specific mentor details
