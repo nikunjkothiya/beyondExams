@@ -137,8 +137,10 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new MentorDetail();
                     $record->user_id = $user_id;
-                    $record->designation = $request->designation;
-                    $record->organisation = $request->organisation;
+                    if (isset($request->designation))
+                        $record->designation = $request->designation;
+                    if (isset($request->organisation))
+                        $record->organisation = $request->organisation;
                     $record->save();
                     // Send Flags
                     if ($record) {
@@ -165,8 +167,10 @@ class PreciselyController extends Controller
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
                 } else {
-                    $check->designation = $request->designation;
-                    $check->organisation = $request->organisation;
+                    if (isset($request->designation))
+                        $check->designation = $request->designation;
+                    if (isset($request->organisation))
+                        $check->organisation = $request->organisation;
                     $check->save();
 
                     if ($check) {
