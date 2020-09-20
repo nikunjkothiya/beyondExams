@@ -164,7 +164,7 @@ class PreciselyController extends Controller
                 } else {
                     $check->designation = $request->designation;
                     $check->organisation = $request->organisation;
-                    $check->profile_link = $request->profile_link;
+                    // $check->profile_link = $request->profile_link;
                     $check->save();
 
                     if ($check) {
@@ -189,7 +189,7 @@ class PreciselyController extends Controller
                         $check->flag = $flag;
                         $check->save();
                         $check['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', $check);
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $check->toArray() ));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
