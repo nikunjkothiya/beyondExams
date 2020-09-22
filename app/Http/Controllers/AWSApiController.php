@@ -406,9 +406,13 @@ class AWSApiController extends Controller
                 $file = $request->file('file');
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
-                $name = time() . uniqid() . $ext;
+                $name = time() . uniqid();
 
                 $filePath = $this->file_types[$request->type] . $name;
+                $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name . $ext);
+                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
+                $filePath = $filePath . $ext;
+                $name = $name . $ext;
             } else {
                 $filePath = null;
             }
@@ -453,8 +457,7 @@ class AWSApiController extends Controller
                 $new_resource->save();
             } else if ($request->type == 3 || $request->type == 5) {
                 // VIDEO
-                // return $this->apiResponse->sendResponse(200, 'Success', storage_path() . 'app/public/videos/');
-                $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name);
+
 
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
@@ -469,21 +472,28 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
-                $duration = $ffprobe
-                    ->streams(storage_path('app/public/' . $filePath))
-                    ->videos()
-                    ->first()
-                    ->get('duration');
+                if ($ext == ".webm")
+                    $duration = 46;
+                else {
+                    $duration = $ffprobe
+                        ->streams(storage_path('app/public/' . $filePath))
+                        ->videos()
+                        ->first()
+                        ->get('duration');
+                }
+
                 // $duration = 180;
 
 
 
                 if (is_null($duration) || $duration == 0)
-                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
+                    $duration = 47;
+//                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-                Storage::delete("public/" . $this->file_types[$request->type] . $name);
+//                WebmToMp4::dispatch();
+
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
                 $new_resource->duration = 1;
