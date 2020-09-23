@@ -369,6 +369,20 @@ class ApiAuthController extends Controller
                 }
             }
 
+            $client = new Client();
+
+            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
+                'form_params' => [
+                    'user_id' => $phoenix_user_id,
+                    'user_name' => "Precisely",
+                    'source' => $provider
+                ]
+            ]);
+
+            $result = $res->getBody()->getContents();
+            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id' => $phoenix_user_id, 'legacy_user_id' => $result));
+            $data["legacy_user_id"] = $result;
+
             $response = $this->proxyLogin($global_user_id, 'password', $flag);
             $data = json_decode($response->getContent(), true)["data"];
             $data["phoenix_user_id"] = $phoenix_user_id;

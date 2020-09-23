@@ -182,6 +182,20 @@ class AuthFirebaseController extends Controller
             $new_details->email = $new_user->email;
             $new_details->save();
 
+            $client = new Client();
+
+            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
+                'form_params' => [
+                    'user_id' => $new_user->id,
+                    'user_name' => "Precisely",
+                    'source' => "firebase"
+                ]
+            ]);
+
+            $result = $res->getBody()->getContents();
+            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id' => $new_user->id, 'legacy_user_id' => $result));
+            $data["legacy_user_id"] = $result;
+
             $response = $this->proxyLogin($firebase_user->id, 'password', $flag);
             $data = json_decode($response->getContent(), true)["data"];
             $data["unique_id"] = $firebase_user->id;
