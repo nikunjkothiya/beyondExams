@@ -410,7 +410,7 @@ class AWSApiController extends Controller
 
                 $filePath = $this->file_types[$request->type] . $name;
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name . $ext);
-                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
+//                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
                 $filePath = $filePath . $ext;
                 $name = $name . $ext;
             } else {
