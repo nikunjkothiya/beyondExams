@@ -91,7 +91,7 @@ class PreciselyController extends Controller
 
                 // Save avatar if its given
                 $img = null;
-                if(isset($request->avatar)){
+                if (isset($request->avatar)) {
                     $aws_root = "public/";
                     $file = $request->file('avatar');
                     $ext = "." . pathinfo($_FILES["avatar"]["name"])['extension'];
@@ -104,11 +104,22 @@ class PreciselyController extends Controller
                     $img = $this->base_url . $aws_root . $filePath;
                 }
 
+                // Save data to users table
+                if (isset($request->lastname)){
+                    $user->name = $request->firstname . ' ' . $request->lastname;
+                } else {
+                    $user->name = $request->firstname;
+                }
+                $user->email = $request->email;
+                $user->save;
+
+
                 // Set commono data to user_details table
                 $details = UserDetail::where('user_id', $user_id)->first();
-		if (!$details)
-		    $details = new UserDetail();
-		    $details->user_id = $user_id;
+                if (is_null($details)){
+                    $details = new UserDetail();
+                    $details->user_id = $user_id;
+                }
                 /* $details->user_id = $user_id;*/
                 if (isset($request->firstname))
                     $details->firstname = $request->firstname;
@@ -120,16 +131,13 @@ class PreciselyController extends Controller
                     $details->phone = $request->phone;
                 if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
-                if (isset($request->firstname) && isset($request->lastname)) {
-                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                    $details->slug = $slug;
-                }
-                if (isset($request->profile_link)){
+                if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
-                }
-                if(isset($request->avatar) && !is_null($img)){
+                if (isset($request->avatar) && !is_null($img))
                     $details->avatar = $img;
-                }
+
+                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $details->slug = $slug;
                 $details->save();
 
                 // Updating Specific mentor details
@@ -146,8 +154,8 @@ class PreciselyController extends Controller
                     if ($record) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
-                        if(isset($request->refer_code)){
-                            if($request->refer_code == 'PRECISELY-TUTOR-PASS'){
+                        if (isset($request->refer_code)) {
+                            if ($request->refer_code == 'PRECISELY-TUTOR-PASS') {
                                 $verified->is_verified = 1;
                                 $verified->save();
                             }
@@ -162,7 +170,7 @@ class PreciselyController extends Controller
                         $record->flag = $flag;
                         $record->save();
                         $record['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $record->toArray() ));
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $record->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -176,8 +184,8 @@ class PreciselyController extends Controller
                     if ($check) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
-                        if(isset($request->refer_code)){
-                            if($request->refer_code == 'PRECISELY-TUTOR-PASS'){
+                        if (isset($request->refer_code)) {
+                            if ($request->refer_code == 'PRECISELY-TUTOR-PASS') {
                                 $verified->is_verified = 1;
                                 $verified->save();
                             }
@@ -195,7 +203,7 @@ class PreciselyController extends Controller
                         $check->flag = $flag;
                         $check->save();
                         $check['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $check->toArray() ));
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $check->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
@@ -231,19 +239,26 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
+                // Save data to users table
+                $user->name = $request->firstname . ' ' . $request->lastname;
+                $user->email = $request->email;
+                $user->save;
+
                 // Updating Common User Details
                 $details = UserDetail::where('user_id', $user_id)->first();
                 $details->user_id = $user_id;
-                if(isset($request->firstname))
+                if (isset($request->firstname))
                     $details->firstname = $request->firstname;
-                if(isset($request->lastname))
+                if (isset($request->lastname))
                     $details->lastname = $request->lastname;
-                if(isset($request->lastname))
+                if (isset($request->lastname))
                     $details->email = $request->email;
                 if (isset($request->phone))
                     $details->phone = $request->phone;
                 if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
+                if (!is_null($user->avatar))
+                    $details->avatar = $user->avatar;
 
                 $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
@@ -255,19 +270,19 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new StudentDetail();
                     $record->user_id = $user_id;
-                    if(isset($request->college))
+                    if (isset($request->college))
                         $record->college = $request->college;
-                    if(isset($request->city))
+                    if (isset($request->city))
                         $record->city = $request->city;
-                    if(isset($request->gpa))
+                    if (isset($request->gpa))
                         $record->gpa = $request->gpa;
-                    if(isset($request->qualification_id))
+                    if (isset($request->qualification_id))
                         $record->qualification_id = $request->qualification;
-                    if(isset($request->discipline_id))
+                    if (isset($request->discipline_id))
                         $record->discipline_id = $request->discipline;
-                    if(isset($request->country_id))
+                    if (isset($request->country_id))
                         $record->country_id = $request->country;
-                
+
                     $record->save();
                     if ($record) {
                         // Check if tags are filled if filled then 0 else 3
@@ -296,19 +311,19 @@ class PreciselyController extends Controller
                     }
                 } else {
                     $check->user_id = $user_id;
-                    if(isset($request->college))
+                    if (isset($request->college))
                         $check->college = $request->college;
-                    if(isset($request->city))
+                    if (isset($request->city))
                         $check->city = $request->city;
-                    if(isset($request->gpa))
+                    if (isset($request->gpa))
                         $check->gpa = $request->gpa;
-                    if(isset($request->qualification_id))
+                    if (isset($request->qualification_id))
                         $check->qualification_id = $request->qualification;
-                    if(isset($request->discipline_id))
+                    if (isset($request->discipline_id))
                         $check->discipline_id = $request->discipline;
-                    if(isset($request->country_id))
+                    if (isset($request->country_id))
                         $check->country_id = $request->country;
-                    
+
                     $check->save();
                     if ($check) {
                         // Check if tags are filled if filled then 0 else 3
@@ -363,24 +378,24 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                 // Updating Common User Details
-                 $details = UserDetail::where('user_id', $user_id)->first();
-                 $details->user_id = $user_id;
-                 if(isset($request->firstname))
-                     $details->firstname = $request->firstname;
-                 if(isset($request->lastname))
-                     $details->lastname = $request->lastname;
-                 if(isset($request->lastname))
-                     $details->email = $request->email;
-                 if (isset($request->phone))
-                     $details->phone = $request->phone;
-                 if (isset($request->profile_link))
-                     $details->profile_link = $request->profile_link;
- 
-                 $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                 $details->slug = $slug;
-                 $details->save();
+                // Updating Common User Details
+                $details = UserDetail::where('user_id', $user_id)->first();
+                $details->user_id = $user_id;
+                if (isset($request->firstname))
+                    $details->firstname = $request->firstname;
+                if (isset($request->lastname))
+                    $details->lastname = $request->lastname;
+                if (isset($request->lastname))
+                    $details->email = $request->email;
+                if (isset($request->phone))
+                    $details->phone = $request->phone;
+                if (isset($request->profile_link))
+                    $details->profile_link = $request->profile_link;
+
+                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $details->slug = $slug;
+                $details->save();
 
                 // Updating Student Specific details
                 $check = OrganisationDetail::where('user_id', $user_id)->first();
@@ -394,8 +409,8 @@ class PreciselyController extends Controller
                     if (isset($request->country_id))
                         $record->country_id = $request->country_id;
                     $record->save();
-                    if($record){
-                    return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
+                    if ($record) {
+                        return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -433,10 +448,10 @@ class PreciselyController extends Controller
 
             if ($pcheck) {
                 $dcheck = StudentDetail::where('user_id', $user->id)->first();
-                if($dcheck){
-                    $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+                if ($dcheck) {
+                    $data['user_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
                 } else {
-                    $data['user_details']= $pcheck;
+                    $data['user_details'] = $pcheck;
                 }
                 $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
                 foreach ($avatar as $ava) {
@@ -462,10 +477,10 @@ class PreciselyController extends Controller
 
         if ($pcheck) {
             $dcheck = MentorDetail::where('user_id', $user->id)->first();
-            if($dcheck){
-                $data['user_details']= array_merge( $pcheck->toArray(), $dcheck->toArray());
+            if ($dcheck) {
+                $data['mentor_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
             } else {
-                $data['user_details']= $pcheck;
+                $data['mentor_details'] = $pcheck;
             }
             $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
             foreach ($avatar as $ava) {
@@ -474,7 +489,7 @@ class PreciselyController extends Controller
             }
 
             // Update Flags
-            if($dcheck){
+            if ($dcheck) {
                 $verified = MentorVerification::where('user_id', $user->id)->first();
                 $flag;
                 if ($verified->is_verified == 0) {
@@ -506,8 +521,8 @@ class PreciselyController extends Controller
 
         if ($pcheck) {
             $dcheck = OrganisationDetail::where('user_id', $user->id)->first();
-            if($dcheck){
-                $data['user_details'] = array_merge( $pcheck->toArray(), $dcheck->toArray());
+            if ($dcheck) {
+                $data['user_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
             } else {
                 $data['user_details'] = $pcheck;
             }
@@ -627,7 +642,7 @@ class PreciselyController extends Controller
             $user = Auth::user();
             $saved_opportunities = $user->saved_opportunities()->with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
-            }, 'tags' => function ($query){
+            }, 'tags' => function ($query) {
                 $query->select('id', 'tag');
             }])->paginate(10);
 
@@ -878,7 +893,7 @@ class PreciselyController extends Controller
 
             $action = Action::where('event', $request->event)->first();
 
-            if(is_null($user) || is_null($action))
+            if (is_null($user) || is_null($action))
                 return $this->apiResponse->sendResponse(200, 'Successfully added analytics', null);
 
             if (array_key_exists("opp_id", $request->properties)) {
@@ -888,10 +903,10 @@ class PreciselyController extends Controller
             }
 
             if ($is_view_action == 0) {
-                if (!is_null($opportunity)){
-                    if ($opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->exists()){
+                if (!is_null($opportunity)) {
+                    if ($opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->exists()) {
                         $opportunity->views()->whereDate('created_at', '=', Carbon::today()->toDateString())->increment('views');
-                    }else{
+                    } else {
                         $opportunity->views()->create([1]);
                     }
                     $opportunity->save();
