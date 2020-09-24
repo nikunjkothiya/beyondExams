@@ -2,25 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use Auth;
-use GuzzleHttp\Exception\BadResponseException;
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\ApiResponse;
-use Laravel\Socialite\Two\GoogleProvider;
-use Validator;
-use App\User;
-use App\UserSocial;
-use App\UserDetail;
 use App\MentorDetail;
 use App\MentorVerification;
 use App\StudentDetail;
+use App\User;
+use App\UserDetail;
 use App\UserRole;
-use GuzzleHttp\Client;
-use Illuminate\Foundation\Application;
-use Carbon\Carbon;
+use App\UserSocial;
+use Auth;
 use DB;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+use InvalidArgumentException;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
+use Validator;
 
 class ApiAuthController extends Controller
 {
@@ -126,7 +125,7 @@ class ApiAuthController extends Controller
                     'client_secret' => env('GOOGLE_API_SECRET'),
                     'redirect' => env('GOOGLE_API_REDIRECT')
                 ];
-		$provider_obj = Socialite::buildProvider(GoogleProvider::class, $config);
+                $provider_obj = Socialite::buildProvider(GoogleProvider::class, $config);
 
                 $user = $provider_obj->userFromToken($request->access_token);
             } else if ($provider == 'facebook') {
@@ -142,7 +141,7 @@ class ApiAuthController extends Controller
                     $user->id = $user->getClaim('sub');
                     $user->email = null;
                     $user->name = null;
-                } catch (\InvalidArgumentException $e) { // If the token has the wrong format
+                } catch (InvalidArgumentException $e) { // If the token has the wrong format
                     return $this->apiResponse->sendResponse(401, 'Couldnt parse token', null);
                 } catch (InvalidToken $e) { // If the token is invalid (expired ...)
                     return $this->apiResponse->sendResponse(401, "Token is invalid", null);
@@ -255,16 +254,15 @@ class ApiAuthController extends Controller
                     );
 
                     // Save user generic details
-                    $break_name = explode(" ",$user->name, 2);
+                    $break_name = explode(" ", $user->name, 2);
                     $new_details = new UserDetail();
                     $new_details->user_id = $new_user->id;
                     $new_details->firstname = $break_name[0];
-                    if(count($break_name) > 1){
+                    if (count($break_name) > 1) {
                         $new_details->lastname = $break_name[1];
                     }
                     $new_details->email = $user->email;
                     $new_details->save();
-
 
 
                     switch ($request->user_role) {
@@ -315,20 +313,27 @@ class ApiAuthController extends Controller
                     $email = $user->email;
 
                     // Save user generic details
-                    $break_name = explode(" ",$user->name, 2);
+                    $break_name = explode(" ", $user->name, 2);
                     $new_details = new UserDetail();
                     $new_details->user_id = $new_user->id;
                     $new_details->firstname = $break_name[0];
-                    if(count($break_name) > 1){
+                    if (count($break_name) > 1) {
                         $new_details->lastname = $break_name[1];
                     }
                     $new_details->email = $user->email;
                     $new_details->save();
 
                 } else if ($provider == 'phone') {
+                    $auth = app('firebase.auth');
+                    $firebase_user = $auth->getUser($user->id);
+                    $claims = $firebase_user->getClaims();
 
                     $new_user = new User();
                     $new_user->unique_id = $user->id;
+                    if (array_key_exists('phone_number', $claims))
+                        $new_user->phone = $firebase_user->getClaim('phone_number');
+                    else
+                        $new_user->phone = null;
 
                     $new_user->save();
                     $new_user->social_accounts()->create(
@@ -389,7 +394,7 @@ class ApiAuthController extends Controller
             $data["email"] = $email;
             $data["user_name"] = $user->name;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
