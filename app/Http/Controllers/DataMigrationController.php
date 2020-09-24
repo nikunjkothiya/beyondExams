@@ -45,6 +45,16 @@ class DataMigrationController extends Controller
                     $detail_table->email = $user->email;
                 }
 
+                // Check if email is null in users table but is avaiable in user_details
+                if(is_null($user->phone) && !is_null($detail_table->phone)){
+                    $user->phone = $detail_table->phone;
+                }
+
+                // Check if email is avaiable in users table but is null in user_details
+                if(!is_null($user->phone) && is_null($detail_table->phone)){
+                    $detail_table->phone = $user->phone;
+                }
+
                 // Save both details
                 $user->save();
                 $detail_table->avatar = $user->avatar;
@@ -57,7 +67,7 @@ class DataMigrationController extends Controller
                     $new->email = $user->email;
                     $new->phone = $user->phone;
                     $new->avatar = $user->avatar;
-    
+
                     $break_name = explode(" ",$user->name, 2);
                     $new->firstname = $break_name[0];
                     if(count($break_name) === 2){
@@ -65,7 +75,7 @@ class DataMigrationController extends Controller
                     } else {
                         $new->lastname = null;
                     }
-    
+
                     if(count($break_name) === 1){
                         $slug = str_replace(" ", "-", strtolower($break_name[0])) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                         $new->slug = $slug;
@@ -73,7 +83,7 @@ class DataMigrationController extends Controller
                         $slug = str_replace(" ", "-", strtolower($break_name[0] . $break_name[1])) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                         $new->slug = $slug;
                     }
-                    
+
                     $new->save();
                 // }
             }
@@ -99,7 +109,7 @@ class DataMigrationController extends Controller
                         'qualification_id' => $data->qualification_id,
                         'created_at' => $data->created_at,
                         'updated_at' => $data->updated_at,
-                    ),
+                    )
                 );
             }
         }
@@ -119,7 +129,7 @@ class DataMigrationController extends Controller
                         'slug' => $data->slug,
                         'created_at' => $data->created_at,
                         'updated_at' => $data->updated_at,
-                    ),
+                    )
                 );
             }
         }
@@ -135,7 +145,7 @@ class DataMigrationController extends Controller
                     array(
                         'opportunity_id' => $data->opportunity_id,
                         'country_id' => $data->eligible_region_id
-                    ),
+                    )
                 );
             }
         }
@@ -153,7 +163,7 @@ class DataMigrationController extends Controller
                     array(
                         'opportunity_id' => $data->id,
                         'country_id' => $id
-                    ),
+                    )
                 );
         }
         return count($old_data);
