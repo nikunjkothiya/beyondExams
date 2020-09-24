@@ -253,18 +253,6 @@ class ApiAuthController extends Controller
                         ['provider_id' => $user->id, 'provider' => $provider]
                     );
 
-                    // Save user generic details
-                    $break_name = explode(" ", $user->name, 2);
-                    $new_details = new UserDetail();
-                    $new_details->user_id = $new_user->id;
-                    $new_details->firstname = $break_name[0];
-                    if (count($break_name) > 1) {
-                        $new_details->lastname = $break_name[1];
-                    }
-                    $new_details->email = $user->email;
-                    $new_details->save();
-
-
                     switch ($request->user_role) {
                         case $this->user_role_id:
                             $new_user->role()->create(
@@ -311,17 +299,6 @@ class ApiAuthController extends Controller
                     $phoenix_user_id = $new_user->id;
                     $global_user_id = $user->id;
                     $email = $user->email;
-
-                    // Save user generic details
-                    $break_name = explode(" ", $user->name, 2);
-                    $new_details = new UserDetail();
-                    $new_details->user_id = $new_user->id;
-                    $new_details->firstname = $break_name[0];
-                    if (count($break_name) > 1) {
-                        $new_details->lastname = $break_name[1];
-                    }
-                    $new_details->email = $user->email;
-                    $new_details->save();
 
                 } else if ($provider == 'phone') {
                     $auth = app('firebase.auth');
@@ -372,6 +349,22 @@ class ApiAuthController extends Controller
                 } else {
                     return $this->apiResponse->sendResponse(500, 'Provider not supported}', null);
                 }
+
+                // Save user generic details
+                $new_details = UserDetail::where('user_id', $new_user->id)->first();
+                $break_name = explode(" ", $new_user->name, 2);
+                if (is_null($new_details)) {
+                    $new_details = new UserDetail();
+                    $new_details->user_id = $new_user->id;
+                }
+                $new_details->firstname = $break_name[0];
+                if (count($break_name) > 1)
+                    $new_details->lastname = $break_name[1];
+                if (!is_null($new_user->email))
+                    $new_details->email = $new_user->email;
+                if (!is_null($new_user->phone))
+                    $new_details->phone = $new_user->phone;
+                $new_details->save();
             }
 
             $client = new Client();
