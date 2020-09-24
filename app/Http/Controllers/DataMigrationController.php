@@ -17,7 +17,6 @@ class DataMigrationController extends Controller
         foreach($users as $u){
             $user = User::where('id', $u->id)->first();
             $detail_table = UserDetail::where('user_id', $user->id)->first();
-
             if($detail_table){
 
                 // Check if name is null in users table but is avaiable in user_details

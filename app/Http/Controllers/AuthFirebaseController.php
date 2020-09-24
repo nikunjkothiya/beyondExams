@@ -172,9 +172,12 @@ class AuthFirebaseController extends Controller
             }
 
             // Save user generic details
+            $new_details = UserDetail::where('user_id', $new_user->id)->first();
+            if(is_null($new_details)){
+                $new_details = new UserDetail();
+                $new_details->user_id = $new_user->id;
+            }
             $break_name = explode(" ",$new_user->name, 2);
-            $new_details = new UserDetail();
-            $new_details->user_id = $new_user->id;
             $new_details->firstname = $break_name[0];
             if(count($break_name) > 1){
                 $new_details->lastname = $break_name[1];

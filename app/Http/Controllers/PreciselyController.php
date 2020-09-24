@@ -116,9 +116,10 @@ class PreciselyController extends Controller
 
                 // Set commono data to user_details table
                 $details = UserDetail::where('user_id', $user_id)->first();
-                if (!$details)
+                if (is_null($details)){
                     $details = new UserDetail();
-                $details->user_id = $user_id;
+                    $details->user_id = $user_id;
+                }
                 /* $details->user_id = $user_id;*/
                 if (isset($request->firstname))
                     $details->firstname = $request->firstname;
