@@ -104,6 +104,16 @@ class PreciselyController extends Controller
                     $img = $this->base_url . $aws_root . $filePath;
                 }
 
+                // Save data to users table
+                if (isset($request->lastname)){
+                    $user->name = $request->firstname . ' ' . $request->lastname;
+                } else {
+                    $user->name = $request->firstname;
+                }
+                $user->email = $request->email;
+                $user->save;
+
+
                 // Set commono data to user_details table
                 $details = UserDetail::where('user_id', $user_id)->first();
                 if (!$details)
@@ -230,6 +240,11 @@ class PreciselyController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
+
+                // Save data to users table
+                $user->name = $request->firstname . ' ' . $request->lastname;
+                $user->email = $request->email;
+                $user->save;
 
                 // Updating Common User Details
                 $details = UserDetail::where('user_id', $user_id)->first();
