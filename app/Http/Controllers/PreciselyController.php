@@ -131,16 +131,13 @@ class PreciselyController extends Controller
                     $details->phone = $request->phone;
                 if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
-                if (isset($request->firstname) && isset($request->lastname)) {
-                    $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                    $details->slug = $slug;
-                }
-                if (isset($request->profile_link)) {
+                if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
-                }
-                if (isset($request->avatar) && !is_null($img)) {
+                if (isset($request->avatar) && !is_null($img))
                     $details->avatar = $img;
-                }
+
+                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $details->slug = $slug;
                 $details->save();
 
                 // Updating Specific mentor details
@@ -260,6 +257,8 @@ class PreciselyController extends Controller
                     $details->phone = $request->phone;
                 if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
+                if (!is_null($user->avatar))
+                    $details->avatar = $user->avatar;
 
                 $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
