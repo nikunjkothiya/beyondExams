@@ -7,6 +7,7 @@ use App\MentorVerification;
 use App\StudentDetail;
 use App\User;
 use App\UserDetail;
+use App\UserLastLogin;
 use App\UserRole;
 use App\UserSocial;
 use Auth;
@@ -20,6 +21,7 @@ use InvalidArgumentException;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
 use Validator;
+use Carbon\Carbon;
 
 class ApiAuthController extends Controller
 {
@@ -237,6 +239,14 @@ class ApiAuthController extends Controller
                         $flag = 1;
                     }
                 }
+
+                $loginActivity = UserLastLogin::where('user_id', $user_id)->first();
+                if (is_null($loginActivity)) {
+                    $loginActivity = new UserLastLogin();
+                    $loginActivity->user_id = $user_id;
+                }
+                $loginActivity->updated_at = Carbon::now();
+                $loginActivity->save();
             } else {
                 // Create New User
                 if ($provider == 'google') {
@@ -299,7 +309,6 @@ class ApiAuthController extends Controller
                     $phoenix_user_id = $new_user->id;
                     $global_user_id = $user->id;
                     $email = $user->email;
-
                 } else if ($provider == 'phone') {
                     $auth = app('firebase.auth');
                     $firebase_user = $auth->getUser($user->id);
@@ -365,6 +374,14 @@ class ApiAuthController extends Controller
                 if (!is_null($new_user->phone))
                     $new_details->phone = $new_user->phone;
                 $new_details->save();
+
+                $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
+                if (is_null($loginActivity)) {
+                    $loginActivity = new UserLastLogin();
+                    $loginActivity->user_id = $new_user->id;
+                }
+                $loginActivity->updated_at = Carbon::now();
+                $loginActivity->save();
             }
 
             $client = new Client();
@@ -476,6 +493,14 @@ class ApiAuthController extends Controller
             }
 
             $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
+
+            $loginActivity = UserLastLogin::where('user_id', $user_id)->first();
+            if (is_null($loginActivity)) {
+                $loginActivity = new UserLastLogin();
+                $loginActivity->user_id = $user_id;
+            }
+            $loginActivity->updated_at = Carbon::now();
+            $loginActivity->save();
 
             if ($request->user_role == $this->user_role_id) {
                 $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();

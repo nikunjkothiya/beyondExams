@@ -11,18 +11,23 @@ use App\MessageType;
 use App\Note;
 use App\Reply;
 use App\Resource;
+use App\ResourceComment;
 use App\ResourceKey;
+use App\ResourceLike;
+use App\ResourceTimeline;
 use App\Test;
 use App\TestScore;
 use App\Transaction;
 use App\User;
 use App\UserKey;
+use App\UserLastLogin;
 use http\Message;
 use Illuminate\Http\Request;
 
 use Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class ResourceController extends Controller
 {
@@ -31,6 +36,135 @@ class ResourceController extends Controller
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
+    }
+
+    public function generate_resource_timeline(){
+        $users = UserLastLogin::where('updated_at', '>', Carbon::now()->subWeek())->get();
+        $resources = Resource::orderBy('updated_at', 'DESC')->limit(50)->get();
+        $oldTimelines = ResourceTimeline::whereIn('user_id', $users);
+        if(!is_null($oldTimelines->get()))
+            $oldTimelines->delete();
+        foreach($users as $user){
+            $i = 1;
+            foreach($resources as $resource){
+                $timeline = new ResourceTimeline();
+                $timeline->resource_id = $resource->id;
+                $timeline->user_id = $user->id;
+                $timeline->priority = $i;
+                $timeline->save();
+                $i = $i +1;
+            }
+        }
+    }
+
+
+    public function get_resource_comments(Request $request){
+        $validator = Validator::make($request->all(), [
+            'resource_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
+        }
+
+        $comments = ResourceComment::where('resource_id', $request->resource_id)->get();
+        // Send notification via Notification controller function or guzzle
+        return $this->apiResponse->sendResponse(200, 'Success', $comments);
+    }
+
+    public function add_resource_comment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string',
+            'resource_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $resource = Resource::find($request->resource_id);
+        if(is_null($resource))
+            return $this->apiResponse->sendResponse(404, 'Resource not found.', null);
+
+        $comment = new ResourceComment();
+        $comment->message = $request->message;
+        $comment->user_id = $user->id;
+        $comment->resource_id = $resource->id;
+        if(isset($request->is_child))
+            $comment->is_child = $request->is_child;
+        if(isset($request->message_type))
+            $comment->message_type = $request->message_type;
+        $comment->save();
+
+        $resource->num_comments = $resource->num_comments + 1;
+        $resource->save();
+        // Send notification via Notification controller function or guzzle
+        return $this->apiResponse->sendResponse(200, 'Comment added successfully', $comment);
+    }
+
+    public function add_resource_like(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'resource_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $resource = Resource::find($request->resource_id);
+        if(is_null($resource))
+            return $this->apiResponse->sendResponse(404, 'Resource not found.', null);
+
+        $liked = $resource->likes()->where('user_id', $user->id);
+
+        if(!is_null($liked->first())){
+            $liked->delete();
+            $resource->num_likes = $resource->num_likes - 1;
+            $resource->save();
+            return $this->apiResponse->sendResponse(200, 'Like removed', null);
+        }
+
+        $resource->likes()->create([
+            'user_id' => $user->id
+        ]);
+
+        $resource->num_likes = $resource->num_likes + 1;
+        $resource->save();
+
+        // Send notification via Notification controller function or guzzle
+
+        return $this->apiResponse->sendResponse(200, 'Resource liked', null);
+    }
+
+    // TO be removed
+    public function add_resource_reply(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string',
+            'resource_id' => 'required|integer',
+            'comment_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+        $comment = Comment::find($request->comment_id);
+
+        $reply = new Reply();
+        $reply->message = $request->message;
+        $reply->user_id = $user->id;
+
+
+        $comment->replies()->save($reply);
+        $reply->save();
+
+        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
     }
 
     public function save_new_key(request $request)
@@ -166,6 +300,10 @@ class ResourceController extends Controller
 
             // Capture the payment
             if ($payment->status == 'authorized') {
+                $key = ResourceKey::where('id', $request->key_id)->get();
+                if(is_null($key))
+                    return $this->apiResponse->sendResponse(404, 'Key Does not exist', null);
+
                 // Capturing Payment
                 $payment->capture(
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
@@ -177,10 +315,16 @@ class ResourceController extends Controller
                 $txn->product_id = 2;
                 $txn->valid = 1;
                 $txn->save();
-
+                
                 $txn->user_key()->create(
-                    ['key_id' => $request->key_id, 'user_id' => Auth::user()->id]
+                    ['key_id' => $key->id, 'user_id' => Auth::user()->id]
                 );
+
+                $resource = Resource::where('id', $key->resource_id)->first();
+                if($resource){
+                    $resource->num_subscribers = $resource->num_subscribers + 1;
+                    $resource->save();
+                }
 
                 return $this->apiResponse->sendResponse(200, 'Purchase Successful. Key Added', null);
             } else if ($payment->status == 'refunded') {
@@ -287,7 +431,7 @@ class ResourceController extends Controller
             'resource_id' => 'required|integer',
             'test_doc' => 'file|mimes:pdf',
             'test_image' => 'image'
-//            'json_content'
+            //            'json_content'
         ]);
 
         if ($validator->fails()) {
@@ -319,7 +463,6 @@ class ResourceController extends Controller
 
                     $test->url = $filePath;
                     $test->type_id = MessageType::where('type', 'document')->value('id');
-
                 } else {
                     return $this->apiResponse->sendResponse(404, 'Resource doesnt exist', null);
                 }
@@ -352,58 +495,7 @@ class ResourceController extends Controller
             $test->save();
 
             return $this->apiResponse->sendResponse(200, 'Test added successfully', null);
-
         }
-    }
-
-    public function add_resource_comment(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'message' => 'required|string',
-            'resource_id' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
-
-        $user = Auth::user();
-        $resource = Resource::find($request->resource_id);
-
-        $comment = new Comment();
-        $comment->message = $request->message;
-        $comment->user_id = $user->id;
-
-        $resource->comments()->save($comment);
-        $comment->save();
-
-        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
-    }
-
-    public function add_resource_reply(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'message' => 'required|string',
-            'resource_id' => 'required|integer',
-            'comment_id' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
-
-        $user = Auth::user();
-        $comment = Comment::find($request->comment_id);
-
-        $reply = new Reply();
-        $reply->message = $request->message;
-        $reply->user_id = $user->id;
-
-
-        $comment->replies()->save($reply);
-        $reply->save();
-
-        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
     }
 
     public function get_test_scores(Request $request)

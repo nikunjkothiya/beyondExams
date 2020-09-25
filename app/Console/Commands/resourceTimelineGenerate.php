@@ -4,21 +4,21 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
-class SitemapCron extends Command
+class resourceTimelineGenerate extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sitemap:cron';
+    protected $signature = 'resourceTimeline:generate';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate latest sitemap files and index.';
+    protected $description = 'Generate latest resource timeline for active users';
 
     /**
      * Create a new command instance.
@@ -37,9 +37,9 @@ class SitemapCron extends Command
      */
     public function handle()
     {
-        $controller = app()->make('App\Http\Controllers\UtilController');
-        app()->call([$controller, 'generate_latest_sitemap']);
+        $controller = app()->make('App\Http\Controllers\ResourceController');
+        app()->call([$controller, 'generate_resource_timeline']);
 
-        $this->info('Sitemap:Cron Cummand Run successfully!');
+        $this->info('resourceTimeline:generate Cummand Run successfully!');
     }
 }
