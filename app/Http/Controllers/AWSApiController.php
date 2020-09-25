@@ -115,7 +115,7 @@ class AWSApiController extends Controller
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
-/*            if (!is_null($file[0]["thumbnail_url"]))
+            /*            if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
@@ -208,6 +208,9 @@ class AWSApiController extends Controller
                         $key['price'] = $kp->price;
                         $key['currency'] = $cur->name;
                     }
+                }
+                if($file->author_id == $request->user_id){
+                    $file['unlocked'] = true;
                 }
                 $file['keys'] = $keys;
             }
@@ -410,7 +413,7 @@ class AWSApiController extends Controller
 
                 $filePath = $this->file_types[$request->type] . $name;
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name . $ext);
-//                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
+                //                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
                 $filePath = $filePath . $ext;
                 $name = $name . $ext;
             } else {
@@ -484,15 +487,13 @@ class AWSApiController extends Controller
 
                 // $duration = 180;
 
-
-
                 if (is_null($duration) || $duration == 0)
                     $duration = 47;
-//                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
+                // return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-//                WebmToMp4::dispatch();
+                // WebmToMp4::dispatch();
 
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
