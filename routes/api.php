@@ -79,6 +79,9 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
     // Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
     // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
+    Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
+
+    // Resources
     Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
     Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
     Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
