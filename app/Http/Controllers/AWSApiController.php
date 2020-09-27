@@ -110,11 +110,42 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
+/*	    $user = Auth::user();*/
+
             $file = $this->resourceCollection->where('slug', $request->slug)->get();
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
-            /*            if (!is_null($file[0]["thumbnail_url"]))
+
+            
+/*                $file['unlocked'] = false;
+                $user_keys = UserKey::where('user_id', $user->user_id)->get();
+                $keys = ResourceKey::where('resource_id', $file->id)->get();
+                if (count($keys) === 0) {
+                    $file['unlocked'] = true;
+                }
+                if ($keys) {
+                    foreach ($keys as $key) {
+                        foreach ($user_keys as $user_key) {
+                            if ($user_key->key_id === $key->key_id) {
+                                $file['unlocked'] = true;
+                            }
+                        }
+                        unset($key['id']);
+                        unset($key['resource_id']);
+                        $k = Key::where('id', $key->key_id)->first();
+                        $kp = KeyPrice::where('key_id', $key->key_id)->first();
+                        $cur = Currency::where('id', $kp->currency_id)->first();
+
+                        $key['name'] = $k->name;
+                        $key['price'] = $kp->price;
+                        $key['currency'] = $cur->name;
+                    }
+                }
+                $file['keys'] = $keys;
+*/
+
+/*            if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 

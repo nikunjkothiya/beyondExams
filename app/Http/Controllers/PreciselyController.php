@@ -538,6 +538,8 @@ class PreciselyController extends Controller
             } else {
                 $data['mentor_details'] = $pcheck;
             }
+	    $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
+
             $avatar = DB::table('users')->select('avatar')->where('id', $pcheck->user_id)->first();
             $data['avatar'] = $avatar->avatar;
 

@@ -139,6 +139,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 Route::post('razorpay_demo_checkout', ['uses' => 'PreciselyController@razorpay_demo_checkout']);
 
 
+Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
+
 Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
@@ -164,7 +166,6 @@ Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
 Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 Route::post('save_playlist', ['uses' => 'AWSApiController@save_playlist']);
 Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
-Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 Route::post('upload_single_image', ['uses' => 'AWSApiController@upload_single_image']);
 
 
