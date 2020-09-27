@@ -2,27 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Currency;
+use App\FileType;
+use App\Key;
+use App\KeyPrice;
 use App\MessageType;
 use App\Note;
 use App\Playlist;
-use Auth;
-use App\User;
-use App\FileType;
 use App\Resource;
 use App\ResourceKey;
+use App\User;
+use App\UserKey;
 use App\UserResource;
 use App\UserRole;
-use App\UserKey;
-use App\Key;
-use App\KeyPrice;
-use App\Currency;
+use Auth;
 use Exception;
-use Illuminate\Http\Request;
-use App\Http\Controllers\UserRoleApiResponse;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use FFMpeg;
 use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 
 class AWSApiController extends Controller
@@ -33,12 +32,14 @@ class AWSApiController extends Controller
     private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
     private $resourceLockController;
+    private $resourceCollection;
 
     public function __construct(ApiResponse $apiResponse, ResourceLockController $resourceLockController)
     {
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
         $this->resourceLockController = $resourceLockController;
+        $this->resourceCollection = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments']);
     }
 
     public function upload_single_image(Request $request)
@@ -115,13 +116,13 @@ class AWSApiController extends Controller
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
-/*            if (!is_null($file[0]["thumbnail_url"]))
-                $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
+            /*            if (!is_null($file[0]["thumbnail_url"]))
+                            $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
-            if ($file[0]["file_type_id"] == 3)
-                $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
-*/
+                        if ($file[0]["file_type_id"] == 3)
+                            $file[0]["file_url"] = $this->base_url . $file[0]["file_url"];
+            */
             return $this->apiResponse->sendResponse(200, 'Success', $file);
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -152,19 +153,19 @@ class AWSApiController extends Controller
             }
             if (isset($request->author_id)) {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 }
             } else {
                 if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->get();
+                    $all_files = $this->resourceCollection->where('file_type_id', $request->type)->orderBy('id', 'DESC')->get();
                 }
             }
 
@@ -222,7 +223,7 @@ class AWSApiController extends Controller
     public function get_resource_stack(Request $request)
     {
         try {
-            $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])
+            $all_files = $this->resourceCollection
                 ->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)
                 ->orderBy('id', 'DESC')->take(9)->get();
 
@@ -260,50 +261,50 @@ class AWSApiController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
             'type' => 'required|integer|min:0|max:' . FileType::count(),
-            'author_id' => 'integer'
+            'author_id' => 'integer',
+            'keyword' => 'string'
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
+        $per_page = 10;
+        $flag = 2;
+
         try {
-            $per_page = 10;
-            $flag = 2;
-            $user_resources = UserResource::where('user_id', $request->user_id)->get();
-            if (count($user_resources) === 0) {
-                // User has 2 free videos
-                $flag = 0;
-            } elseif (count($user_resources) === 1) {
-                // User has 1 free video
-                $flag = 1;
-            }
-            if (isset($request->author_id)) {
-                if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
-                } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
-                } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
-                }
+            if ($request->keyword) {
+                $all_files = $this->resourceCollection->where('title', 'like', "%{$request->keyword}%")->orderBy('id', 'DESC')->paginate($per_page);;
             } else {
-                if ($request->type == 0) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
-                } else if ($request->type == 3) {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                $user_resources = UserResource::where('user_id', $request->user_id)->get();
+                if (count($user_resources) === 0) {
+                    // User has 2 free videos
+                    $flag = 0;
+                } elseif (count($user_resources) === 1) {
+                    // User has 1 free video
+                    $flag = 1;
+                }
+
+                $resp['flag'] = $flag;
+
+                if (isset($request->author_id)) {
+                    if ($request->type == 0) {
+                        $all_files = $this->resourceCollection->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else if ($request->type == 3) {
+                        $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else {
+                        $all_files = $this->resourceCollection->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
+                    }
                 } else {
-                    $all_files = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
+                    if ($request->type == 0) {
+                        $all_files = $this->resourceCollection->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else if ($request->type == 3) {
+                        $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else {
+                        $all_files = $this->resourceCollection->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
+                    }
                 }
             }
-            /*
-            foreach ($all_files as $file) {
-                if (!is_null($file["thumbnail_url"]))
-                    $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                if ($file["file_type_id"] == 3)
-                    $file["file_url"] = $this->base_url . $file["file_url"];
-            }
-            */
-            $resp['flag'] = $flag;
 
 
             foreach ($all_files as $file) {
@@ -353,7 +354,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $all_files = Resource::with('user:id,name,avatar')->where('title', 'like', "%{$request->keyword}%")->get();
+            $all_files = $this->resourceCollection->where('title', 'like', "%{$request->keyword}%")->get();
 
             foreach ($all_files as $file) {
                 if (!is_null($file["thumbnail_url"]))
@@ -483,7 +484,6 @@ class AWSApiController extends Controller
                 }
 
                 // $duration = 180;
-
 
 
                 if (is_null($duration) || $duration == 0)
