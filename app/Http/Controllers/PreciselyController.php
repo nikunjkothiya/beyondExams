@@ -16,7 +16,10 @@ use App\FileType;
 use App\Language;
 use App\Opportunity;
 use App\Qualification;
+use App\Resource;
+use App\ResourceKey;
 use App\Tag;
+use App\Transaction;
 use App\User;
 use App\UserDetail;
 use App\MentorDetail;
@@ -1003,4 +1006,73 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
+    function razorpay_demo_checkout(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "payment_id" => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+
+            // Set Variables
+            $api = new Api(env('RAZOR_KEY'), env('RAZOR_SECRET'));
+
+            // Get Payment Details
+            $payment = $api->payment->fetch($request->payment_id);
+
+//            $mentor_detail = MentorDetail::where('user_id', $request->mentor_id)->first();
+//
+//            if (!$mentor_detail) {
+//                return $this->apiResponse->sendResponse(400, 'Mentor does not exist', null);
+//            }
+
+            if (!$payment) {
+                return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
+            }
+
+            // Capture the payment
+            if ($payment->status == 'authorized') {
+
+                // Capturing Payment
+                $payment->capture(
+                    array('amount' => $payment->amount, 'currency' => $payment->currency)
+                );
+                // Create A TXN
+//                $txn = new Transaction();
+//                $txn->transaction_id = $payment->id;
+//                $txn->user_id = Auth::id();
+//                $txn->mentor_id = $request->mentor_id;
+//                $txn->product_id = 3;
+//                $txn->valid = 1;
+//                $txn->save();
+
+
+
+//                $mentor_detail->num_paid_subscribers = $mentor_detail->num_paid_subscribers + 1;
+//                $mentor_detail->save();
+
+                return $this->apiResponse->sendResponse(200, 'Purchase Successful.', null);
+            } else if ($payment->status == 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status == 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status == 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
+            } else {
+                // Unkown Error
+                return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(400, 'Payment Error', $e->getMessage());
+        }
+    }
+
 }

@@ -136,6 +136,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 });
 
+Route::post('razorpay_demo_checkout', ['uses' => 'PreciselyController@razorpay_demo_checkout']);
+
 
 Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
