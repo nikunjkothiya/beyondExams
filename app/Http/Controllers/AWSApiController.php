@@ -31,13 +31,13 @@ class AWSApiController extends Controller
     private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
-    private $resourceController;
+    private $resourceCollection;
 
-    public function __construct(ApiResponse $apiResponse, ResourceController $resourceController)
+    public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
-        $this->resourceController = $resourceController;
+        $this->resourceCollection = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments']);
     }
 
     public function upload_single_image(Request $request)
@@ -112,7 +112,7 @@ class AWSApiController extends Controller
 
 /*	    $user = Auth::user();*/
 
-            $file = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->where('slug', $request->slug)->get();
+            $file = $this->resourceCollection->where('slug', $request->slug)->get();
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
@@ -626,7 +626,7 @@ class AWSApiController extends Controller
                 $resourceKey->save();
             }
 
-            return $this->apiResponse->sendResponse(200, 'Success', Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments'])->find($new_resource->id));
+            return $this->apiResponse->sendResponse(200, 'Success', $this->resourceCollection->find($new_resource->id));
         } catch (\Exception $e) {
 
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
