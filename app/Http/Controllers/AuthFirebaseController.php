@@ -6,14 +6,19 @@ use App\MentorDetail;
 use App\MentorVerification;
 use App\User;
 use App\UserDetail;
+use App\UserLastLogin;
 use App\UserRole;
 use App\UserSocial;
+use Auth;
+use DB;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Validator;
 use DB;
+use Carbon\Carbon;
 
 class AuthFirebaseController extends Controller
 {
@@ -94,7 +99,7 @@ class AuthFirebaseController extends Controller
                 // $new_user->phone = $firebase_user->phone;
                 $new_user->unique_id = $firebase_user->id;
                 $new_user->avatar = $firebase_user->avatar;
-		        $new_user->save();
+                $new_user->save();
 
                 // Assign Role Entry if not existing
                 if (!$new_user->role()) {
@@ -173,19 +178,27 @@ class AuthFirebaseController extends Controller
 
             // Save user generic details
             $new_details = UserDetail::where('user_id', $new_user->id)->first();
-            $break_name = explode(" ",$new_user->name, 2);
-            if(is_null($new_details)){
+            $break_name = explode(" ", $new_user->name, 2);
+            if (is_null($new_details)) {
                 $new_details = new UserDetail();
                 $new_details->user_id = $new_user->id;
             }
             $new_details->firstname = $break_name[0];
-            if(count($break_name) > 1)
+            if (count($break_name) > 1)
                 $new_details->lastname = $break_name[1];
-            if(!is_null($new_user->email))
+            if (!is_null($new_user->email))
                 $new_details->email = $new_user->email;
-            if(!is_null($new_user->phone))
+            if (!is_null($new_user->phone))
                 $new_details->phone = $new_user->phone;
             $new_details->save();
+
+            $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
+            if(is_null($loginActivity)){
+                $loginActivity = new UserLastLogin();
+                $loginActivity->user_id = $new_user->id;
+            }
+            $loginActivity->updated_at = Carbon::now();
+            $loginActivity->save();
 
             $client = new Client();
 
@@ -340,6 +353,14 @@ class AuthFirebaseController extends Controller
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
             }
 
+            $loginActivity = UserLastLogin::where('user_id', $user->id)->first();
+            if(is_null($loginActivity)){
+                $loginActivity = new UserLastLogin();
+                $loginActivity->user_id = $user->id;
+            }
+            $loginActivity->updated_at = Carbon::now();
+            $loginActivity->save();
+
             if ($request->user_role == $this->student_role_id) {
                 $flag = $this->getStudentFlag($user);
             } elseif ($request->user_role == $this->mentor_role_id) {
@@ -360,5 +381,58 @@ class AuthFirebaseController extends Controller
             'refresh_token' => $refreshToken,
             'username' => $unique_id
         ]);
+    }
+
+    public function logout()
+    {
+        try {
+            $response = 1;
+            $user_id = Auth::user()->id;
+            $accessTokens = $this->token($user_id);
+            foreach ($accessTokens as $accessToken) {
+                $response = $response * $this->proxyLogout($accessToken->id);
+            }
+            if ($response) {
+                return $this->apiResponse->sendResponse(200, 'Token successfully destroyed', $this->json_data);
+            }
+            $response_data["message"] = "Logout Error";
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function token($user_id)
+    {
+        try {
+            $token = $this->db
+                ->table('oauth_access_tokens')
+                ->where('user_id', $user_id)
+                ->where('revoked', 0)
+                ->get(['id']);
+            return $token;
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function proxyLogout($accessToken)
+    {
+        try {
+            $refreshToken = $this->db
+                ->table('oauth_refresh_tokens')
+                ->where('access_token_id', $accessToken)
+                ->update([
+                    'revoked' => true
+                ]);
+            if ($refreshToken) {
+                if ($this->revoke($accessToken)) {
+                    return 1;
+                }
+            }
+            return 0;
+        } catch (Exception $e) {
+            return 0;
+        }
     }
 }

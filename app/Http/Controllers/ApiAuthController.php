@@ -299,7 +299,6 @@ class ApiAuthController extends Controller
                     $phoenix_user_id = $new_user->id;
                     $global_user_id = $user->id;
                     $email = $user->email;
-
                 } else if ($provider == 'phone') {
                     $auth = app('firebase.auth');
                     $firebase_user = $auth->getUser($user->id);

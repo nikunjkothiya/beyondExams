@@ -8,9 +8,11 @@ use App\ActionUser;
 use App\ActionUserOpportunity;
 use App\Analytics;
 use App\Country;
+use App\Currency;
 use App\Discipline;
 use App\Domain;
 use App\DomainUser;
+use App\FileType;
 use App\Language;
 use App\Opportunity;
 use App\Qualification;
@@ -83,6 +85,8 @@ class PreciselyController extends Controller
                     'organisation' => 'string|max:255',
                     'profile_link' => 'string|max:1024',
                     'avatar' => 'image',
+                    'price' => 'between:0,999.99',
+                    'currency_id' => 'int|min:0|max:' . Currency::count(),
                 ]);
 
                 if ($validator->fails()) {
@@ -145,6 +149,10 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new MentorDetail();
                     $record->user_id = $user_id;
+                    if (isset($request->price) && isset($request->currency_id)){
+                        $record->price = $request->price;
+                        $record->currency_id = $request->currency_id;
+                    }
                     if (isset($request->designation))
                         $record->designation = $request->designation;
                     if (isset($request->organisation))
@@ -491,11 +499,55 @@ class PreciselyController extends Controller
             // Update Flags
             if ($dcheck) {
                 $verified = MentorVerification::where('user_id', $user->id)->first();
-                $flag;
+
                 if ($verified->is_verified == 0) {
                     // Mentor Details filled but not verified
                     $flag = 2;
-                } elseif ($verified->is_verified == 1) {
+                } else {
+                    // Mentor Verified
+                    $flag = 1;
+                }
+                $dcheck->flag = $flag;
+                $dcheck->save();
+            }
+
+
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
+        }
+    }
+
+    public function get_mentor_profile_from_slug(Request $request, $slug)
+    {
+
+        try {
+            $pcheck = UserDetail::where('slug', $slug)->first();
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(400, 'Invalid slug', $e->getMessage());
+        }
+
+        if ($pcheck) {
+            $dcheck = MentorDetail::where('user_id', $pcheck->user_id)->first();
+
+            if ($dcheck) {
+                $data['mentor_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
+            } else {
+                $data['mentor_details'] = $pcheck;
+            }
+	    $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
+
+            $avatar = DB::table('users')->select('avatar')->where('id', $pcheck->user_id)->first();
+            $data['avatar'] = $avatar->avatar;
+
+            // Update Flags
+            if ($dcheck) {
+                $verified = MentorVerification::where('user_id', $pcheck->user_id)->first();
+
+                if ($verified->is_verified == 0) {
+                    // Mentor Details filled but not verified
+                    $flag = 2;
+                } else {
                     // Mentor Verified
                     $flag = 1;
                 }
