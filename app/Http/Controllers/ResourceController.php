@@ -20,6 +20,8 @@ use App\UserKey;
 use http\Message;
 use Illuminate\Http\Request;
 
+use Razorpay\Api\Api;
+
 use Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -154,7 +156,7 @@ class ResourceController extends Controller
             $payment = $api->payment->fetch($request->payment_id);
 
             // Check if resource_key exist
-            $resource_key = ResourceKey::where('id', $request->key_id)->first();
+            $resource_key = ResourceKey::where('key_id', $request->key_id)->first();
 
             if (!$resource_key) {
                 return $this->apiResponse->sendResponse(400, 'Resource Key Does not exist', null);

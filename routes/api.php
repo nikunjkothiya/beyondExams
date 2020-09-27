@@ -87,6 +87,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
     Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);
     Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
+//    Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 
     // Premium Subscription
     Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
@@ -132,6 +133,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
 });
 
+Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 
 Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']);
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
@@ -158,7 +160,6 @@ Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
 Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
 Route::post('save_playlist', ['uses' => 'AWSApiController@save_playlist']);
 Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
-Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
 Route::post('upload_single_image', ['uses' => 'AWSApiController@upload_single_image']);
 
 
