@@ -43,6 +43,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     // Profile APi
     Route::post('logout', ['uses' => 'ApiAuthController@logout']);
+    Route::post('logoutFirebase', ['uses' => 'AuthFirebaseController@logoutFirebase']);
     Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
     Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
     Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
