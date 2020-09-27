@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\UpdateLastLoginStatus;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -69,6 +70,7 @@ class Kernel extends HttpKernel
         'locale' => \App\Http\Middleware\Localization::class,
 //	'auth.api' => \App\Http\Middleware\ApiAuthenticate::class,
         'verifyAuth' => \App\Http\Middleware\CheckAuthToken::class,
+        'login_status' => UpdateLastLoginStatus::class
     ];
 
     /**
