@@ -2,6 +2,9 @@
 
 namespace App\Http;
 
+
+use App\Http\Middleware\UpdateLastLoginStatus;
+
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CheckAdminAccess;
 use App\Http\Middleware\CheckAuthToken;
@@ -10,6 +13,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
+
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Http\Middleware\SetCacheHeaders;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -80,8 +84,11 @@ class Kernel extends HttpKernel
         'verified' => EnsureEmailIsVerified::class,
         'locale' => Localization::class,
 //	'auth.api' => \App\Http\Middleware\ApiAuthenticate::class,
+
+        'login_status' => UpdateLastLoginStatus::class,
         'verifyAuth' => CheckAuthToken::class,
         'admin_access' => CheckAdminAccess::class,
+
     ];
 
     /**

@@ -28,6 +28,7 @@ Route::get('get_all_domains', ['uses' => 'PreciselyController@get_all_domains'])
 
 // Misc APi
 Route::get('opportunity/{slug}', ['uses' => 'ApiOpportunityController@get_opp_by_slug']);
+Route::get('mentor/{slug}', ['uses' => 'PreciselyController@get_mentor_profile_from_slug']);
 Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_location']);
 Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
@@ -40,97 +41,99 @@ Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
+    Route::group(['middleware' => ['login_status']], function () {
 
-    // Profile APi
-    Route::post('logout', ['uses' => 'ApiAuthController@logout']);
-    Route::post('logoutFirebase', ['uses' => 'AuthFirebaseController@logoutFirebase']);
-    Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
-    Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
-    Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
-    Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
-    Route::post('submit_org_profile', ['uses' => 'PreciselyController@submit_org_profile']);
-    Route::get('get_org_profile', ['uses' => 'PreciselyController@get_org_profile']);
+        // Profile APi
+        Route::post('logout', ['uses' => 'ApiAuthController@logout']);
+        Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
+        Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
+        Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
+        Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
+        Route::post('submit_org_profile', ['uses' => 'PreciselyController@submit_org_profile']);
+        Route::get('get_org_profile', ['uses' => 'PreciselyController@get_org_profile']);
 
-    // User Misc Data
-    Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);
-    Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
-    Route::post('save_user_filters', ['uses' => 'PreciselyController@save_user_filters']);
-    Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
-    Route::post('save_user_domains', ['uses' => 'PreciselyController@save_user_domains']);
-    Route::get('get_user_domains', ['uses' => 'PreciselyController@get_user_domains']);
+        // User Misc Data
+        Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);
+        Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
+        Route::post('save_user_filters', ['uses' => 'PreciselyController@save_user_filters']);
+        Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
+        Route::post('save_user_domains', ['uses' => 'PreciselyController@save_user_domains']);
+        Route::get('get_user_domains', ['uses' => 'PreciselyController@get_user_domains']);
 
-    // Opportuinities APi
-    Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
-    Route::get('new_opportunities', ['uses' => 'ApiOpportunityController@get_new_opportunities']);
-    Route::post('unsave_opportunity', ['uses' => 'PreciselyController@unsave_opportunity']);
-    Route::post('save_opportunity', ['uses' => 'PreciselyController@save_opportunity']);
-    Route::get('show_saved_opportunity', ['uses' => 'PreciselyController@show_saved_opportunity']);
+        // Opportuinities APi
+        Route::get('opportunities', ['uses' => 'ApiOpportunityController@get_opportunities']);
+        Route::get('new_opportunities', ['uses' => 'ApiOpportunityController@get_new_opportunities']);
+        Route::post('unsave_opportunity', ['uses' => 'PreciselyController@unsave_opportunity']);
+        Route::post('save_opportunity', ['uses' => 'PreciselyController@save_opportunity']);
+        Route::get('show_saved_opportunity', ['uses' => 'PreciselyController@show_saved_opportunity']);
 
-    Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
-    Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
+        Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
+        Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
-    Route::get('get_user_views_opp', ['uses' => 'ApiOpportunityController@get_user_views_opp']);
-    Route::post('save_user_views_opp', ['uses' => 'ApiOpportunityController@save_user_views_opp']);
+        Route::get('get_user_views_opp', ['uses' => 'ApiOpportunityController@get_user_views_opp']);
+        Route::post('save_user_views_opp', ['uses' => 'ApiOpportunityController@save_user_views_opp']);
 
-    Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
+        Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
 
-    // Resource Locking
-    Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
-    // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
-    // Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
-    // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
-    Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
+        // Resources
+        Route::get('get_resource_comments', ['uses' => 'ResourceController@get_resource_comments']);
+        Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
+        Route::post('add_resource_like', ['uses' => 'ResourceController@add_resource_like']);
+        Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
+        // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
+        // Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
+        // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
+        Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
+        Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
+        Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
+        Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
+        Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
+        Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);
+        Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
 
-    // Resources
-    Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
-    Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
-    Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
-    Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
-    Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);
-    Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
+        // Premium Subscription
+        Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
+        Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
+        Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
 
-    // Premium Subscription
-    Route::get('get_subscriptions', ['uses' => 'PremiumSubscriptionController@get_subscriptions']);
-    Route::post('add_days_to_premium', ['uses' => 'PremiumSubscriptionController@add_days_to_premium']);
-    Route::post('premium_checkout', ['uses' => 'PremiumSubscriptionController@premium_checkout']);
+        // Social
+        Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
+        Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
+        Route::post('start_following', ['uses' => 'SocialController@start_following']);
 
-    // Social
-    Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
-    Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
-    Route::post('start_following', ['uses' => 'SocialController@start_following']);
+        // Chats Integration
+        Route::post('submit_guidance_request', ['uses' => 'UtilController@submit_guidance_request']);
+        Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
+        Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
+        Route::post('create_group_chat', ['uses' => 'ChatController@create_group_chat']);
+        Route::post('create_opportunity_chat', ['uses' => 'ChatController@create_opportunity_chat']);
+        Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
+        Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
+        Route::post('add_chat_admin', ['uses' => 'ChatController@add_chat_admin']);
+        Route::post('add_chat_operator', ['uses' => 'ChatController@add_chat_operator']);
+        Route::post('send_message', ['uses' => 'ChatController@send_message']);
+        Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
+        Route::post('add_student_firebase_id', ['uses' => 'ChatController@add_student_firebase_id']);
+        Route::post('add_admin_firebase_id', ['uses' => 'ChatController@add_admin_firebase_id']);
+        Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
+        Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
+        Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
+        Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
 
-    // Chats Integration
-    Route::post('submit_guidance_request', ['uses'=>'UtilController@submit_guidance_request']);
-    Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
-    Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
-    Route::post('create_group_chat', ['uses' => 'ChatController@create_group_chat']);
-    Route::post('create_opportunity_chat', ['uses' => 'ChatController@create_opportunity_chat']);
-    Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
-    Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
-    Route::post('add_chat_admin', ['uses' => 'ChatController@add_chat_admin']);
-    Route::post('add_chat_operator', ['uses' => 'ChatController@add_chat_operator']);
-    Route::post('send_message', ['uses' => 'ChatController@send_message']);
-    Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
-    Route::post('add_student_firebase_id', ['uses' => 'ChatController@add_student_firebase_id']);
-    Route::post('add_admin_firebase_id', ['uses' => 'ChatController@add_admin_firebase_id']);
-    Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
-    Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
-    Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
-    Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
+        // Chat Categories
+        Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
+        Route::post('add_category', ['uses' => 'ChatController@add_category']);
+        Route::post('assign_category', ['uses' => 'ChatController@assign_category']);
 
-    // Chat Categories
-    Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
-    Route::post('add_category', ['uses' => 'ChatController@add_category']);
-    Route::post('assign_category', ['uses' => 'ChatController@assign_category']);
+        // Notifications
+        Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 
-    // Notifications
-    Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
-
-    // Old Premium
-    // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
-    // Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
-    // Route::post('success', ['uses' => 'SubscriptionController@success']);
-    // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
+        // Old Premium
+        // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
+        // Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
+        // Route::post('success', ['uses' => 'SubscriptionController@success']);
+        // Route::post('failure', ['uses' => 'SubscriptionController@failure']);
+    });
 });
 
 

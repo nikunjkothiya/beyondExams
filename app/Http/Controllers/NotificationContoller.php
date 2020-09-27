@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class NotificationContoller extends Controller
 {
-    public function send_notification()
+    public function send_notification(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [

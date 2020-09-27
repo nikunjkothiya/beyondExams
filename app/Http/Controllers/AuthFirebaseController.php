@@ -6,6 +6,7 @@ use App\MentorDetail;
 use App\MentorVerification;
 use App\User;
 use App\UserDetail;
+use App\UserLastLogin;
 use App\UserRole;
 use App\UserSocial;
 use Auth;
@@ -16,6 +17,8 @@ use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Validator;
+use DB;
+use Carbon\Carbon;
 
 class AuthFirebaseController extends Controller
 {
@@ -189,6 +192,14 @@ class AuthFirebaseController extends Controller
                 $new_details->phone = $new_user->phone;
             $new_details->save();
 
+            $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
+            if(is_null($loginActivity)){
+                $loginActivity = new UserLastLogin();
+                $loginActivity->user_id = $new_user->id;
+            }
+            $loginActivity->updated_at = Carbon::now();
+            $loginActivity->save();
+
             $client = new Client();
 
             $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
@@ -341,6 +352,14 @@ class AuthFirebaseController extends Controller
             if (!$user) {
                 return $this->apiResponse->sendResponse(404, 'User not found.', null);
             }
+
+            $loginActivity = UserLastLogin::where('user_id', $user->id)->first();
+            if(is_null($loginActivity)){
+                $loginActivity = new UserLastLogin();
+                $loginActivity->user_id = $user->id;
+            }
+            $loginActivity->updated_at = Carbon::now();
+            $loginActivity->save();
 
             if ($request->user_role == $this->student_role_id) {
                 $flag = $this->getStudentFlag($user);

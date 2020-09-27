@@ -26,7 +26,11 @@ class Resource extends Model
     }
 
     public function comments(){
-        return $this->hasMany('App\Comment');
+        return $this->hasMany('App\ResourceComment');
+    }
+
+    public function likes(){
+        return $this->hasOne('App\ResourceLike');
     }
 
     public function notes(){

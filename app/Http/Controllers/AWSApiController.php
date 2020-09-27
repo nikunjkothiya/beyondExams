@@ -31,15 +31,13 @@ class AWSApiController extends Controller
     private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
     private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
     private $apiConsumer;
-    private $resourceLockController;
-    private $resourceCollection;
+    private $resourceController;
 
-    public function __construct(ApiResponse $apiResponse, ResourceLockController $resourceLockController)
+    public function __construct(ApiResponse $apiResponse, ResourceController $resourceController)
     {
         $this->apiResponse = $apiResponse;
         $this->apiConsumer = new Client();
-        $this->resourceLockController = $resourceLockController;
-        $this->resourceCollection = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments']);
+        $this->resourceController = $resourceController;
     }
 
     public function upload_single_image(Request $request)
@@ -117,7 +115,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
             /*            if (!is_null($file[0]["thumbnail_url"]))
-                            $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
+                $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
                         if ($file[0]["file_type_id"] == 3)
@@ -169,19 +167,19 @@ class AWSApiController extends Controller
                 }
             }
 
-            /*            foreach ($all_files as $file) {
-                    foreach ($file["notes"] as $note) {
-                        $note["url"] = $this->base_url . $note["url"];
-                    }
-                    foreach ($file["tests"] as $test) {
-                        $test["url"] = $this->base_url . $test["url"];
-                    }
-                            if (!is_null($file["thumbnail_url"]))
-                                $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
-                            if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
-                                $file["file_url"] = $this->base_url . $file["file_url"];
-                        }
-            */
+            // foreach ($all_files as $file) {
+            //     foreach ($file["notes"] as $note) {
+            //         $note["url"] = $this->base_url . $note["url"];
+            //     }
+            //     foreach ($file["tests"] as $test) {
+            //         $test["url"] = $this->base_url . $test["url"];
+            //     }
+            //     if (!is_null($file["thumbnail_url"]))
+            //         $file["thumbnail_url"] = $this->base_url . $file["thumbnail_url"];
+            //     if ($file["file_type_id"] == 3 || $file["file_type_id"] == 5)
+            //         $file["file_url"] = $this->base_url . $file["file_url"];
+            // }
+
             $resp['flag'] = $flag;
 
 
@@ -209,6 +207,9 @@ class AWSApiController extends Controller
                         $key['price'] = $kp->price;
                         $key['currency'] = $cur->name;
                     }
+                }
+                if ($file->author_id == $request->user_id) {
+                    $file['unlocked'] = true;
                 }
                 $file['keys'] = $keys;
             }
@@ -393,7 +394,8 @@ class AWSApiController extends Controller
             }
 
             $user = User::find($request->user_id);
-            $newRole = UserRole::where('user_id', $request->user_id)->first();
+            $user_id = $user->id;
+            $newRole = UserRole::where('user_id', $user_id)->first();
             if ($newRole == null && $user->role_id === 1) {
                 return $this->apiResponse->sendResponse(400, 'Not a mentor 1', null);
             }
@@ -411,7 +413,7 @@ class AWSApiController extends Controller
 
                 $filePath = $this->file_types[$request->type] . $name;
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name . $ext);
-//                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
+                //                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
                 $filePath = $filePath . $ext;
                 $name = $name . $ext;
             } else {
@@ -423,7 +425,7 @@ class AWSApiController extends Controller
             $new_resource = new Resource();
             $new_resource->file_type_id = $request->type;
             $new_resource->title = $request->title;
-            $new_resource->author_id = $user->id;
+            $new_resource->author_id = $user_id;
             $new_resource->slug = $slug;
             $new_resource->file_url = $filePath;
             $new_resource->description = $contents;
@@ -485,14 +487,13 @@ class AWSApiController extends Controller
 
                 // $duration = 180;
 
-
                 if (is_null($duration) || $duration == 0)
                     $duration = 47;
-//                    return $this->apiResponse->sendResponse(400, 'File content not valid', null);
+                // return $this->apiResponse->sendResponse(400, 'File content not valid', null);
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-//                WebmToMp4::dispatch();
+                // WebmToMp4::dispatch();
 
             } else if ($request->type == 6) {
                 Storage::disk('s3')->put($aws_root . $filePath, file_get_contents(storage_path() . '/app/public/misc/' . $name));
@@ -508,7 +509,7 @@ class AWSApiController extends Controller
                     'multipart' => [
                         [
                             'name' => 'user_id',
-                            'contents' => $user->id
+                            'contents' => $user_id
                         ],
                         [
                             'name' => 'file',
@@ -575,21 +576,16 @@ class AWSApiController extends Controller
             }
 
             if ($request->price) {
-                $new_request = new Request();
-                $new_request->name = (string)$request->price;
-                $new_request->author_id = $user->id;
-                $new_request->price = $request->price;
-                $new_request->currency_id = $request->currency_id;
 
                 $newKey = new Key();
-                $newKey->name = $new_request->name;
-                $newKey->author_id = $new_request->author_id;
+                $newKey->name = $request->title;
+                $newKey->author_id = $user_id;
                 $newKey->save();
 
                 $newKey->key_price()->create(
                     [
-                        'price' => $new_request->price,
-                        'currency_id' => $new_request->currency_id,
+                        'price' => $request->price,
+                        'currency_id' => $request->currency_id,
                     ]
                 );
 
