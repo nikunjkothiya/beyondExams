@@ -241,6 +241,8 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
+                $pcheck = UserDetail::where('user_id', $user->id)->first();
+
                 // Updating Specific mentor details
                 $check = MentorDetail::where('user_id', $user->id)->first();
 
@@ -251,7 +253,7 @@ class PreciselyController extends Controller
                     $check->currency_id = $request->currency_id;
                     $check->save();
 
-                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', null);
+                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', $pcheck->slug);
                 }
             }
             return $this->apiResponse->sendResponse(401, "User not found", null);
@@ -565,9 +567,11 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
+        $pcheck = UserDetail::where('user_id', $request->mentor_id)->first();
         $dcheck = MentorDetail::where('user_id', $request->mentor_id)->first();
         $data["currency"] = Currency::find($dcheck->currency_id);
         $data["price"] = $dcheck->price;
+        $data["slug"] = $pcheck->slug;
         if ($dcheck) {
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor price', $data);
         } else {
