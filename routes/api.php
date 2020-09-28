@@ -15,6 +15,7 @@ Route::post('{provider}/verifyAccessToken', ['uses' => 'ApiAuthController@verify
 Route::post('refresh', ['uses' => 'ApiAuthController@refresh']);
 
 Route::post('verifyFirebaseAccessToken', ['uses' => 'AuthFirebaseController@verifyAccessToken']);
+Route::post('{provider}/verifyAdminAccessToken', ['uses' => 'AuthFirebaseController@verifyAdminAccessToken']);
 Route::post('refreshFirebase', ['uses' => 'AuthFirebaseController@refresh']);
 
 Route::post('organisation/{provider}/verifyAccessToken', ['uses' => 'ApiAuthOrganisationController@verifyAccessToken']);
@@ -35,6 +36,7 @@ Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment
 Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
 Route::get('generate_all_sitemap', ['uses' => 'UtilController@generate_all_sitemap']);
 Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest_sitemap']);
+Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price']);
 
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
@@ -48,6 +50,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
         Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
         Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
+        Route::post('submit_mentor_price', ['uses' => 'PreciselyController@update_mentor_price']);
         Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
         Route::post('submit_org_profile', ['uses' => 'PreciselyController@submit_org_profile']);
         Route::get('get_org_profile', ['uses' => 'PreciselyController@get_org_profile']);
