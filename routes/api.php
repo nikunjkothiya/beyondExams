@@ -48,12 +48,12 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
         Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
-        Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
         Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
-        Route::post('submit_mentor_price', ['uses' => 'PreciselyController@update_mentor_price']);
-        Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
         Route::post('submit_org_profile', ['uses' => 'PreciselyController@submit_org_profile']);
+        Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
+        Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
         Route::get('get_org_profile', ['uses' => 'PreciselyController@get_org_profile']);
+        Route::post('submit_mentor_price', ['uses' => 'PreciselyController@update_mentor_price']);
 
         // User Misc Data
         Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);
