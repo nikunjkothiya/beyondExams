@@ -7,7 +7,6 @@ use Socialite;
 
 use Illuminate\Http\Request;
 use App\Language;
-use App\UserDetail;
 use App\UserSocial;
 use App\User;
 

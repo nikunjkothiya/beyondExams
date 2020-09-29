@@ -11,7 +11,6 @@ use App\OpportunityLocation;
 use App\PlusTransaction;
 use App\Tag;
 use App\User;
-use App\UserDetail;
 use App\VersionCode;
 use Auth;
 use Carbon\Carbon;
@@ -39,29 +38,6 @@ class UtilController extends Controller
             $this->code[] = $lang->code;
         }
         $this->KEY = env('SYS_API_KEY');
-    }
-
-    public function generate_slug_for_all(){
-        $users = UserDetail::all();
-
-        foreach($users as $u){
-            if($u->firstname !== NULL){
-                $user = UserDetail::where('id', $u->id)->first();
-                $slug = null;
-                if(is_null($user->lastname)){
-                    $slug = str_replace(" ", "-", strtolower($user->firstname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                } else{
-                    $slug = str_replace(" ", "-", strtolower($user->firstname . $user->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                }
-                $user->slug = $slug;
-                $user->save();
-            } else {
-                $user = UserDetail::where('id', $u->id)->first();
-                $slug = null;
-                $user->slug = $slug;
-                $user->save();
-            }
-        }
     }
 
     public function locale($locale)

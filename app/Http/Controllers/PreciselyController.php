@@ -21,7 +21,6 @@ use App\ResourceKey;
 use App\Tag;
 use App\Transaction;
 use App\User;
-use App\UserDetail;
 use App\MentorDetail;
 use App\MentorVerification;
 use Carbon\Carbon;
@@ -111,48 +110,32 @@ class PreciselyController extends Controller
                     $img = $this->base_url . $aws_root . $filePath;
                 }
 
-                // Save data to users table
-                if (isset($request->lastname)){
-                    $user->name = $request->firstname . ' ' . $request->lastname;
-                } else {
-                    $user->name = $request->firstname;
-                }
-                $user->email = $request->email;
-                $user->save;
-
-
-                // Set commono data to user_details table
-                $details = UserDetail::where('user_id', $user_id)->first();
-                if (is_null($details)){
-                    $details = new UserDetail();
-                    $details->user_id = $user_id;
-                }
-                /* $details->user_id = $user_id;*/
                 if (isset($request->firstname))
-                    $details->firstname = $request->firstname;
+                    $user->firstname = $request->firstname;
+                $user->name = $request->firstname;
                 if (isset($request->lastname))
-                    $details->lastname = $request->lastname;
+                    $user->lastname = $request->lastname;
+                $user->name = $request->firstname . ' ' . $request->lastname;
                 if (isset($request->email))
-                    $details->email = $request->email;
+                    $user->email = $request->email;
                 if (isset($request->phone))
-                    $details->phone = $request->phone;
+                    $user->phone = $request->phone;
                 if (isset($request->profile_link))
-                    $details->profile_link = $request->profile_link;
-                if (isset($request->profile_link))
-                    $details->profile_link = $request->profile_link;
+                    $user->profile_link = $request->profile_link;
                 if (isset($request->avatar) && !is_null($img))
-                    $details->avatar = $img;
+                    $user->avatar = $img;
 
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                $details->slug = $slug;
-                $details->save();
+                if (is_null($user->slug))
+                    $user->slug = $slug;
+                $user->save();
 
                 // Updating Specific mentor details
                 $check = MentorDetail::where('user_id', $user_id)->first();
                 if (is_null($check)) {
                     $record = new MentorDetail();
                     $record->user_id = $user_id;
-                    if (isset($request->price) && isset($request->currency_id)){
+                    if (isset($request->price) && isset($request->currency_id)) {
                         $record->price = $request->price;
                         $record->currency_id = $request->currency_id;
                     }
@@ -214,7 +197,7 @@ class PreciselyController extends Controller
                         $check->flag = $flag;
                         $check->save();
                         $check['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $check->toArray()));
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($user->toArray(), $check->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
@@ -241,8 +224,6 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $pcheck = UserDetail::where('user_id', $user->id)->first();
-
                 // Updating Specific mentor details
                 $check = MentorDetail::where('user_id', $user->id)->first();
 
@@ -253,7 +234,7 @@ class PreciselyController extends Controller
                     $check->currency_id = $request->currency_id;
                     $check->save();
 
-                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', $pcheck->slug);
+                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', $user->slug);
                 }
             }
             return $this->apiResponse->sendResponse(401, "User not found", null);
@@ -286,31 +267,26 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                // Save data to users table
-                $user->name = $request->firstname . ' ' . $request->lastname;
-                $user->email = $request->email;
-                $user->save;
-
-                // Updating Common User Details
-                $details = UserDetail::where('user_id', $user_id)->first();
-                $details->user_id = $user_id;
                 if (isset($request->firstname))
-                    $details->firstname = $request->firstname;
+                    $user->firstname = $request->firstname;
+                $user->name = $request->firstname;
                 if (isset($request->lastname))
-                    $details->lastname = $request->lastname;
-                if (isset($request->lastname))
-                    $details->email = $request->email;
+                    $user->lastname = $request->lastname;
+                $user->name = $request->firstname . ' ' . $request->lastname;
+                if (isset($request->email))
+                    $user->email = $request->email;
                 if (isset($request->phone))
-                    $details->phone = $request->phone;
+                    $user->phone = $request->phone;
                 if (isset($request->profile_link))
-                    $details->profile_link = $request->profile_link;
+                    $user->profile_link = $request->profile_link;
                 if (!is_null($user->avatar))
-                    $details->avatar = $user->avatar;
+                    $user->avatar = $user->avatar;
 
-                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                // $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                $details->slug = $slug;
-                $details->save();
+                if (is_null($user->slug))
+                    $user->slug = $slug;
+                $user->save();
 
                 // Updating Student Specific details
                 $check = StudentDetail::where('user_id', $user_id)->first();
@@ -425,24 +401,24 @@ class PreciselyController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                // Updating Common User Details
-                $details = UserDetail::where('user_id', $user_id)->first();
-                $details->user_id = $user_id;
                 if (isset($request->firstname))
-                    $details->firstname = $request->firstname;
+                    $user->firstname = $request->firstname;
+                $user->name = $request->firstname;
                 if (isset($request->lastname))
-                    $details->lastname = $request->lastname;
-                if (isset($request->lastname))
-                    $details->email = $request->email;
+                    $user->lastname = $request->lastname;
+                $user->name = $request->firstname . ' ' . $request->lastname;
+                if (isset($request->email))
+                    $user->email = $request->email;
                 if (isset($request->phone))
-                    $details->phone = $request->phone;
+                    $user->phone = $request->phone;
                 if (isset($request->profile_link))
-                    $details->profile_link = $request->profile_link;
+                    $user->profile_link = $request->profile_link;
 
-                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+                // $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                $details->slug = $slug;
-                $details->save();
+                if (is_null($user->slug))
+                    $user->slug = $slug;
+                $user->save();
 
                 // Updating Student Specific details
                 $check = OrganisationDetail::where('user_id', $user_id)->first();
@@ -457,7 +433,7 @@ class PreciselyController extends Controller
                         $record->country_id = $request->country_id;
                     $record->save();
                     if ($record) {
-                        return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
+                        return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $user->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }
@@ -487,18 +463,12 @@ class PreciselyController extends Controller
     {
         if (Auth::check()) {
             $user = User::find(Auth::user()->id);
-            try {
-                $pcheck = UserDetail::where('user_id', $user->id)->first();
-            } catch (Exception $e) {
-                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-            }
-
-            if ($pcheck) {
+            if ($user) {
                 $dcheck = StudentDetail::where('user_id', $user->id)->first();
                 if ($dcheck) {
-                    $data['user_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
+                    $data['user_details'] = array_merge($user->toArray(), $dcheck->toArray());
                 } else {
-                    $data['user_details'] = $pcheck;
+                    $data['user_details'] = $user;
                 }
                 $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
                 foreach ($avatar as $ava) {
@@ -516,18 +486,12 @@ class PreciselyController extends Controller
     public function get_mentor_profile()
     {
         $user = Auth::user();
-        try {
-            $pcheck = UserDetail::where('user_id', $user->id)->first();
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-        }
-
-        if ($pcheck) {
+        if ($user) {
             $dcheck = MentorDetail::where('user_id', $user->id)->first();
             if ($dcheck) {
-                $data['mentor_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
+                $data['mentor_details'] = array_merge($user->toArray(), $dcheck->toArray());
             } else {
-                $data['mentor_details'] = $pcheck;
+                $data['mentor_details'] = $user;
             }
             $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
             foreach ($avatar as $ava) {
@@ -550,7 +514,6 @@ class PreciselyController extends Controller
                 $dcheck->save();
             }
 
-
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
         } else {
             return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
@@ -567,7 +530,7 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        $pcheck = UserDetail::where('user_id', $request->mentor_id)->first();
+        $pcheck = User::where('user_id', $request->mentor_id)->first();
         $dcheck = MentorDetail::where('user_id', $request->mentor_id)->first();
         $data["currency"] = Currency::find($dcheck->currency_id);
         $data["price"] = $dcheck->price;
@@ -575,7 +538,6 @@ class PreciselyController extends Controller
         if ($dcheck) {
             return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor price', $data);
         } else {
-
         }
     }
 
@@ -583,7 +545,7 @@ class PreciselyController extends Controller
     {
 
         try {
-            $pcheck = UserDetail::where('slug', $slug)->first();
+            $pcheck = User::where('slug', $slug)->first();
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(400, 'Invalid slug', $e->getMessage());
         }
@@ -596,7 +558,7 @@ class PreciselyController extends Controller
             } else {
                 $data['mentor_details'] = $pcheck;
             }
-	    $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
+            $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
 
             $avatar = DB::table('users')->select('avatar')->where('id', $pcheck->user_id)->first();
             $data['avatar'] = $avatar->avatar;
@@ -626,18 +588,12 @@ class PreciselyController extends Controller
     public function get_org_profile()
     {
         $user = Auth::user();
-        try {
-            $pcheck = UserDetail::where('user_id', $user->id)->first();
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-        }
-
-        if ($pcheck) {
+        if ($user) {
             $dcheck = OrganisationDetail::where('user_id', $user->id)->first();
             if ($dcheck) {
-                $data['user_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
+                $data['user_details'] = array_merge($user->toArray(), $dcheck->toArray());
             } else {
-                $data['user_details'] = $pcheck;
+                $data['user_details'] = $user;
             }
             $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
             foreach ($avatar as $ava) {
@@ -689,16 +645,6 @@ class PreciselyController extends Controller
             } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
-
-            // try{
-            //   $id = $request->id;
-            //   $user = UserDetail::where('user_id',$request->user_id)->first();
-            //   $user->saved_opportunities()->detach($id);
-            //   $user->saved_opportunities()->attach($id);
-            // }
-            // catch(Exception $e){
-            //   return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-            // }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -739,10 +685,6 @@ class PreciselyController extends Controller
             } else {
                 $this->apiResponse->sendResponse(400, 'Not Authorized', null);
             }
-
-            // $id = $request->id;
-            // $user = UserDetail::where('user_id',$request->user_id)->first();
-            // $user->saved_opportunities()->detach($id);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal server error.', $e->getMessage());
         }
@@ -781,64 +723,36 @@ class PreciselyController extends Controller
             $user = User::find(Auth::user()->id);
 
             try {
-                $pcheck = UserDetail::where('user_id', $user->id)->first();
+                $pcheck = User::where('id', $user->id)->first();
             } catch (Exception $e) {
                 return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
             }
 
-            if ($pcheck) {
-                $pcheck->language_id = $request->id;
-                $pcheck->save();
-                // Flags
-                $flag = 2;
-                $check_detail = StudentDetail::where('user_id', $user->id)->first();
-                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
-                if ($check_detail) {
-                    // Check User Details is filled
-                    if ($check_tag) {
-                        // If Category is filled
-                        $flag = 0;
-                    } else {
-                        // If Category is not filled
-                        $flag = 3;
-                    }
-                    $check_detail->flag = $flag;
-                    $check_detail->save();
+            $pcheck->language_id = $request->id;
+            $pcheck->save();
+            // Flags
+            $flag = 2;
+            $check_detail = StudentDetail::where('user_id', $user->id)->first();
+            $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
+            if ($check_detail) {
+                // Check User Details is filled
+                if ($check_tag) {
+                    // If Category is filled
+                    $flag = 0;
                 } else {
-                    // Check User Details is not filled
-                    $flag = 2;
+                    // If Category is not filled
+                    $flag = 3;
                 }
-                $responseArray = [
-                    'new' => $flag
-                ];
-                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
+                $check_detail->flag = $flag;
+                $check_detail->save();
             } else {
-                $record = new UserDetail;
-                $record->user_id = $user->id;
-                $record->language_id = $request->id;
-                $record->save();
-                // Flags
+                // Check User Details is not filled
                 $flag = 2;
-                $check_detail = StudentDetail::where('user_id', $user->id)->first();
-                $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user->id)->first();
-                if ($check_detail) {
-                    if ($check_tag) {
-                        // If Category is filled
-                        $flag = 0;
-                    } else {
-                        // If Category is not filled
-                        $flag = 3;
-                    }
-                    $check_detail->flag = $flag;
-                    $check_detail->save();
-                } else {
-                    $flag = 2;
-                }
-                $responseArray = [
-                    'new' => $flag
-                ];
-                return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
             }
+            $responseArray = [
+                'new' => $flag
+            ];
+            return $this->apiResponse->sendResponse(200, 'Success', $responseArray);
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
         }
@@ -1085,11 +999,11 @@ class PreciselyController extends Controller
             // Get Payment Details
             $payment = $api->payment->fetch($request->payment_id);
 
-//            $mentor_detail = MentorDetail::where('user_id', $request->mentor_id)->first();
-//
-//            if (!$mentor_detail) {
-//                return $this->apiResponse->sendResponse(400, 'Mentor does not exist', null);
-//            }
+            //            $mentor_detail = MentorDetail::where('user_id', $request->mentor_id)->first();
+            //
+            //            if (!$mentor_detail) {
+            //                return $this->apiResponse->sendResponse(400, 'Mentor does not exist', null);
+            //            }
 
             if (!$payment) {
                 return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
@@ -1103,18 +1017,18 @@ class PreciselyController extends Controller
                     array('amount' => $payment->amount, 'currency' => $payment->currency)
                 );
                 // Create A TXN
-//                $txn = new Transaction();
-//                $txn->transaction_id = $payment->id;
-//                $txn->user_id = Auth::id();
-//                $txn->mentor_id = $request->mentor_id;
-//                $txn->product_id = 3;
-//                $txn->valid = 1;
-//                $txn->save();
+                //                $txn = new Transaction();
+                //                $txn->transaction_id = $payment->id;
+                //                $txn->user_id = Auth::id();
+                //                $txn->mentor_id = $request->mentor_id;
+                //                $txn->product_id = 3;
+                //                $txn->valid = 1;
+                //                $txn->save();
 
 
 
-//                $mentor_detail->num_paid_subscribers = $mentor_detail->num_paid_subscribers + 1;
-//                $mentor_detail->save();
+                //                $mentor_detail->num_paid_subscribers = $mentor_detail->num_paid_subscribers + 1;
+                //                $mentor_detail->save();
 
                 return $this->apiResponse->sendResponse(200, 'Purchase Successful.', null);
             } else if ($payment->status == 'refunded') {
@@ -1134,5 +1048,4 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(400, 'Payment Error', $e->getMessage());
         }
     }
-
 }

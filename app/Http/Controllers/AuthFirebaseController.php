@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\MentorDetail;
 use App\MentorVerification;
+use App\StudentDetail;
 use App\User;
-use App\UserDetail;
 use App\UserLastLogin;
 use App\UserRole;
 use App\UserSocial;
@@ -176,22 +176,6 @@ class AuthFirebaseController extends Controller
                 }
             }
 
-            // Save user generic details
-            $new_details = UserDetail::where('user_id', $new_user->id)->first();
-            $break_name = explode(" ", $new_user->name, 2);
-            if (is_null($new_details)) {
-                $new_details = new UserDetail();
-                $new_details->user_id = $new_user->id;
-            }
-            $new_details->firstname = $break_name[0];
-            if (count($break_name) > 1)
-                $new_details->lastname = $break_name[1];
-            if (!is_null($new_user->email))
-                $new_details->email = $new_user->email;
-            if (!is_null($new_user->phone))
-                $new_details->phone = $new_user->phone;
-            $new_details->save();
-
             $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
             if(is_null($loginActivity)){
                 $loginActivity = new UserLastLogin();
@@ -232,12 +216,12 @@ class AuthFirebaseController extends Controller
 
     public function getStudentFlag($new_user)
     {
-        $check_lang = UserDetail::select('language_id')->where('user_id', $new_user->id)->first();
+        $check_lang = User::select('language_id')->where('id', $new_user->id)->first();
 
         $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $new_user->id)->first();
         // Flags for user
         if ($check_lang) {
-            if (UserDetail::select('email')->where('user_id', $new_user->id)->first()->email) {
+            if (StudentDetail::select('email')->where('user_id', $new_user->id)->first()->email) {
                 if ($check_tag) {
                     // If Category is filled
                     return 0;

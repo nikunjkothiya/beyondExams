@@ -5,158 +5,27 @@ namespace App\Http\Controllers;
 use App\Opportunity;
 use App\User;
 use App\UserDetail;
-use App\UserRole;
 use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DataMigrationController extends Controller
 {
-
-    public function migrate_user_info(){
-        $auth = app('firebase.auth');
-
-        $users = User::get();
-        foreach($users as $user){
-            try {
-                $firebase_user = $auth->getUser($user->id);
-
-                if (is_null($user->phone))
-                    $user->phone = $firebase_user->phone;
-
-                if (is_null($user->email))
-                    $user->email = $firebase_user->email;
-
-                if (is_null($user->name))
-                    $user->name = $firebase_user->name;
-
-                if (is_null($user->avatar))
-                    $user->avatar = $firebase_user->photoUrl;
-
-                $detail_table = UserDetail::where('user_id', $user->id)->first();
-
-                if ($detail_table) {
-
-                    // Check if name is null in users table but is avaiable in user_details
-                    if (is_null($user->name) && !is_null($detail_table->firstname)) {
-                        if ($detail_table->lastname)
-                            $user->name = $detail_table->firstname . ' ' . $detail_table->lastname;
-                        else
-                            $user->name = $detail_table->firstname;
-                    }
-
-                    // Check if name is avaiable in users table but is null in user_details
-                    if (!is_null($user->name) && is_null($detail_table->firstname)) {
-                        $break_name = explode(" ", $user->name, 2);
-                        $detail_table->firstname = $break_name[0];
-                        if (count($break_name) > 1) {
-                            $detail_table->lastname = $break_name[1];
-                        }
-                    }
-
-                    // Check if email is null in users table but is avaiable in user_details
-                    if (is_null($user->email) && !is_null($detail_table->email)) {
-                        $user->email = $detail_table->email;
-                    }
-
-                    // Check if email is avaiable in users table but is null in user_details
-                    if (!is_null($user->email) && is_null($detail_table->email)) {
-                        $detail_table->email = $user->email;
-                    }
-
-                    // Check if email is null in users table but is avaiable in user_details
-                    if (is_null($user->phone) && !is_null($detail_table->phone)) {
-                        $user->phone = $detail_table->phone;
-                    }
-
-                    // Check if email is avaiable in users table but is null in user_details
-                    if (!is_null($user->phone) && is_null($detail_table->phone)) {
-                        $detail_table->phone = $user->phone;
-                    }
-
-                    // Save both details
-                    $user->save();
-                    $detail_table->avatar = $user->avatar;
-                    $detail_table->save();
-
-                } else {
-                    // if(!is_null($user->name) || !is_null($user->email)){
-                    $new = new UserDetail();
-                    $new->user_id = $user->id;
-                    $new->email = $user->email;
-                    $new->phone = $user->phone;
-                    $new->avatar = $user->avatar;
-
-                    $break_name = explode(" ", $user->name, 2);
-                    $new->firstname = $break_name[0];
-                    if (count($break_name) === 2) {
-                        $new->lastname = $break_name[1];
-                    } else {
-                        $new->lastname = null;
-                    }
-
-                    if (count($break_name) === 1) {
-                        $slug = str_replace(" ", "-", strtolower($break_name[0])) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                        $new->slug = $slug;
-                    } elseif (count($break_name) === 2) {
-                        $slug = str_replace(" ", "-", strtolower($break_name[0] . $break_name[1])) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                        $new->slug = $slug;
-                    }
-
-                    $new->save();
-                    // }
-                }
-            } catch (Exception $e) {
-                continue;
-            }
+   
+    public function migrate_user_data () {
+        $details = UserDetail::all();
+        foreach($details as $detail){
+            $user = User::where('id', $detail->user_id)->first();
+            if(!is_null($detail->firstname))
+                $user->firstname = $detail->firstname;
+            if(!is_null($detail->lastname))
+                $user->lastname = $detail->lastname;
+            if(!is_null($detail->slug))
+                $user->slug = $detail->slug;
+            if(!is_null($detail->profile_link))
+                $user->profile_link = $detail->profile_link;
+            $user->save();
         }
-
-        return count($users);
-    }
-
-    public function migrate_user_details(){
-        // user_details ie student unique data to student_details
-        $old_data = DB::table('user_details')->get();
-        foreach($old_data as $data){
-            $role = UserRole::where('user_id', $data->user_id)->first();
-            if(is_null($role) ||  $role->is_user === 1){
-                DB::table('student_details')->insert(
-                    array(
-                        'user_id' => $data->user_id,
-                        'college' => $data->college,
-                        'city' => $data->city,
-                        'gpa' => $data->gpa,
-                        'country_id' => $data->country_id,
-                        'discipline_id' => $data->discipline_id,
-                        'qualification_id' => $data->qualification_id,
-                        'created_at' => $data->created_at,
-                        'updated_at' => $data->updated_at,
-                    )
-                );
-            }
-        }
-
-        // mentor_details ie mentor common data to user_details
-        $old_data = DB::table('mentor_details')->get();
-        foreach($old_data as $data){
-            $role = UserRole::where('user_id', $data->user_id)->first();
-            if(is_null($role) || $role->is_mentor === 1){
-                DB::table('user_details')->insert(
-                    array(
-                        'user_id' => $data->user_id,
-                        'firstname' => $data->firstname,
-                        'lastname' => $data->lastname,
-                        'email' => $data->email,
-                        'profile_link' => $data->profile_link,
-                        'slug' => $data->slug,
-                        'created_at' => $data->created_at,
-                        'updated_at' => $data->updated_at,
-                    )
-                );
-            }
-        }
-
-        return count($old_data);
     }
 
     public function migrate_eligible_regions_data(){

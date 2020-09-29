@@ -6,7 +6,6 @@ use Auth;
 use App\User;
 use App\UserFollower;
 use App\Http\Controllers\ApiResponse;
-use App\UserDetail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Exception;
@@ -52,16 +51,16 @@ class SocialController extends Controller
             if(is_null(User::find($request->id)))
                 return $this->apiResponse->sendResponse(404, 'No such user exist', null);
 
+            $user = Auth::user();
             $follow = new UserFollower();
-            $follow->user_id = Auth::user()->id;
+            $follow->user_id = $user->id;
             $follow->influencer_id = $request->id;
             $follow->save();
             
-            $user = UserDetail::where('user_id', Auth::user()->id)->first();
             $user->num_following = $user->num_following + 1;
             $user->save();
 
-            $influencer = UserDetail::where('user_id', $request->id)->first();
+            $influencer = User::where('id', $request->id)->first();
             $influencer->num_followers = $influencer->num_followers + 1;
             $influencer->save();
 
@@ -88,15 +87,14 @@ class SocialController extends Controller
             if(!is_null($follow->first())){
                 $follow->delete();
 
-                $user = UserDetail::where('user_id', Auth::user()->id)->first();
-                $user->num_following = $user->num_following - 1;
-                $user->save();
+            $user->num_following = $user->num_following - 1;
+            $user->save();
 
-                $influencer = UserDetail::where('user_id', $request->id)->first();
-                $influencer->num_followers = $influencer->num_followers - 1;
-                $influencer->save();
+            $influencer = User::where('id', $request->id)->first();
+            $influencer->num_followers = $influencer->num_followers - 1;
+            $influencer->save();
 
-                return $this->apiResponse->sendResponse(200, 'Stopped Following the user', null);
+            return $this->apiResponse->sendResponse(200, 'Stopped Following the user', null);
             } else {
                 return $this->apiResponse->sendResponse(404, 'Not following this user', null);
             }

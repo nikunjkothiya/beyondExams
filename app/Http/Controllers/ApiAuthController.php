@@ -6,7 +6,6 @@ use App\MentorDetail;
 use App\MentorVerification;
 use App\StudentDetail;
 use App\User;
-use App\UserDetail;
 use App\UserRole;
 use App\UserSocial;
 use Auth;
@@ -180,7 +179,7 @@ class ApiAuthController extends Controller
                     $check_user_role->is_user = 1;
                     $check_user_role->save();
                     // Return Flag for user
-                    $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
+                    $check_lang = User::select('language_id')->where('id', $user_id)->first();
                     if ($check_lang) {
                         $check_detail = StudentDetail::where('user_id', $user_id)->first();
                     } else {
@@ -348,22 +347,6 @@ class ApiAuthController extends Controller
                 } else {
                     return $this->apiResponse->sendResponse(500, 'Provider not supported}', null);
                 }
-
-                // Save user generic details
-                $new_details = UserDetail::where('user_id', $new_user->id)->first();
-                $break_name = explode(" ", $new_user->name, 2);
-                if (is_null($new_details)) {
-                    $new_details = new UserDetail();
-                    $new_details->user_id = $new_user->id;
-                }
-                $new_details->firstname = $break_name[0];
-                if (count($break_name) > 1)
-                    $new_details->lastname = $break_name[1];
-                if (!is_null($new_user->email))
-                    $new_details->email = $new_user->email;
-                if (!is_null($new_user->phone))
-                    $new_details->phone = $new_user->phone;
-                $new_details->save();
             }
 
             $client = new Client();
@@ -477,13 +460,8 @@ class ApiAuthController extends Controller
             $user_id = User::select('id')->where('unique_id', $request->unique_id)->first()->id;
 
             if ($request->user_role == $this->user_role_id) {
-                $check_lang = UserDetail::select('language_id')->where('user_id', $user_id)->first();
-                if ($check_lang) {
-                    $check_detail = UserDetail::where('user_id', $user_id)->first()->email;
-                } else {
-                    $check_detail = UserDetail::where('user_id', $user_id)->first();
-                }
-
+                $check_lang = User::select('language_id')->where('id', $user_id)->first();
+                $check_detail = StudentDetail::where('user_id', $user_id)->first();
                 $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
                 // Flags for user
                 if ($check_lang) {
