@@ -42,7 +42,7 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
 //Protected APIs via Auth Middleware
-Route::group(['middleware' => 'auth:api'], function () {
+Route::group(['middleware' => 'admin_access'], function () {
     Route::group(['middleware' => ['login_status']], function () {
 
         // Profile APi
@@ -103,6 +103,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
         Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);
         Route::post('start_following', ['uses' => 'SocialController@start_following']);
+        Route::post('start_unfollowing', ['uses' => 'SocialController@start_unfollowing']);
 
         // Chats Integration
         Route::post('submit_guidance_request', ['uses' => 'UtilController@submit_guidance_request']);

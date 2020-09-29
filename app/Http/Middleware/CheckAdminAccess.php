@@ -16,7 +16,7 @@ class CheckAdminAccess
      */
     public function handle($request, Closure $next)
     {
-        Auth::loginUsingId(1);
+        Auth::loginUsingId(93);
         return $next($request);
     }
 }
