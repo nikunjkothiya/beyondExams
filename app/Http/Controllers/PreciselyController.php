@@ -8,13 +8,18 @@ use App\ActionUser;
 use App\ActionUserOpportunity;
 use App\Analytics;
 use App\Country;
+use App\Currency;
 use App\Discipline;
 use App\Domain;
 use App\DomainUser;
+use App\FileType;
 use App\Language;
 use App\Opportunity;
 use App\Qualification;
+use App\Resource;
+use App\ResourceKey;
 use App\Tag;
+use App\Transaction;
 use App\User;
 use App\UserDetail;
 use App\MentorDetail;
@@ -83,6 +88,8 @@ class PreciselyController extends Controller
                     'organisation' => 'string|max:255',
                     'profile_link' => 'string|max:1024',
                     'avatar' => 'image',
+                    'price' => 'between:1,999.99',
+                    'currency_id' => 'int|min:1|max:' . Currency::count(),
                 ]);
 
                 if ($validator->fails()) {
@@ -145,6 +152,10 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new MentorDetail();
                     $record->user_id = $user_id;
+                    if (isset($request->price) && isset($request->currency_id)){
+                        $record->price = $request->price;
+                        $record->currency_id = $request->currency_id;
+                    }
                     if (isset($request->designation))
                         $record->designation = $request->designation;
                     if (isset($request->organisation))
@@ -207,6 +218,42 @@ class PreciselyController extends Controller
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
+                }
+            }
+            return $this->apiResponse->sendResponse(401, "User not found", null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_mentor_price(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+
+                $validator = Validator::make($request->all(), [
+                    'price' => 'required|between:1,999.99',
+                    'currency_id' => 'required|int|min:1|max:' . Currency::count(),
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                $pcheck = UserDetail::where('user_id', $user->id)->first();
+
+                // Updating Specific mentor details
+                $check = MentorDetail::where('user_id', $user->id)->first();
+
+                if (is_null($check)) {
+                    return $this->apiResponse->sendResponse(400, 'Please submit mentor profile first', null);
+                } else {
+                    $check->price = $request->price;
+                    $check->currency_id = $request->currency_id;
+                    $check->save();
+
+                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', $pcheck->slug);
                 }
             }
             return $this->apiResponse->sendResponse(401, "User not found", null);
@@ -491,11 +538,77 @@ class PreciselyController extends Controller
             // Update Flags
             if ($dcheck) {
                 $verified = MentorVerification::where('user_id', $user->id)->first();
-                $flag;
+
                 if ($verified->is_verified == 0) {
                     // Mentor Details filled but not verified
                     $flag = 2;
-                } elseif ($verified->is_verified == 1) {
+                } else {
+                    // Mentor Verified
+                    $flag = 1;
+                }
+                $dcheck->flag = $flag;
+                $dcheck->save();
+            }
+
+
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor profile.', $data);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'Mentor profile needs to be filled', null);
+        }
+    }
+
+    public function get_mentor_price(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mentor_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $pcheck = UserDetail::where('user_id', $request->mentor_id)->first();
+        $dcheck = MentorDetail::where('user_id', $request->mentor_id)->first();
+        $data["currency"] = Currency::find($dcheck->currency_id);
+        $data["price"] = $dcheck->price;
+        $data["slug"] = $pcheck->slug;
+        if ($dcheck) {
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor price', $data);
+        } else {
+
+        }
+    }
+
+    public function get_mentor_profile_from_slug(Request $request, $slug)
+    {
+
+        try {
+            $pcheck = UserDetail::where('slug', $slug)->first();
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(400, 'Invalid slug', $e->getMessage());
+        }
+
+        if ($pcheck) {
+            $dcheck = MentorDetail::where('user_id', $pcheck->user_id)->first();
+
+            if ($dcheck) {
+                $data['mentor_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
+            } else {
+                $data['mentor_details'] = $pcheck;
+            }
+	    $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
+
+            $avatar = DB::table('users')->select('avatar')->where('id', $pcheck->user_id)->first();
+            $data['avatar'] = $avatar->avatar;
+
+            // Update Flags
+            if ($dcheck) {
+                $verified = MentorVerification::where('user_id', $pcheck->user_id)->first();
+
+                if ($verified->is_verified == 0) {
+                    // Mentor Details filled but not verified
+                    $flag = 2;
+                } else {
                     // Mentor Verified
                     $flag = 1;
                 }
@@ -648,7 +761,7 @@ class PreciselyController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $saved_opportunities);
         } else {
-            return $this->apiResponse->sendResponse(500, 'Unauthorized', null);
+            $this->apiResponse->sendResponse(400, 'Not Authorized', null);
         }
     }
 
@@ -953,4 +1066,73 @@ class PreciselyController extends Controller
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
+    function razorpay_demo_checkout(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "payment_id" => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+
+            // Set Variables
+            $api = new Api(env('RAZOR_KEY'), env('RAZOR_SECRET'));
+
+            // Get Payment Details
+            $payment = $api->payment->fetch($request->payment_id);
+
+//            $mentor_detail = MentorDetail::where('user_id', $request->mentor_id)->first();
+//
+//            if (!$mentor_detail) {
+//                return $this->apiResponse->sendResponse(400, 'Mentor does not exist', null);
+//            }
+
+            if (!$payment) {
+                return $this->apiResponse->sendResponse(400, 'Payment ID is invalid', null);
+            }
+
+            // Capture the payment
+            if ($payment->status == 'authorized') {
+
+                // Capturing Payment
+                $payment->capture(
+                    array('amount' => $payment->amount, 'currency' => $payment->currency)
+                );
+                // Create A TXN
+//                $txn = new Transaction();
+//                $txn->transaction_id = $payment->id;
+//                $txn->user_id = Auth::id();
+//                $txn->mentor_id = $request->mentor_id;
+//                $txn->product_id = 3;
+//                $txn->valid = 1;
+//                $txn->save();
+
+
+
+//                $mentor_detail->num_paid_subscribers = $mentor_detail->num_paid_subscribers + 1;
+//                $mentor_detail->save();
+
+                return $this->apiResponse->sendResponse(200, 'Purchase Successful.', null);
+            } else if ($payment->status == 'refunded') {
+                // Payment was refunded
+                return $this->apiResponse->sendResponse(400, 'Transaction was refunded', null);
+            } else if ($payment->status == 'failed') {
+                // Payment Failed
+                return $this->apiResponse->sendResponse(400, 'Transaction was failed', null);
+            } else if ($payment->status == 'captured') {
+                // Payment Token Already used
+                return $this->apiResponse->sendResponse(400, 'Transaction was already captured', null);
+            } else {
+                // Unkown Error
+                return $this->apiResponse->sendResponse(400, 'Transaction not captured', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(400, 'Payment Error', $e->getMessage());
+        }
+    }
+
 }
