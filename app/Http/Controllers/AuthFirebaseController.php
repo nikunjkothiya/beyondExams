@@ -93,7 +93,7 @@ class AuthFirebaseController extends Controller
                 $new_user = User::find($check_account->user_id);
                 $new_user->name = $firebase_user->name;
                 $new_user->email = $firebase_user->email;
-                // $new_user->phone = $firebase_user->phone;
+                $new_user->phone = $firebase_user->phone;
                 $new_user->unique_id = $firebase_user->id;
                 $new_user->avatar = $firebase_user->avatar;
 		        $new_user->save();
@@ -136,7 +136,7 @@ class AuthFirebaseController extends Controller
                 $new_user = new User();
                 $new_user->name = $firebase_user->name;
                 $new_user->email = $firebase_user->email;
-                //  $new_user->phone = $firebase_user->phone;
+                $new_user->phone = $firebase_user->phone;
                 $new_user->unique_id = $firebase_user->id;
                 $new_user->avatar = $firebase_user->avatar;
 
@@ -217,6 +217,7 @@ class AuthFirebaseController extends Controller
             $data["phoenix_user_id"] = $new_user->id;
             $data["email"] = $new_user->email;
             $data["user_name"] = $new_user->name;
+            $data["phone"] = $new_user->phone;
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
         } catch (\InvalidArgumentException $e) { // If the token has the wrong format
