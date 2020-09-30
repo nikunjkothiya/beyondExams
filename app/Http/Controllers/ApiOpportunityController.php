@@ -170,7 +170,7 @@ class ApiOpportunityController extends Controller
                 $query->where('locale', 'en');
             }, 'tags' => function ($query){
                 $query->select('id', 'tag');
-            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+            }, 'raw_relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereNotIn('tags.id', $user->tags);
             });
 
@@ -179,22 +179,26 @@ class ApiOpportunityController extends Controller
                 $query->where('locale', 'en');
             },'tags' => function ($query){
                 $query->select('id', 'tag');
-            }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+            }, 'raw_relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereIn('tags.id', $user->tags);
             })->union($gopportunities)->paginate(10);
 
             if (count($user->saved_opportunities) > 0) {
                 $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
-                foreach ($opportunities as $opportunity) {
-                    if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
-                        $opportunity['saved'] = 1;
-                    else
-                        $opportunity['saved'] = 0;
-                }
             } else {
-                foreach ($opportunities as $opportunity) {
+                $subset_saved_opporutnies = [];
+            }
+
+            foreach ($opportunities as $opportunity) {
+                if (in_array(["id" => $opportunity->id], $subset_saved_opporutnies))
+                    $opportunity['saved'] = 1;
+                else
                     $opportunity['saved'] = 0;
-                }
+
+                if (is_null($opportunity["raw_relevance"]))
+                    $opportunity["relevance"] = 0;
+                else
+                    $opportunity["relevance"] = $opportunity["raw_relevance"];
             }
 
             return $this->apiResponse->sendResponse(200, "Successfully retrieved opportunities", $opportunities);

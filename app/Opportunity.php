@@ -70,9 +70,10 @@ class Opportunity extends Model implements TranslatableContract
     }
 
     public function relevance(){
-        // return $this->hasOne('App\OpportunityRelevance')->withDefault(function () {
-        //     return new OpportunityRelevance();
-        // });
+        return $this->hasOne('App\OpportunityRelevance');
+    }
+
+    public function raw_relevance(){
         return $this->hasOne('App\OpportunityRelevance');
     }
 }
