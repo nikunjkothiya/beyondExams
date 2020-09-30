@@ -30,14 +30,17 @@ use Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ResourceController extends Controller
 {
     private $apiResponse;
+    private $resourceCollection;
 
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
+        $this->resourceCollection = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments']);
     }
 
     public function generate_resource_timeline(){
@@ -247,6 +250,14 @@ class ResourceController extends Controller
             $key['resources'] = $resources;
         }
         return $this->apiResponse->sendResponse(200, 'Done', $keys);
+    }
+
+    public function get_user_paid_resources()
+    {
+        $keys = UserKey::where('user_id', Auth::user()->id)->get()->pluck('key_id');
+        $resourceIds = ResourceKey::whereIn('key_id', $keys)->get()->pluck('resource_id');
+        $resources = $this->resourceCollection->whereIn('id', $resourceIds)->get();
+        return $this->apiResponse->sendResponse(200, 'Successful', $resources);
     }
 
     public function get_author_keys(request $request)

@@ -483,7 +483,7 @@ class ApiAuthController extends Controller
             } elseif ($request->user_role == $this->mentor_role_id) {
                 // Update Mentor Roles
                 $check_user_role = UserRole::where('user_id', $user_id)->first();
-                //                TODO: User shouldn't be allowed to simply modify one param and achieve mentor status
+                // TODO: User shouldn't be allowed to simply modify one param and achieve mentor status
                 $check_user_role->is_mentor = 1;
                 $check_user_role->save();
                 // Flags for Mentor

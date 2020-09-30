@@ -42,7 +42,7 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
 //Protected APIs via Auth Middleware
-Route::group(['middleware' => 'auth:api'], function () {
+Route::group(['middleware' => 'admin_access'], function () {
     Route::group(['middleware' => ['login_status']], function () {
 
         // Profile APi
@@ -83,6 +83,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
         Route::post('add_resource_like', ['uses' => 'ResourceController@add_resource_like']);
         Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
+        Route::get('get_user_paid_resources', ['uses' => 'ResourceController@get_user_paid_resources']);
         // Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
         // Route::post('save_new_key', ['uses' => 'ResourceController@save_new_key']);
         // Route::post('lock_resource', ['uses' => 'ResourceController@lock_resource']);
