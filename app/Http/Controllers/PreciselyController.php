@@ -88,8 +88,8 @@ class PreciselyController extends Controller
                     'organisation' => 'string|max:255',
                     'profile_link' => 'string|max:1024',
                     'avatar' => 'image',
-                    'price' => 'between:0,999.99',
-                    'currency_id' => 'int|min:0|max:' . Currency::count(),
+                    'price' => 'between:1,999.99',
+                    'currency_id' => 'int|min:1|max:' . Currency::count(),
                 ]);
 
                 if ($validator->fails()) {
@@ -218,6 +218,42 @@ class PreciselyController extends Controller
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
                     }
+                }
+            }
+            return $this->apiResponse->sendResponse(401, "User not found", null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_mentor_price(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+
+                $validator = Validator::make($request->all(), [
+                    'price' => 'required|between:1,999.99',
+                    'currency_id' => 'required|int|min:1|max:' . Currency::count(),
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                $pcheck = UserDetail::where('user_id', $user->id)->first();
+
+                // Updating Specific mentor details
+                $check = MentorDetail::where('user_id', $user->id)->first();
+
+                if (is_null($check)) {
+                    return $this->apiResponse->sendResponse(400, 'Please submit mentor profile first', null);
+                } else {
+                    $check->price = $request->price;
+                    $check->currency_id = $request->currency_id;
+                    $check->save();
+
+                    return $this->apiResponse->sendResponse(200, 'Mentor price saved.', $pcheck->slug);
                 }
             }
             return $this->apiResponse->sendResponse(401, "User not found", null);
@@ -521,6 +557,28 @@ class PreciselyController extends Controller
         }
     }
 
+    public function get_mentor_price(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mentor_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $pcheck = UserDetail::where('user_id', $request->mentor_id)->first();
+        $dcheck = MentorDetail::where('user_id', $request->mentor_id)->first();
+        $data["currency"] = Currency::find($dcheck->currency_id);
+        $data["price"] = $dcheck->price;
+        $data["slug"] = $pcheck->slug;
+        if ($dcheck) {
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched mentor price', $data);
+        } else {
+
+        }
+    }
+
     public function get_mentor_profile_from_slug(Request $request, $slug)
     {
 
@@ -703,7 +761,7 @@ class PreciselyController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $saved_opportunities);
         } else {
-            return $this->apiResponse->sendResponse(500, 'Unauthorized', null);
+            $this->apiResponse->sendResponse(400, 'Not Authorized', null);
         }
     }
 
