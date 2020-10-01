@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Tag;
-use App\Http\Controllers\ApiResponse;
 use App\Language;
 use App\Opportunity;
-use App\UserViewedOpportunity;
+use App\Tag;
 use App\User;
+use App\UserViewedOpportunity;
 use Auth;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Pagination\LengthAwarePaginator;
-
-use Carbon\Carbon;
 
 class ApiOpportunityController extends Controller
 {
@@ -124,7 +121,7 @@ class ApiOpportunityController extends Controller
 
             $gopportunities = Opportunity::with(['new_location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
-            }, 'tags' => function ($query){
+            }, 'tags' => function ($query) {
                 $query->select('id', 'tag');
             }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereNotIn('tags.id', $user->tags);
@@ -133,7 +130,7 @@ class ApiOpportunityController extends Controller
             // return $user->tags;
             $opportunities = Opportunity::with(['new_location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
-            },'tags' => function ($query){
+            }, 'tags' => function ($query) {
                 $query->select('id', 'tag');
             }, 'relevance'])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereIn('tags.id', $user->tags);
@@ -166,26 +163,31 @@ class ApiOpportunityController extends Controller
         try {
             $user = Auth::user();
 
-            $gopportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
-                $query->where('locale', 'en');
-            }, 'tags' => function ($query){
-                $query->select('id', 'tag');
-            }, 'raw_relevance' => function ($query){
-                $query->select('score');
-            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
-                $query->whereNotIn('tags.id', $user->tags);
-            });
+//            $gopportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
+//                $query->where('locale', 'en');
+//            }, 'tags' => function ($query){
+//                $query->select('id', 'tag');
+//            }, 'raw_relevance' => function ($query){
+//                $query->select('score');
+//            }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
+//                $query->whereNotIn('tags.id', $user->tags);
+//            });
+
+            Opportunity::with(['tags' => function ($query) use ($user) {
+                $query->whereIn('tags.id', $user->tags()->pluck('id')->toArray());
+            }])->where('deadline', '>', Carbon::now());
+
 
             // return $user->tags;
             $opportunities = Opportunity::with(['location', 'fund_type', 'opportunity_translations' => function ($query) {
                 $query->where('locale', 'en');
-            },'tags' => function ($query){
-                $query->select('id', 'tag');
-            }, 'raw_relevance' => function ($query){
+            }, 'tags' => function ($query) use ($user) {
+                $query->whereIn('tags.id', $user->tags()->pluck('id')->toArray())->select('id', 'tag');
+            }, 'raw_relevance' => function ($query) {
                 $query->select('score');
             }])->where('deadline', '>', Carbon::now())->whereHas('tags', function ($query) use ($user) {
                 $query->whereIn('tags.id', $user->tags);
-            })->union($gopportunities)->paginate(10);
+            })->paginate(10);
 
             if (count($user->saved_opportunities) > 0) {
                 $subset_saved_opporutnies = $user->saved_opportunities->map->only('id')->toArray();
@@ -297,7 +299,7 @@ class ApiOpportunityController extends Controller
         $tags = Tag::where('tag_type_id', 1)->get();
         $opportunities = array();
         foreach ($tags as $tag) {
-            $opportunity = $tag->opportunities()->with(['location', 'fund_type', 'tags' => function ($query){
+            $opportunity = $tag->opportunities()->with(['location', 'fund_type', 'tags' => function ($query) {
                 $query->select('id', 'tag');
             }])->latest()->first();
 
@@ -321,12 +323,12 @@ class ApiOpportunityController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'No Opportunity ids were given', $validator->errors());
             }
-            foreach($request->opp_ids as $opp){
+            foreach ($request->opp_ids as $opp) {
                 $saved_user_views_opp = UserViewedOpportunity::where('user_id', Auth::user()->id)->where('opportunity_id', $opp)->first();
-                if(is_null($saved_user_views_opp)){
+                if (is_null($saved_user_views_opp)) {
                     $viewed_opp = new UserViewedOpportunity();
                     $viewed_opp->user_id = Auth::user()->id;
-                    $viewed_opp->opportunity_id  = $opp;
+                    $viewed_opp->opportunity_id = $opp;
                     $viewed_opp->save();
                 }
             }
@@ -343,7 +345,7 @@ class ApiOpportunityController extends Controller
         try {
 
             $opportunities = UserViewedOpportunity::where('user_id', Auth::user()->id)->get();
-            if(count($opportunities) > 0)
+            if (count($opportunities) > 0)
                 return $this->apiResponse->sendResponse(200, 'Success', $opportunities);
 
             return $this->apiResponse->sendResponse(404, 'There is no user saved opportunity', null);
