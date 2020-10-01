@@ -29,7 +29,7 @@ class AWSApiController extends Controller
     private $apiResponse;
     private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
     private $base_url = 'https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/';
-    private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/"];
+    private $file_types = ["all", "blogs/", "articles/", "videos/", "playlist/", "live/", "misc/", "podcast/"];
     private $apiConsumer;
     private $resourceCollection;
 
@@ -110,15 +110,15 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-/*	    $user = Auth::user();*/
+            /* $user = Auth::user();*/
 
             $file = $this->resourceCollection->where('slug', $request->slug)->get();
             if (count($file) == 0)
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
 
-            
-/*                $file['unlocked'] = false;
+
+            /*  $file['unlocked'] = false;
                 $user_keys = UserKey::where('user_id', $user->user_id)->get();
                 $keys = ResourceKey::where('resource_id', $file->id)->get();
                 if (count($keys) === 0) {
@@ -143,9 +143,9 @@ class AWSApiController extends Controller
                     }
                 }
                 $file['keys'] = $keys;
-*/
+            */
 
-/*            if (!is_null($file[0]["thumbnail_url"]))
+            /*            if (!is_null($file[0]["thumbnail_url"]))
                 $file[0]["thumbnail_url"] = $this->base_url . $file[0]["thumbnail_url"];
 
 
@@ -185,6 +185,8 @@ class AWSApiController extends Controller
                     $all_files = $this->resourceCollection->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
                     $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
+                } else if ($request->type == 7) {
+                    $all_files = $this->resourceCollection->whereIn('file_type_id', [7])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 } else {
                     $all_files = $this->resourceCollection->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->get();
                 }
@@ -193,6 +195,8 @@ class AWSApiController extends Controller
                     $all_files = $this->resourceCollection->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else if ($request->type == 3) {
                     $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
+                } else if ($request->type == 7) {
+                    $all_files = $this->resourceCollection->whereIn('file_type_id', [7])->where('duration', '>', 0)->orderBy('id', 'DESC')->get();
                 } else {
                     $all_files = $this->resourceCollection->where('file_type_id', $request->type)->orderBy('id', 'DESC')->get();
                 }
@@ -324,6 +328,8 @@ class AWSApiController extends Controller
                         $all_files = $this->resourceCollection->where('author_id', $request->author_id)->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
                     } else if ($request->type == 3) {
                         $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else if ($request->type == 7) {
+                        $all_files = $this->resourceCollection->whereIn('file_type_id', [7])->where('duration', '>', 0)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
                     } else {
                         $all_files = $this->resourceCollection->where('file_type_id', $request->type)->where('author_id', $request->author_id)->orderBy('id', 'DESC')->paginate($per_page);
                     }
@@ -332,6 +338,8 @@ class AWSApiController extends Controller
                         $all_files = $this->resourceCollection->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
                     } else if ($request->type == 3) {
                         $all_files = $this->resourceCollection->whereIn('file_type_id', [3, 4])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
+                    } else if ($request->type == 7) {
+                        $all_files = $this->resourceCollection->whereIn('file_type_id', [7])->where('duration', '>', 0)->orderBy('id', 'DESC')->paginate($per_page);
                     } else {
                         $all_files = $this->resourceCollection->where('file_type_id', $request->type)->orderBy('id', 'DESC')->paginate($per_page);
                     }
@@ -436,7 +444,7 @@ class AWSApiController extends Controller
 
 
             $contents = $request->description;
-            if ($request->type == 3 || $request->type == 5) {
+            if ($request->type == 3 || $request->type == 5 || $request->type == 7) {
                 $file = $request->file('file');
                 $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
 
@@ -444,7 +452,7 @@ class AWSApiController extends Controller
 
                 $filePath = $this->file_types[$request->type] . $name;
                 $file->move(storage_path() . '/app/public/' . $this->file_types[$request->type], $name . $ext);
-                //                shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
+                // shell_exec("ffmpeg -i " . storage_path('app/public/' . $filePath . $ext) . " " . storage_path('app/public/' . $filePath . ".mp4"));
                 $filePath = $filePath . $ext;
                 $name = $name . $ext;
             } else {
@@ -489,9 +497,8 @@ class AWSApiController extends Controller
 
                 $new_resource->duration = $duration;
                 $new_resource->save();
-            } else if ($request->type == 3 || $request->type == 5) {
-                // VIDEO
-
+            } else if ($request->type == 3 || $request->type == 5 || $request->type == 7) {
+                // VIDEO 
 
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
@@ -506,9 +513,16 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
-                if ($ext == ".webm")
+                if ($ext == ".webm"){
                     $duration = 46;
-                else {
+                }
+                else if ($ext == ".mp3"){
+                    $duration = $ffprobe
+                    ->streams(storage_path('app/public/' . $filePath))
+                    ->audios()
+                    ->first()
+                    ->get('duration');
+                } else {
                     $duration = $ffprobe
                         ->streams(storage_path('app/public/' . $filePath))
                         ->videos()
