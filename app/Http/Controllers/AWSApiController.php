@@ -117,7 +117,7 @@ class AWSApiController extends Controller
                 return $this->apiResponse->sendResponse(404, 'Resource not found', null);
 
 
-            
+
 /*                $file['unlocked'] = false;
                 $user_keys = UserKey::where('user_id', $user->user_id)->get();
                 $keys = ResourceKey::where('resource_id', $file->id)->get();
@@ -340,6 +340,8 @@ class AWSApiController extends Controller
 
 
             foreach ($all_files as $file) {
+                $file['liked_by_user'] = $file->likes()->where('user_id', $request->user_id)->count() > 0;
+                $file['user_follows_author'] = !is_null(User::find($request->user_id)->influencers()->firstWhere(['user_id'=>$file->author_id]));
                 $file['unlocked'] = false;
                 $user_keys = UserKey::where('user_id', $request->user_id)->get();
                 $keys = ResourceKey::where('resource_id', $file->id)->get();
