@@ -50,6 +50,33 @@ class PreciselyController extends Controller
         $this->txnflag = new SubscriptionController($apiResponse);
     }
 
+    public function getMentorsInOrganization(Request $request){
+        if(!isset($request->id))
+            return $this->apiResponse->sendResponse(400, 'Need org id as param', null);
+
+        $org = Organisation::where('id', $request->id)->with('mentors')->get()->toArray();
+        $mentors = $org[0]['mentors'];
+        if(!is_null($mentors)){
+            return $this->apiResponse->sendResponse(200, 'Success', $mentors);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'No Mentor found', null);
+        }
+    }
+
+    public function getAffiliateOrganization(Request $request){
+        if(!isset($request->id))
+            return $this->apiResponse->sendResponse(400, 'Need Mentor id as param', null);
+
+        $mentor = User::with('organisations')->where('id', $request->id)->get();
+        $organisations = $mentor[0]['organisations'];
+        if(!is_null($organisations)){
+            return $this->apiResponse->sendResponse(200, 'Success', $organisations);
+        } else {
+            return $this->apiResponse->sendResponse(404, 'No org found', null);
+        }
+    }
+
+
     public function get_language(Request $request)
     {
         try {
@@ -148,6 +175,12 @@ class PreciselyController extends Controller
                     if ($record) {
                         $flag = 2;
                         $verified = MentorVerification::where('user_id', $user_id)->first();
+                        // Temp Only
+                        $verified->is_verified = 1;
+                        $verified->save();
+                        // Temp Only
+
+                        
                         if (isset($request->refer_code)) {
                             if ($request->refer_code == 'PRECISELY-TUTOR-PASS') {
                                 $verified->is_verified = 1;
@@ -164,7 +197,7 @@ class PreciselyController extends Controller
                         $record->flag = $flag;
                         $record->save();
                         $record['new'] = $flag;
-                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($details->toArray(), $record->toArray()));
+                        return $this->apiResponse->sendResponse(200, 'Mentor details saved.', array_merge($user->toArray(), $record->toArray()));
                     } else {
                         return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
                     }

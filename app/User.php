@@ -100,6 +100,10 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Opportunity');
     }
 
+    public function organisations(){
+        return $this->belongsToMany('App\Organisation', 'mentor_organisation');
+    }
+
     public function validateForPassportPasswordGrant($password)
     {
         //$owerridedPassword = 'password';

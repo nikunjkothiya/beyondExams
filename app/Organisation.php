@@ -47,4 +47,8 @@ class Organisation extends Model
     public function opportunities(){
         return $this->hasMany('App\Opportunity');
     }
+
+    public function mentors(){
+        return $this->belongsToMany('App\User', 'mentor_organisation');
+    }
 }

@@ -20,6 +20,15 @@ class LearnageBroadcastingController extends Controller
         $this->apiResponse = $apiResponse;
     }
 
+    public function terminate_old_sessions(){
+        try {
+            $sessions = Session::where('live_time', '<', Carbon::now()->subHours(12))->get();
+            return $this->apiResponse->sendResponse(200, 'Test', $sessions);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function get_broadcast_sessions(Request $request)
     {
         try {

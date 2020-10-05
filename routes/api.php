@@ -41,6 +41,11 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
+// Social
+Route::get('getMentorsInOrganization', ['uses' => 'PreciselyController@getMentorsInOrganization']);
+Route::get('getAffiliateOrganization', ['uses' => 'PreciselyController@getAffiliateOrganization']);
+
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
