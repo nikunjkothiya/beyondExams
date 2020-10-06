@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\AccessType;
+use App\ClassMentor;
 use App\Http\Controllers\ApiResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -9,18 +11,229 @@ use App\UserLive;
 use App\Session;
 use App\SessionType;
 use App\SessionUser;
+use App\TimeRecursionType;
 use App\User;
+use App\ClassModel;
+use App\ClassStudent;
 use Carbon\Carbon;
+use Auth;
 use Exception;
 
-class LearnageBroadcastingController extends Controller
+class LearnageController extends Controller
 {
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
     }
 
-    public function terminate_old_sessions(){
+    public function get_my_classes(){
+        try {
+            $class_ids = ClassMentor::where('mentor_id', Auth::user()->id)->get()->pluck('class_id');
+            $classes = ClassModel::whereIn('id', $class_ids)->get();
+            return $this->apiResponse->sendResponse(200, 'Success', $classes);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+
+    }
+
+    public function get_class_students(Request $request){
+        try {
+            $validator = Validator::make($request->all(), [
+                'class_id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+            $student_ids = ClassStudent::where('class_id', $request->class_id)->get()->pluck('student_id');
+            $students = User::whereIn('id', $student_ids)->get();
+            return $this->apiResponse->sendResponse(200, 'Success', $students);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+
+    }
+
+    public function add_students_to_class(Request $request){
+        try {
+            $validator = Validator::make($request->all(), [
+                'class_id' => 'required|integer',
+                'student_id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+            $class_student = new ClassStudent();
+            $class_student->class_id = $request->class_id;
+            $class_student->student_id = $request->student_id;
+            $class_student->save();
+            return $this->apiResponse->sendResponse(200, 'Success', $class_student);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+
+    }
+
+    public function create_class(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string',
+                'grade_id' => 'integer',
+                'subject_id' => 'integer',
+                'duration' => 'integer',
+                'time_recursion_id' => 'required|integer|min:0|max:' . TimeRecursionType::count(),
+                'access_type_id' => 'required|integer|min:0|max:' . AccessType::count(),
+                'max_students' => 'integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = new ClassModel();
+            $class->title = $request->title;
+            $class->time_recursion_id = $request->time_recursion_id;
+            $class->access_type_id = $request->access_type_id;
+            if (isset($request->grade_id))
+                $class->grade_id = $request->grade_id;
+            if (isset($request->subject_id))
+                $class->subject_id = $request->subject_id;
+            if (isset($request->duration))
+                $class->duration = $request->duration;
+            if (isset($request->max_students))
+                $class->max_students = $request->max_students;
+            $class->mentor()->create([
+                'mentor_id' => Auth::user()->id
+            ]);
+            $class->save();
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_class_title(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string',
+                'id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = ClassModel::where('id', $request->id)->first();
+            if (is_null($class))
+                return $this->apiResponse->sendResponse(404, 'Class does not exist.', null);
+
+            $class->title = $request->title;
+            $class->save();
+            return $this->apiResponse->sendResponse(200, 'Class title updated', $class);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_class_grade(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'grade_id' => 'required|integer',
+                'id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = ClassModel::where('id', $request->id)->first();
+            if (is_null($class))
+                return $this->apiResponse->sendResponse(404, 'Class does not exist.', null);
+
+            $class->grade_id = $request->grade_id;
+            $class->save();
+            return $this->apiResponse->sendResponse(200, 'Class Grade updated', $class);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_class_subject(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'subject_id' => 'required|integer',
+                'id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = ClassModel::where('id', $request->id)->first();
+            if (is_null($class))
+                return $this->apiResponse->sendResponse(404, 'Class does not exist.', null);
+
+            $class->subject_id = $request->subject_id;
+            $class->save();
+            return $this->apiResponse->sendResponse(200, 'Class Subject updated', $class);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_class_schedule(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = ClassModel::where('id', $request->id)->first();
+            if (is_null($class))
+                return $this->apiResponse->sendResponse(404, 'Class does not exist.', null);
+
+            if(isset($request->class_start_date))
+                $class->class_start_date = Carbon::parse($request->class_start_date);
+            if(isset($request->class_start_time))
+                $class->class_start_time = Carbon::parse($request->class_start_time);
+            if(isset($request->duration))
+                $class->duration = Carbon::parse($request->duration);
+            if(isset($request->time_recursion_id))
+                $class->time_recursion_id = Carbon::parse($request->time_recursion_id);
+            $class->save();
+            return $this->apiResponse->sendResponse(200, 'Class Schedule updated', $class);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_class_access(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id' => 'required|integer',
+                'access_type_id' => 'required|integer',
+            ]);
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $class = ClassModel::where('id', $request->id)->first();
+            if (is_null($class))
+                return $this->apiResponse->sendResponse(404, 'Class does not exist.', null);
+
+            $class->access_type_id = Carbon::parse($request->access_type_id);
+            $class->save();
+            return $this->apiResponse->sendResponse(200, 'Class Access updated', $class);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function terminate_old_sessions()
+    {
         try {
             $sessions = Session::where('live_time', '<', Carbon::now()->subHours(12))->get();
             return $this->apiResponse->sendResponse(200, 'Test', $sessions);
@@ -70,20 +283,20 @@ class LearnageBroadcastingController extends Controller
     public function get_session_by_peer(Request $request)
     {
         try {
-            if(!isset($request->peer_id)){
+            if (!isset($request->peer_id)) {
                 return $this->apiResponse->sendResponse(400, 'Need a Peer/Room id to find session', null);
             }
 
             $user_id = $request->user_id;
             $session = Session::where('peer_id', $request->peer_id)->with('host:id,name,avatar')->first();
 
-            if(is_null($session)){
+            if (is_null($session)) {
                 return $this->apiResponse->sendResponse(404, 'Session does not exist', null);
             }
 
-            if($session->restricted == 1){
+            if ($session->restricted == 1) {
                 $access = SessionUser::where('session_id', $session->id)->where('user_id', $user_id)->first();
-                if(is_null($access)){
+                if (is_null($access)) {
                     return $this->apiResponse->sendResponse(402, 'You do not have access to view this session', []);
                 }
             }
@@ -203,9 +416,9 @@ class LearnageBroadcastingController extends Controller
                 'id' => 'integer',
             ]);
 
-            if(isset($request->email)){
+            if (isset($request->email)) {
                 $user = User::where('email', $request->email)->first();
-            } elseif (isset($request->id)){
+            } elseif (isset($request->id)) {
                 $user = User::where('id', $request->id)->first();
             } else {
                 return $this->apiResponse->sendResponse(400, 'Need a id of email to find user', null);

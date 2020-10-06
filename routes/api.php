@@ -138,6 +138,17 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 
+        // Learnage
+        Route::get('get_my_classes', ['uses' => 'LearnageController@get_my_classes']);
+        Route::get('get_class_students', ['uses' => 'LearnageController@get_class_students']);
+        Route::post('add_students_to_class', ['uses' => 'LearnageController@add_students_to_class']);
+        Route::post('create_class', ['uses' => 'LearnageController@create_class']);
+        Route::post('update_class_title', ['uses' => 'LearnageController@update_class_title']);
+        Route::post('update_class_grade', ['uses' => 'LearnageController@update_class_grade']);
+        Route::post('update_class_subject', ['uses' => 'LearnageController@update_class_subject']);
+        Route::post('update_class_schedule', ['uses' => 'LearnageController@update_class_schedule']);
+        Route::post('update_class_access', ['uses' => 'LearnageController@update_class_access']);
+
         // Old Premium
         // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
         // Route::post('checkout', ['uses' => 'SubscriptionController@checkout']);
@@ -155,12 +166,12 @@ Route::get('get_chat_from_hash', ['uses' => 'ChatController@get_chat_from_hash']
 Route::post('send_message_through_hash', ['uses' => 'ChatController@send_message_through_hash']);
 
 // Learnage Broadcasting
-Route::get('get_broadcast_sessions', ['uses' => 'LearnageBroadcastingController@get_broadcast_sessions']);
-Route::get('get_scheduled_sessions', ['uses' => 'LearnageBroadcastingController@get_scheduled_sessions']);
-Route::get('get_session_by_peer', ['uses' => 'LearnageBroadcastingController@get_session_by_peer']);
-Route::post('add_session', ['uses' => 'LearnageBroadcastingController@add_session']);
-Route::post('update_session', ['uses' => 'LearnageBroadcastingController@update_session']);
-Route::post('verify_user', ['uses' => 'LearnageBroadcastingController@verify_user']);
+Route::get('get_broadcast_sessions', ['uses' => 'LearnageController@get_broadcast_sessions']);
+Route::get('get_scheduled_sessions', ['uses' => 'LearnageController@get_scheduled_sessions']);
+Route::get('get_session_by_peer', ['uses' => 'LearnageController@get_session_by_peer']);
+Route::post('add_session', ['uses' => 'LearnageController@add_session']);
+Route::post('update_session', ['uses' => 'LearnageController@update_session']);
+Route::post('verify_user', ['uses' => 'LearnageController@verify_user']);
 
 // Resource Locking
 Route::get('get_author_keys', ['uses' => 'ResourceController@get_author_keys']);
