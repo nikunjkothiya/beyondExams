@@ -312,7 +312,7 @@ class AWSApiController extends Controller
         try {
 
             if ($request->package_id) {
-                $all_files = $this->resourceCollection->whereIn('id', ResourceKey::where('key_id', $request->package_id)->pluck('id')->toArray())->orderBy('id', 'DESC')->paginate($per_page);
+		$all_files = $this->resourceCollection->whereIn('id', ResourceKey::where('key_id', $request->package_id)->pluck('resource_id')->toArray())->orderBy('id', 'DESC')->paginate($per_page);
             } else if ($request->keyword) {
                 $all_files = $this->resourceCollection->where('title', 'like', "%{$request->keyword}%")->orderBy('id', 'DESC')->paginate($per_page);;
             } else {
