@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Comment;
 use App\Currency;
-use App\FileType;
 use App\Key;
 use App\KeyPrice;
 use App\MessageType;
@@ -13,7 +12,6 @@ use App\Reply;
 use App\Resource;
 use App\ResourceComment;
 use App\ResourceKey;
-use App\ResourceLike;
 use App\ResourceTimeline;
 use App\Test;
 use App\TestScore;
@@ -21,16 +19,12 @@ use App\Transaction;
 use App\User;
 use App\UserKey;
 use App\UserLastLogin;
-use http\Message;
-use Illuminate\Http\Request;
-
-use Razorpay\Api\Api;
-
 use Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Razorpay\Api\Api;
 
 class ResourceController extends Controller
 {
@@ -43,27 +37,29 @@ class ResourceController extends Controller
         $this->resourceCollection = Resource::with(['user:id,name,avatar', 'notes', 'tests', 'comments']);
     }
 
-    public function generate_resource_timeline(){
+    public function generate_resource_timeline()
+    {
         $users = UserLastLogin::where('updated_at', '>', Carbon::now()->subWeek())->get();
         $resources = Resource::orderBy('updated_at', 'DESC')->limit(50)->get();
         $oldTimelines = ResourceTimeline::whereIn('user_id', $users);
-        if(!is_null($oldTimelines->get()))
+        if (!is_null($oldTimelines->get()))
             $oldTimelines->delete();
-        foreach($users as $user){
+        foreach ($users as $user) {
             $i = 1;
-            foreach($resources as $resource){
+            foreach ($resources as $resource) {
                 $timeline = new ResourceTimeline();
                 $timeline->resource_id = $resource->id;
                 $timeline->user_id = $user->id;
                 $timeline->priority = $i;
                 $timeline->save();
-                $i = $i +1;
+                $i = $i + 1;
             }
         }
     }
 
 
-    public function get_resource_comments(Request $request){
+    public function get_resource_comments(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'resource_id' => 'required|integer',
         ]);
@@ -90,16 +86,16 @@ class ResourceController extends Controller
 
         $user = Auth::user();
         $resource = Resource::find($request->resource_id);
-        if(is_null($resource))
+        if (is_null($resource))
             return $this->apiResponse->sendResponse(404, 'Resource not found.', null);
 
         $comment = new ResourceComment();
         $comment->message = $request->message;
         $comment->user_id = $user->id;
         $comment->resource_id = $resource->id;
-        if(isset($request->is_child))
+        if (isset($request->is_child))
             $comment->is_child = $request->is_child;
-        if(isset($request->message_type))
+        if (isset($request->message_type))
             $comment->message_type = $request->message_type;
         $comment->save();
 
@@ -121,12 +117,12 @@ class ResourceController extends Controller
 
         $user = Auth::user();
         $resource = Resource::find($request->resource_id);
-        if(is_null($resource))
+        if (is_null($resource))
             return $this->apiResponse->sendResponse(404, 'Resource not found.', null);
 
         $liked = $resource->likes()->where('user_id', $user->id);
 
-        if(!is_null($liked->first())){
+        if (!is_null($liked->first())) {
             $liked->delete();
             $resource->num_likes = $resource->num_likes - 1;
             $resource->save();
@@ -314,7 +310,7 @@ class ResourceController extends Controller
             // Capture the payment
             if ($payment->status == 'authorized') {
                 $key = ResourceKey::where('id', $request->key_id)->get();
-                if(is_null($key))
+                if (is_null($key))
                     return $this->apiResponse->sendResponse(404, 'Key Does not exist', null);
 
                 // Capturing Payment
@@ -328,13 +324,13 @@ class ResourceController extends Controller
                 $txn->product_id = 2;
                 $txn->valid = 1;
                 $txn->save();
-                
+
                 $txn->user_key()->create(
                     ['key_id' => $key->id, 'user_id' => Auth::user()->id]
                 );
 
                 $resource = Resource::where('id', $key->resource_id)->first();
-                if($resource){
+                if ($resource) {
                     $resource->num_subscribers = $resource->num_subscribers + 1;
                     $resource->save();
                 }
@@ -552,5 +548,50 @@ class ResourceController extends Controller
         $test_score->save();
 
         return $this->apiResponse->sendResponse(200, 'Test score added successfully', null);
+    }
+
+    public function get_my_packages()
+    {
+        $user = Auth::user();
+        $author_packages = Key::with(['key_price' => function ($query) {
+            $query->with('currency');
+        }])->where('author_id', $user->id)->get();
+        return $this->apiResponse->sendResponse(200, 'Packages retrieved successfully', $author_packages);
+    }
+
+    public function add_new_package(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'price' => 'required|between:1,999.999',
+            'currency_id' => 'required|integer|min:1|max:' . Currency::count(),
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $user = Auth::user();
+
+        $kp_exists = Key::whereIn('id', KeyPrice::where('price', $request->price)->where('currency_id', $request->currency_id)->pluck('id')->toArray())->first();
+
+        if ($kp_exists)
+            return $this->apiResponse->sendResponse(500, 'Package already exists for this price', $kp_exists->id);
+        $newKey = new Key();
+        $newKey->name = $request->title;
+        $newKey->author_id = $user->id;
+        $newKey->save();
+
+        $newKey->key_price()->create(
+            [
+                'price' => $request->price,
+                'currency_id' => $request->currency_id,
+            ]
+        );
+
+        return $this->apiResponse->sendResponse(200, 'Package saved successfully', Key::with(['key_price' => function ($query) {
+            $query->with('currency');
+        }])->find($newKey->id));
     }
 }

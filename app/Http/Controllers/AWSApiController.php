@@ -298,7 +298,8 @@ class AWSApiController extends Controller
             'user_id' => 'required|integer',
             'type' => 'required|integer|min:0|max:' . FileType::count(),
             'author_id' => 'integer',
-            'keyword' => 'string'
+            'keyword' => 'string',
+            'package_id' => 'int'
         ]);
 
         if ($validator->fails()) {
@@ -309,7 +310,10 @@ class AWSApiController extends Controller
         $flag = 2;
 
         try {
-            if ($request->keyword) {
+
+            if ($request->package_id) {
+                $all_files = $this->resourceCollection->whereIn('id', ResourceKey::where('key_id', $request->package_id)->pluck('id')->toArray())->orderBy('id', 'DESC')->paginate($per_page);
+            } else if ($request->keyword) {
                 $all_files = $this->resourceCollection->where('title', 'like', "%{$request->keyword}%")->orderBy('id', 'DESC')->paginate($per_page);;
             } else {
                 $user_resources = UserResource::where('user_id', $request->user_id)->get();
@@ -422,8 +426,9 @@ class AWSApiController extends Controller
                 'notes_doc' => 'file|mimes:pdf',
                 'notes_title' => 'string',
                 'notes_image' => 'image',
-                'price' => 'between:0,999.999',
-                'currency_id' => 'integer|min:1|max:' . Currency::count()
+                'price' => 'between:1,999.999',
+                'currency_id' => 'integer|min:1|max:' . Currency::count(),
+                'package_id' => 'integer'
             ]);
 
             $aws_root = "public/";
@@ -498,7 +503,7 @@ class AWSApiController extends Controller
                 $new_resource->duration = $duration;
                 $new_resource->save();
             } else if ($request->type == 3 || $request->type == 5 || $request->type == 7) {
-                // VIDEO 
+                // VIDEO
 
                 // $contents = Storage::get('public/videos/', $name);
                 // Storage::putFileAs(
@@ -637,6 +642,12 @@ class AWSApiController extends Controller
                 $resourceKey = new ResourceKey();
                 $resourceKey->resource_id = $new_resource->id;
                 $resourceKey->key_id = $newKey->id;
+                $resourceKey->save();
+            } else if ($request->package_id) {
+
+                $resourceKey = new ResourceKey();
+                $resourceKey->resource_id = $new_resource->id;
+                $resourceKey->key_id = $request->package_id;
                 $resourceKey->save();
             }
 
