@@ -348,6 +348,8 @@ class AWSApiController extends Controller
 
 
             foreach ($all_files as $file) {
+                $file['liked_by_user'] = $file->likes()->where('user_id', $request->user_id)->count() > 0;
+                $file['user_follows_author'] = !is_null(User::find($request->user_id)->influencers()->firstWhere(['user_id' => $file->author_id]));
                 $file['unlocked'] = false;
                 $user_keys = UserKey::where('user_id', $request->user_id)->get();
                 $keys = ResourceKey::where('resource_id', $file->id)->get();
@@ -513,15 +515,14 @@ class AWSApiController extends Controller
                     'ffprobe.binaries' => '/usr/bin/ffprobe'
                 ));
 
-                if ($ext == ".webm"){
+                if ($ext == ".webm") {
                     $duration = 46;
-                }
-                else if ($ext == ".mp3"){
+                } else if ($ext == ".mp3") {
                     $duration = $ffprobe
-                    ->streams(storage_path('app/public/' . $filePath))
-                    ->audios()
-                    ->first()
-                    ->get('duration');
+                        ->streams(storage_path('app/public/' . $filePath))
+                        ->audios()
+                        ->first()
+                        ->get('duration');
                 } else {
                     $duration = $ffprobe
                         ->streams(storage_path('app/public/' . $filePath))
