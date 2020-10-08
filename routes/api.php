@@ -142,15 +142,15 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 
         // Learnage
-        Route::get('get_my_classes', ['uses' => 'LearnageController@get_my_classes']);
-        Route::get('get_class_students', ['uses' => 'LearnageController@get_class_students']);
-        Route::post('add_students_to_class', ['uses' => 'LearnageController@add_students_to_class']);
-        Route::post('create_class', ['uses' => 'LearnageController@create_class']);
-        Route::post('update_class_title', ['uses' => 'LearnageController@update_class_title']);
-        Route::post('update_class_grade', ['uses' => 'LearnageController@update_class_grade']);
-        Route::post('update_class_subject', ['uses' => 'LearnageController@update_class_subject']);
-        Route::post('update_class_schedule', ['uses' => 'LearnageController@update_class_schedule']);
-        Route::post('update_class_access', ['uses' => 'LearnageController@update_class_access']);
+        Route::get('get_my_classrooms', ['uses' => 'LearnageController@get_my_classrooms']);
+        Route::get('get_classroom_students', ['uses' => 'LearnageController@get_classroom_students']);
+        Route::post('add_students_to_classroom', ['uses' => 'LearnageController@add_students_to_classroom']);
+        Route::post('create_classroom', ['uses' => 'LearnageController@create_classroom']);
+        Route::post('update_classroom_title', ['uses' => 'LearnageController@update_classroom_title']);
+        Route::post('update_classroom_grade', ['uses' => 'LearnageController@update_classroom_grade']);
+        Route::post('update_classroom_subject', ['uses' => 'LearnageController@update_classroom_subject']);
+        Route::post('update_classroom_schedule', ['uses' => 'LearnageController@update_classroom_schedule']);
+        Route::post('update_classroom_access', ['uses' => 'LearnageController@update_classroom_access']);
 
         // Old Premium
         // Route::get('subscription', ['uses' => 'SubscriptionController@subscription']);
