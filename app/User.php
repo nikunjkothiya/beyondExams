@@ -147,4 +147,12 @@ class User extends Authenticatable
     public function test_scores(){
         return $this->hasMany('App\TestScore');
     }
+
+    public function student_classrooms(){
+        return $this->belongsToMany('App\Classroom', 'classroom_students', 'student_id', 'classroom_id');
+    }
+
+    public function teacher_classrooms(){
+        return $this->hasMany('App\Classroom', 'teacher_id');
+    }
 }
