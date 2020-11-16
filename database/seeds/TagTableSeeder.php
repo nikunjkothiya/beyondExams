@@ -12,16 +12,13 @@ class TagTableSeeder extends Seeder
     public function run()
     {
         $tags = array(
-			array('tag' => 'Conferences', 'tag_type_id' => 1),
-			array('tag' => 'Competitions', 'tag_type_id' => 1),
-			array('tag' => 'Scholarships', 'tag_type_id' => 1),
-			array('tag' => 'Awards', 'tag_type_id' => 1),
-            array('tag' => 'Internships', 'tag_type_id' => 1),
-            array('tag' => 'Admissions', 'tag_type_id' => 1),
-            array('tag' => 'Summer/Winter Schools', 'tag_type_id' => 1),
-            array('tag' => 'Fellowships', 'tag_type_id' => 1),
-            array('tag' => 'Grants', 'tag_type_id' => 1),
-            array('tag' => 'Workshops', 'tag_type_id' => 1),
+			array('tag' => 'English', 'tag_type_id' => 1),
+			array('tag' => 'Mathematics', 'tag_type_id' => 1),
+			array('tag' => 'Science', 'tag_type_id' => 1),
+			array('tag' => 'Hindi', 'tag_type_id' => 1),
+            array('tag' => 'Social Science', 'tag_type_id' => 1),
+            array('tag' => 'Computer Science', 'tag_type_id' => 1),
+            array('tag' => 'Sanskrit', 'tag_type_id' => 1),
             array('tag' => 'Post Doctorate', 'tag_type_id' => 2),
             array('tag' => 'Doctorate', 'tag_type_id' => 2),
             array('tag' => 'Masters', 'tag_type_id' => 2),

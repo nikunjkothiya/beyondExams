@@ -14,27 +14,21 @@ class DatabaseSeeder extends Seeder
         $this->call(CountryTableSeeder::class);
         $this->call(CategoryTableSeeder::class);
         $this->call(DisciplinesTableSeeder::class);
-        $this->call(FundTypeTableSeeder::class);
         $this->call(FileTypeTableSeeder::class);
         $this->call(MessagesTypesTableSeeder::class);
         $this->call(LanguageTableSeeder::class);
         $this->call(EligibleRegionTableSeeder::class);
-        $this->call(ProductTableSeeder::class);
         $this->call(QualificationsTableSeeder::class);
         $this->call(RoleTableSeeder::class);
         $this->call(TagTypeTableSeeder::class);
         $this->call(TagTableSeeder::class);
         $this->call(DomainTableSeeder::class);
-        $this->call(OrganisationTableSeeder::class);
         $this->call(UserTableSeeder::class);
         $this->call(realAnalyticsTableSeeder::class);
         $this->call(realFileTypesTableSeeder::class);
-//        $this->call(realLegacyUsersTableSeeder::class);
         $this->call(realUsersTableSeeder::class);
         $this->call(realUserSocialsTableSeeder::class);
-//        $this->call(realUserDetailsTableSeeder::class);
         $this->call(realListCommentsTableSeeder::class);
-//        $this->call(realMentorDetailsTableSeeder::class);
         $this->call(realMentorVerificationsTableSeeder::class);
         $this->call(realResourcesTableSeeder::class);
         $this->call(realOauthAccessTokensTableSeeder::class);
@@ -42,17 +36,11 @@ class DatabaseSeeder extends Seeder
         $this->call(realOauthClientsTableSeeder::class);
         $this->call(realOauthPersonalAccessClientsTableSeeder::class);
         $this->call(realOauthRefreshTokensTableSeeder::class);
-//        $this->call(realLegacyOpportunitiesTableSeeder::class);
-        $this->call(realOrganisationsTableSeeder::class);
-        $this->call(realOrganisationSocialsTableSeeder::class);
-        $this->call(realOrganisationDetailsTableSeeder::class);
         $this->call(realPasswordResetsTableSeeder::class);
-        $this->call(realPlusTransactionsTableSeeder::class);
         $this->call(realUserCommentsTableSeeder::class);
         $this->call(realUserRolesTableSeeder::class);
         $this->call(realReplyTableSeeder::class);
         $this->call(realTagUserTableSeeder::class);
-        $this->call(realTransactionsTableSeeder::class);
         $this->call(CurrencyTableSeeder::class);
     }
 }
