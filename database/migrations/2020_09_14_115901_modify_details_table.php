@@ -35,18 +35,5 @@ class ModifyDetailsTable extends Migration
      */
     public function down()
     {
-        Schema::table('user_details', function (Blueprint $table) {
-            $table->dropColumn('profile_link');
-            $table->dropColumn('slug');
-        });
-
-        Schema::table('mentor_details', function (Blueprint $table) {
-            $table->dropColumn('slug');
-        });
-
-        Schema::table('organisation_details', function (Blueprint $table) {
-            $table->dropColumn('profile_link');
-            $table->dropColumn('slug');
-        });
     }
 }

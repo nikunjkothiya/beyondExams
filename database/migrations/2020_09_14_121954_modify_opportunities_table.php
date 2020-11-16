@@ -32,10 +32,5 @@ class ModifyOpportunitiesTable extends Migration
      */
     public function down()
     {
-        Schema::table('opportunities', function (Blueprint $table) {
-            $table->dropColumn('curator_id');
-            $table->dropColumn('opportunity_id');
-            $table->dropColumn('source_website');
-        });
     }
 }

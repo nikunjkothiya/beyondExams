@@ -30,9 +30,5 @@ class AddPriceToMentorDetails extends Migration
      */
     public function down()
     {
-        Schema::table('mentor_details', function (Blueprint $table) {
-            $table->dropColumn('price');
-            $table->dropColumn('currency_id');
-        });
     }
 }

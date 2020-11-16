@@ -14,7 +14,7 @@ class realOpportunitiesTableSeeder extends Seeder
     {
         
 
-        \DB::table('opportunities')->delete();
+//        \DB::table('opportunities')->delete();
         
         \DB::table('opportunities')->insert(array (
             0 => 
