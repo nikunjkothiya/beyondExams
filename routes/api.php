@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 //M2M APIs
 Route::post('post/opportunity', 'UtilController@post_opportunity');
 

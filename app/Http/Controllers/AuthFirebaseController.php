@@ -7,18 +7,16 @@ use App\MentorVerification;
 use App\User;
 use App\UserDetail;
 use App\UserLastLogin;
-use App\UserRole;
-use App\UserSocial;
 use Auth;
+use Carbon\Carbon;
 use DB;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Validator;
-use DB;
-use Carbon\Carbon;
 
 class AuthFirebaseController extends Controller
 {
@@ -49,9 +47,6 @@ class AuthFirebaseController extends Controller
                 'access_token' => 'required',
             ]);
 
-            if (!isset($request->user_role))
-                $request->user_role = 1;
-
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
             }
@@ -62,172 +57,229 @@ class AuthFirebaseController extends Controller
 
             $idTokenString = $request->access_token;
 
-            $firebase_user = $auth->verifyIdToken($idTokenString);
-
-            if ($firebase_user != null) {
-                $provider = $firebase_user->getClaim('firebase')->sign_in_provider;
-                $claims = $firebase_user->getClaims();
-                $firebase_user->id = $firebase_user->getClaim('sub');
-
-                if (array_key_exists('phone_number', $claims))
-                    $firebase_user->phone = $firebase_user->getClaim('phone_number');
-                else
-                    $firebase_user->phone = null;
-
-                if (array_key_exists('email', $claims))
-                    $firebase_user->email = $firebase_user->getClaim('email');
-                else
-                    $firebase_user->email = null;
-                if (array_key_exists('name', $claims))
-                    $firebase_user->name = $firebase_user->getClaim('name');
-                else
-                    $firebase_user->name = null;
-                if (array_key_exists('picture', $claims))
-                    $firebase_user->avatar = $firebase_user->getClaim('picture');
-                else
-                    $firebase_user->avatar = null;
-            } else {
-                return $this->apiResponse->sendResponse(401, "Couldn't retrieve user", null);
+            try {
+                $firebase_tokens = $auth->verifyIdToken($idTokenString);
+                $firebase_user = $auth->getUser($firebase_tokens->getClaim('user_id'));
+            } catch (Exception $e) {
+                if (str_contains($e->getMessage(), "two dots")) {
+                    $firebase_user = $auth->getUser($request->access_token);
+                } else
+                    return $this->apiResponse->sendResponse(401, "Couldn't retrieve user", null);
             }
 
-            $check_account = UserSocial::where('provider_id', $firebase_user->id)->first();
-            $new_user = null;
-            if ($check_account) {
-                $new_user = User::find($check_account->user_id);
-                $new_user->name = $firebase_user->name;
-                $new_user->email = $firebase_user->email;
-                // $new_user->phone = $firebase_user->phone;
-                $new_user->unique_id = $firebase_user->id;
-                $new_user->avatar = $firebase_user->avatar;
-                $new_user->save();
+            $new_user = User::where('unique_id', $firebase_user->uid)->first();
 
-                // Assign Role Entry if not existing
-                if (!$new_user->role()) {
-                    $newRole = new UserRole();
-                    $newRole->user_id = $new_user->id;
-                    if ($request->user_role == $this->student_role_id)
-                        $newRole->is_user = 1;
-                    if ($request->user_role == $this->mentor_role_id)
-                        $newRole->is_mentor = 1;
-
-                    $newRole->save();
-                } else {
-                    if ($request->user_role == $this->student_role_id)
-                        $new_user->role->is_user = 1;
-                    if ($request->user_role == $this->mentor_role_id)
-                        $new_user->role->is_mentor = 1;
-
-                    $new_user->role->save();
-                }
-
-                if ($request->user_role == $this->student_role_id) {
-
-                    $flag = $this->getStudentFlag($new_user);
-                } else if ($request->user_role == $this->mentor_role_id) {
-                    $verified = MentorVerification::where('user_id', $new_user->id)->first();
-                    if (!$verified) {
-                        $newMentorVerification = new MentorVerification();
-                        $newMentorVerification->user_id = $new_user->id;
-                        $newMentorVerification->is_verified = 0;
-                        $newMentorVerification->save();
-                    }
-                    $flag = $this->getMentorFlag($new_user);
-                }
-
-            } else {
-                $flag = 1;
+            if (!$new_user) {
                 $new_user = new User();
-                $new_user->name = $firebase_user->name;
-                $new_user->email = $firebase_user->email;
-                //  $new_user->phone = $firebase_user->phone;
-                $new_user->unique_id = $firebase_user->id;
-                $new_user->avatar = $firebase_user->avatar;
+                $new_user->role_id = 1;
+            }
 
-                $new_user->save();
+            if (!is_null($firebase_user->displayName))
+                $new_user->name = $firebase_user->displayName;
 
+            $new_user->email = $firebase_user->email;
+            $new_user->unique_id = $firebase_user->uid;
+
+            if ($firebase_user->photoUrl && strlen($firebase_user->photoUrl))
+                $new_user->avatar = $firebase_user->photoUrl;
+
+            $new_user->save();
+
+            if (!$new_user->social_accounts)
                 $new_user->social_accounts()->create(
-                    ['provider_id' => $firebase_user->id, 'provider' => $provider]
+                    ['provider_id' => $firebase_user->uid, 'provider' => "google"]
                 );
 
-                switch ($request->user_role) {
-                    case $this->student_role_id:
-                        $new_user->role()->create(
-                            ['is_user' => 1]
-                        );
-                        break;
-                    case $this->mentor_role_id:
-                        $new_user->role()->create(
-                            ['is_mentor' => 1]
-                        );
-                        $new_user->mentor_verification()->create(
-                            ['is_verified' => 0]
-                        );
-                        break;
-                    case $this->admin_role_id:
-                        $new_user->role()->create(
-                            ['is_admin' => 1]
-                        );
-                        break;
-                    case $this->org_role_id:
-                        $new_user->role()->create(
-                            ['is_organisation' => 1]
-                        );
-                        break;
-                }
-            }
-
-            // Save user generic details
-            $new_details = UserDetail::where('user_id', $new_user->id)->first();
-            $break_name = explode(" ", $new_user->name, 2);
-            if (is_null($new_details)) {
-                $new_details = new UserDetail();
-                $new_details->user_id = $new_user->id;
-            }
-            $new_details->firstname = $break_name[0];
-            if (count($break_name) > 1)
-                $new_details->lastname = $break_name[1];
-            if (!is_null($new_user->email))
-                $new_details->email = $new_user->email;
-            if (!is_null($new_user->phone))
-                $new_details->phone = $new_user->phone;
-            $new_details->save();
+//            // Save user generic details
+//            $new_details = UserDetail::where('user_id', $new_user->id)->first();
+//            $break_name = explode(" ", $new_user->name, 2);
+//            if (is_null($new_details)) {
+//                $new_details = new UserDetail();
+//                $new_details->user_id = $new_user->id;
+//            }
+//            $new_details->name = $new_user->name;
+//            $new_details->firstname = $break_name[0];
+//            if (count($break_name) > 1)
+//                $new_details->lastname = $break_name[1];
+//
+//            if (!is_null($new_user->email))
+//                $new_details->email = $new_user->email;
+//
+//            if (!is_null($new_user->phone))
+//                $new_details->phone = $new_user->phone;
+//
+//            $new_details->save();
 
             $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
-            if(is_null($loginActivity)){
+
+            if (is_null($loginActivity)) {
                 $loginActivity = new UserLastLogin();
                 $loginActivity->user_id = $new_user->id;
             }
+
             $loginActivity->updated_at = Carbon::now();
             $loginActivity->save();
 
-            $client = new Client();
+            $response = $this->proxyLogin($firebase_user->uid, 'password', $flag);
 
-            $res = $client->request('POST', 'https://lithics.in/apis/mauka/signup.php', [
-                'form_params' => [
-                    'user_id' => $new_user->id,
-                    'user_name' => "Precisely",
-                    'source' => "firebase"
-                ]
-            ]);
-
-            $result = $res->getBody()->getContents();
-            DB::table('legacy_users')->insertOrIgnore(array('phoenix_user_id' => $new_user->id, 'legacy_user_id' => $result));
-            $data["legacy_user_id"] = $result;
-
-            $response = $this->proxyLogin($firebase_user->id, 'password', $flag);
             $data = json_decode($response->getContent(), true)["data"];
-            $data["unique_id"] = $firebase_user->id;
+
+            $data["flag"] = $new_user->flag;
+            $data["unique_id"] = $firebase_user->uid;
             $data["phoenix_user_id"] = $new_user->id;
             $data["email"] = $new_user->email;
-            $data["user_name"] = $new_user->name;
+            $data["name"] = $new_user->name;
+            $data["role_id"] = $new_user->role_id;
+
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
-        } catch (\InvalidArgumentException $e) { // If the token has the wrong format
+        } catch (InvalidArgumentException $e) { // If the token has the wrong format
             return $this->apiResponse->sendResponse(401, $e->getMessage(), $e->getTraceAsString());
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function proxyLogin($unique_id, $password, $flag)
+    {
+        try {
+            $user = User::where('unique_id', $unique_id)->first();
+
+            if (!is_null($user)) {
+                return $this->proxy('password', $flag, [
+                    'username' => $unique_id,
+                    'password' => $password,
+                ]);
+            } else {
+
+                $data = [
+                    'access_token' => '',
+                    'expires_in' => '',
+                    'refresh_token' => '',
+                ];
+
+                return $this->apiResponse->sendResponse(401, 'The user credentials were incorrect.', $data);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function proxy($grantType, $flag, array $data = [])
+    {
+        //    	Get Laravel app config
+        $config = app()->make('config');
+        $data = array_merge($data, [
+            'client_id' => env('PASSWORD_CLIENT_ID'),
+            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
+            'grant_type' => $grantType
+        ]);
+        try {
+            $response = $this->apiConsumer->post(sprintf('%s/oauth/token', $config->get('app.url')), [
+                'form_params' => $data
+            ]);
+
+            $data_response = json_decode($response->getBody());
+
+            $token_data = [
+                'unique_id' => $data["username"],
+                'new' => $flag,
+                'access_token' => $data_response->access_token,
+                'expires_in' => $data_response->expires_in,
+                'refresh_token' => $data_response->refresh_token,
+            ];
+            return $this->apiResponse->sendResponse(200, 'Login Successful', $token_data);
+        } catch (BadResponseException $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function refresh(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'unique_id' => 'required',
+                'refresh_token' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, $validator->errors(), null);
+            }
+
+            $user = User::where('unique_id', $request->unique_id)->first();
+            if (!$user) {
+                return $this->apiResponse->sendResponse(404, 'User not found.', null);
+            }
+
+            $refreshToken = $request->get('refresh_token');
+            $response = $this->proxyRefresh($refreshToken, $request->get('unique_id'), $user->flag);
+            return $response;
         } catch (\Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
+    public function proxyRefresh($refreshToken, $unique_id, $flag)
+    {
+        return $this->proxy('refresh_token', $flag, [
+            'refresh_token' => $refreshToken,
+            'username' => $unique_id
+        ]);
+    }
+
+    public function logout()
+    {
+        try {
+            $response = 1;
+            $user_id = Auth::user()->id;
+            $accessTokens = $this->token($user_id);
+            foreach ($accessTokens as $accessToken) {
+                $response = $response * $this->proxyLogout($accessToken->id);
+            }
+            if ($response) {
+                return $this->apiResponse->sendResponse(200, 'Token successfully destroyed', $this->json_data);
+            }
+            $response_data["message"] = "Logout Error";
+            return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function token($user_id)
+    {
+        try {
+            $token = $this->db
+                ->table('oauth_access_tokens')
+                ->where('user_id', $user_id)
+                ->where('revoked', 0)
+                ->get(['id']);
+            return $token;
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function proxyLogout($accessToken)
+    {
+        try {
+            $refreshToken = $this->db
+                ->table('oauth_refresh_tokens')
+                ->where('access_token_id', $accessToken)
+                ->update([
+                    'revoked' => true
+                ]);
+            if ($refreshToken) {
+                if ($this->revoke($accessToken)) {
+                    return 1;
+                }
+            }
+            return 0;
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
 
     public function getStudentFlag($new_user)
     {
@@ -276,163 +328,4 @@ class AuthFirebaseController extends Controller
         }
     }
 
-    public function proxyLogin($unique_id, $password, $flag)
-    {
-        $user = User::where('unique_id', $unique_id)->first();
-
-        if (!is_null($user)) {
-            return $this->proxy('password', $flag, [
-                'username' => $unique_id,
-                'password' => $password,
-            ]);
-        } else {
-
-            $data = [
-                'access_token' => '',
-                'expires_in' => '',
-                'refresh_token' => '',
-            ];
-
-            return $this->apiResponse->sendResponse(401, 'The user credentials were incorrect.', $data);
-        }
-    }
-
-    public function proxy($grantType, $flag, array $data = [])
-    {
-        //    	Get Laravel app config
-        //$details = User::where('email',$data['username'])->first();
-        $config = app()->make('config');
-        $data = array_merge($data, [
-            'client_id' => env('PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSWORD_CLIENT_SECRET'),
-            'grant_type' => $grantType
-        ]);
-        try {
-            //$user = User::where('email',$data['username'])->first();
-            $response = $this->apiConsumer->post(sprintf('%s/oauth/token', $config->get('app.url')), [
-                'form_params' => $data
-            ]);
-
-            $data_response = json_decode($response->getBody());
-
-            $token_data = [
-                'unique_id' => $data["username"],
-                'new' => $flag,
-                'access_token' => $data_response->access_token,
-                'expires_in' => $data_response->expires_in,
-                'refresh_token' => $data_response->refresh_token,
-            ];
-            return $this->apiResponse->sendResponse(200, 'Login Successful', $token_data);
-        } catch (BadResponseException $e) {
-            $response = json_decode($e->getResponse()->getBody());
-            $data = [
-                'access_token' => '',
-                'expires_in' => '',
-                'refresh_token' => '',
-            ];
-
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function refresh(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'unique_id' => 'required',
-                'refresh_token' => 'required',
-                'user_role' => 'integer'
-            ]);
-
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, $validator->errors(), null);
-            }
-
-            $user = User::where('unique_id', $request->unique_id)->first();
-            if (!$user) {
-                return $this->apiResponse->sendResponse(404, 'User not found.', null);
-            }
-
-            $loginActivity = UserLastLogin::where('user_id', $user->id)->first();
-            if(is_null($loginActivity)){
-                $loginActivity = new UserLastLogin();
-                $loginActivity->user_id = $user->id;
-            }
-            $loginActivity->updated_at = Carbon::now();
-            $loginActivity->save();
-
-            if ($request->user_role == $this->student_role_id) {
-                $flag = $this->getStudentFlag($user);
-            } elseif ($request->user_role == $this->mentor_role_id) {
-                $flag = $this->getMentorFlag($user);
-            }
-
-            $refreshToken = $request->get('refresh_token');
-            $response = $this->proxyRefresh($refreshToken, $request->get('unique_id'), $flag);
-            return $response;
-        } catch (\Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function proxyRefresh($refreshToken, $unique_id, $flag)
-    {
-        return $this->proxy('refresh_token', $flag, [
-            'refresh_token' => $refreshToken,
-            'username' => $unique_id
-        ]);
-    }
-
-    public function logout()
-    {
-        try {
-            $response = 1;
-            $user_id = Auth::user()->id;
-            $accessTokens = $this->token($user_id);
-            foreach ($accessTokens as $accessToken) {
-                $response = $response * $this->proxyLogout($accessToken->id);
-            }
-            if ($response) {
-                return $this->apiResponse->sendResponse(200, 'Token successfully destroyed', $this->json_data);
-            }
-            $response_data["message"] = "Logout Error";
-            return $this->apiResponse->sendResponse(500, 'Internal server error 3', $response_data);
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function token($user_id)
-    {
-        try {
-            $token = $this->db
-                ->table('oauth_access_tokens')
-                ->where('user_id', $user_id)
-                ->where('revoked', 0)
-                ->get(['id']);
-            return $token;
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse($e->getCode(), $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function proxyLogout($accessToken)
-    {
-        try {
-            $refreshToken = $this->db
-                ->table('oauth_refresh_tokens')
-                ->where('access_token_id', $accessToken)
-                ->update([
-                    'revoked' => true
-                ]);
-            if ($refreshToken) {
-                if ($this->revoke($accessToken)) {
-                    return 1;
-                }
-            }
-            return 0;
-        } catch (Exception $e) {
-            return 0;
-        }
-    }
 }

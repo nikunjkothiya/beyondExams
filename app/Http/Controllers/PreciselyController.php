@@ -9,32 +9,25 @@ use App\ActionUserOpportunity;
 use App\Analytics;
 use App\Country;
 use App\Currency;
-use App\Discipline;
 use App\Domain;
 use App\DomainUser;
-use App\FileType;
 use App\Language;
-use App\Opportunity;
-use App\Qualification;
-use App\Resource;
-use App\ResourceKey;
-use App\Tag;
-use App\Transaction;
-use App\User;
-use App\UserDetail;
 use App\MentorDetail;
 use App\MentorVerification;
-use Carbon\Carbon;
-use Config;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use App\Http\Controllers\ApiResponse;
-use App\Organisation;
+use App\Opportunity;
 use App\OrganisationDetail;
 use App\StudentDetail;
-use Illuminate\Support\Facades\Storage;
+use App\Tag;
+use App\User;
+use App\UserDetail;
 use Auth;
+use Carbon\Carbon;
+use Config;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @property ApiResponse apiResponse
@@ -112,7 +105,7 @@ class PreciselyController extends Controller
                 }
 
                 // Save data to users table
-                if (isset($request->lastname)){
+                if (isset($request->lastname)) {
                     $user->name = $request->firstname . ' ' . $request->lastname;
                 } else {
                     $user->name = $request->firstname;
@@ -123,7 +116,7 @@ class PreciselyController extends Controller
 
                 // Set commono data to user_details table
                 $details = UserDetail::where('user_id', $user_id)->first();
-                if (is_null($details)){
+                if (is_null($details)) {
                     $details = new UserDetail();
                     $details->user_id = $user_id;
                 }
@@ -152,7 +145,7 @@ class PreciselyController extends Controller
                 if (is_null($check)) {
                     $record = new MentorDetail();
                     $record->user_id = $user_id;
-                    if (isset($request->price) && isset($request->currency_id)){
+                    if (isset($request->price) && isset($request->currency_id)) {
                         $record->price = $request->price;
                         $record->currency_id = $request->currency_id;
                     }
@@ -266,19 +259,16 @@ class PreciselyController extends Controller
     {
         try {
             if (Auth::check()) {
-                $user = User::find(Auth::user()->id);
+                $user = Auth::user();
                 $user_id = $user->id;
                 $validator = Validator::make($request->all(), [
                     'firstname' => 'required|string|max:255',
                     'lastname' => 'required|string|max:255',
-                    'college' => 'required|string|max:1024',
-                    'gpa' => 'numeric|between:0,10.00',
-                    'qualification' => 'required|integer|min:1|max:' . Qualification::count(),
-                    'discipline' => 'required|integer|min:1|max:' . Discipline::count(),
+                    'email' => 'required|email',
+                    'college' => 'string|max:1024',
+                    'age' => 'required|int',
                     'city' => 'string|max:255',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
-                    'email' => 'required|email',
-                    'phone' => 'string',
                     'profile_link' => 'string',
                 ]);
 
@@ -292,7 +282,7 @@ class PreciselyController extends Controller
                 $user->save;
 
                 // Updating Common User Details
-                $details = UserDetail::where('user_id', $user_id)->first();
+                $details = UserDeta1il::where('user_id', $user_id)->first();
                 $details->user_id = $user_id;
                 if (isset($request->firstname))
                     $details->firstname = $request->firstname;
@@ -300,8 +290,6 @@ class PreciselyController extends Controller
                     $details->lastname = $request->lastname;
                 if (isset($request->lastname))
                     $details->email = $request->email;
-                if (isset($request->phone))
-                    $details->phone = $request->phone;
                 if (isset($request->profile_link))
                     $details->profile_link = $request->profile_link;
                 if (!is_null($user->avatar))
@@ -312,92 +300,9 @@ class PreciselyController extends Controller
                 $details->slug = $slug;
                 $details->save();
 
-                // Updating Student Specific details
-                $check = StudentDetail::where('user_id', $user_id)->first();
-                if (is_null($check)) {
-                    $record = new StudentDetail();
-                    $record->user_id = $user_id;
-                    if (isset($request->college))
-                        $record->college = $request->college;
-                    if (isset($request->city))
-                        $record->city = $request->city;
-                    if (isset($request->gpa))
-                        $record->gpa = $request->gpa;
-                    if (isset($request->qualification_id))
-                        $record->qualification_id = $request->qualification;
-                    if (isset($request->discipline_id))
-                        $record->discipline_id = $request->discipline;
-                    if (isset($request->country_id))
-                        $record->country_id = $request->country;
-
-                    $record->save();
-                    if ($record) {
-                        // Check if tags are filled if filled then 0 else 3
-                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-                        if ($check_tag) {
-                            $flag = 0;
-                        } else {
-                            $flag = 3;
-                        }
-                        $responseArray = [
-                            'new' => $flag
-                        ];
-                        $record->flag = $flag;
-                        $record->save();
-                        if (isset($request->domain_ids)) {
-                            foreach ($request->domain_ids as $domain) {
-                                $domain_user = new DomainUser();
-                                $domain_user->user_id = Auth::user()->id;
-                                $domain_user->domain_id = $domain;
-                                $domain_user->save();
-                            }
-                        }
-                        return $this->apiResponse->sendResponse(200, 'User details saved', $responseArray);
-                    } else {
-                        return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
-                    }
-                } else {
-                    $check->user_id = $user_id;
-                    if (isset($request->college))
-                        $check->college = $request->college;
-                    if (isset($request->city))
-                        $check->city = $request->city;
-                    if (isset($request->gpa))
-                        $check->gpa = $request->gpa;
-                    if (isset($request->qualification_id))
-                        $check->qualification_id = $request->qualification;
-                    if (isset($request->discipline_id))
-                        $check->discipline_id = $request->discipline;
-                    if (isset($request->country_id))
-                        $check->country_id = $request->country;
-
-                    $check->save();
-                    if ($check) {
-                        // Check if tags are filled if filled then 0 else 3
-                        $check_tag = DB::table('tag_user')->select('tag_id')->where('user_id', $user_id)->first();
-                        if ($check_tag) {
-                            $flag = 0;
-                        } else {
-                            $flag = 3;
-                        }
-                        $responseArray = [
-                            'new' => $flag
-                        ];
-                        $check->flag = $flag;
-                        $check->save();
-                        if (isset($request->domain_ids)) {
-                            foreach ($request->domain_ids as $domain) {
-                                $domain_user = new DomainUser();
-                                $domain_user->user_id = Auth::user()->id;
-                                $domain_user->domain_id = $domain;
-                                $domain_user->save();
-                            }
-                        }
-                        return $this->apiResponse->sendResponse(200, 'User details saved.', $responseArray);
-                    } else {
-                        return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
-                    }
-                }
+                return $this->apiResponse->sendResponse(200, 'User details saved', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -486,7 +391,8 @@ class PreciselyController extends Controller
     public function get_user_profile()
     {
         if (Auth::check()) {
-            $user = User::find(Auth::user()->id);
+            $user = Auth::user();
+
             try {
                 $pcheck = UserDetail::where('user_id', $user->id)->first();
             } catch (Exception $e) {
@@ -500,13 +406,10 @@ class PreciselyController extends Controller
                 } else {
                     $data['user_details'] = $pcheck;
                 }
-                $avatar = DB::table('users')->select('avatar')->where('id', $user->id)->get();
-                foreach ($avatar as $ava) {
-                    $data['avatar'] = $ava->avatar;
-                    break;
-                }
 
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
+            } else {
+                return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
             }
         } else {
             return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
@@ -596,7 +499,7 @@ class PreciselyController extends Controller
             } else {
                 $data['mentor_details'] = $pcheck;
             }
-	    $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
+            $data['mentor_details']["currency"] = Currency::find($data["mentor_details"]["currency_id"]);
 
             $avatar = DB::table('users')->select('avatar')->where('id', $pcheck->user_id)->first();
             $data['avatar'] = $avatar->avatar;
@@ -1110,7 +1013,6 @@ class PreciselyController extends Controller
 //                $txn->product_id = 3;
 //                $txn->valid = 1;
 //                $txn->save();
-
 
 
 //                $mentor_detail->num_paid_subscribers = $mentor_detail->num_paid_subscribers + 1;
