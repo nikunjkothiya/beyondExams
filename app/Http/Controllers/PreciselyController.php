@@ -318,7 +318,7 @@ class PreciselyController extends Controller
         if (Auth::check()) {
             $user = Auth::user();
 
-            return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', ["user_details"=>$user]);
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
         }
