@@ -13,10 +13,11 @@ use DB;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
-use http\Client\Request;
+//use http\Client\Request;
 use Illuminate\Foundation\Application;
 use InvalidArgumentException;
 use Validator;
+use Illuminate\Http\Request;
 
 class AuthFirebaseController extends Controller
 {
