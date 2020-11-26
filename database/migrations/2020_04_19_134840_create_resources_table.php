@@ -16,20 +16,21 @@ class CreateResourcesTable extends Migration
 //        private $file_parameters = ["url", "thumbnail", "type", "length", "title", "author", "designation", "profile_pic"];
         Schema::create('resources', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedInteger('file_type_id');
-            $table->string('file_url')->nullable();
+            $table->string('url')->nullable();
             $table->string('thumbnail_url')->nullable();
             $table->integer('duration')->nullable();
             $table->string('title');
             $table->mediumText('description');
             $table->string('slug');
+            $table->integer('num_likes')->default(0);
+            $table->integer('num_comments')->default(0);
+            $table->integer('num_subscribers')->default(0);
             $table->unsignedBigInteger('author_id');
             $table->timestamps();
         });
 
         Schema::table('resources',function($table){
             $table->foreign('author_id')->references('id')->on('users');
-            $table->foreign('file_type_id')->references('id')->on('file_types');
         });
     }
 

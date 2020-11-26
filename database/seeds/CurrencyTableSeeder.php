@@ -15,6 +15,7 @@ class CurrencyTableSeeder extends Seeder
 			array('name' => 'USD', 'symbol' => '$'),
 			array('name' => 'INR', 'symbol' => '₹'),
 		);
+
 		DB::table('currencies')->insert($currencies);
     }
 }

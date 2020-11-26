@@ -18,8 +18,7 @@ class ApiAuthenticate
      */
     public function handle($request, Closure $next)
     {
-        if (env("SHOW_API_AUTHENTICATE"))
-            dd("ApiAuthenticate");
+
         $apiResponse = new ApiResponse;
         $authorization = $request->header('Authorization');
         if (is_null($authorization))
