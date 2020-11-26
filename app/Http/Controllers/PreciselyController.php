@@ -309,114 +309,19 @@ class PreciselyController extends Controller
         }
     }
 
-    public function submit_org_profile(Request $request)
-    {
-        try {
-            if (Auth::check()) {
-                $user = User::find(Auth::user()->id);
-                $user_id = $user->id;
-                $validator = Validator::make($request->all(), [
-                    'firstname' => 'required|string|max:255',
-                    'lastname' => 'required|string|max:255',
-                    'contact_person' => 'required|string|max:1024',
-                    'branch' => 'required|numeric|between:0,10.00',
-                    'country_id' => 'required|integer|min:1|max:' . Country::count(),
-                    'email' => 'required|email',
-                    'phone' => 'string',
-                    'profile_link' => 'string',
-                ]);
-
-                if ($validator->fails()) {
-                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-                }
-
-                // Updating Common User Details
-                $details = UserDetail::where('user_id', $user_id)->first();
-                $details->user_id = $user_id;
-                if (isset($request->firstname))
-                    $details->firstname = $request->firstname;
-                if (isset($request->lastname))
-                    $details->lastname = $request->lastname;
-                if (isset($request->lastname))
-                    $details->email = $request->email;
-                if (isset($request->phone))
-                    $details->phone = $request->phone;
-                if (isset($request->profile_link))
-                    $details->profile_link = $request->profile_link;
-
-                $details->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
-                $details->slug = $slug;
-                $details->save();
-
-                // Updating Student Specific details
-                $check = OrganisationDetail::where('user_id', $user_id)->first();
-                if (is_null($check)) {
-                    $record = new OrganisationDetail();
-                    $record->user_id = $user_id;
-                    if (isset($request->contact_person))
-                        $record->contact_person = $request->contact_person;
-                    if (isset($request->branch))
-                        $record->branch = $request->branch;
-                    if (isset($request->country_id))
-                        $record->country_id = $request->country_id;
-                    $record->save();
-                    if ($record) {
-                        return $this->apiResponse->sendResponse(200, 'Org details saved', array_merge($record->toArray(), $details->toArray()));
-                    } else {
-                        return $this->apiResponse->sendResponse(500, 'Internal server error. New record could not be inserted', null);
-                    }
-                } else {
-                    $check->user_id = $user_id;
-                    if (isset($request->contact_person))
-                        $check->contact_person = $request->contact_person;
-                    if (isset($request->branch))
-                        $check->branch = $request->branch;
-                    if (isset($request->country_id))
-                        $check->country_id = $request->country_id;
-                    $check->save();
-                    if ($check) {
-                        return $this->apiResponse->sendResponse(200, 'Org details saved.', array_merge($check->toArray(), $details->toArray()));
-                    } else {
-                        return $this->apiResponse->sendResponse(500, 'Internal server error. Record could not be updated', null);
-                    }
-                }
-            }
-        } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
     //    TODO: CORRECT RETURN TYPE
     public function get_user_profile()
     {
         if (Auth::check()) {
             $user = Auth::user();
 
-            try {
-                $pcheck = UserDetail::where('user_id', $user->id)->first();
-            } catch (Exception $e) {
-                return $this->apiResponse->sendResponse(500, 'User authentication failed', $e->getMessage());
-            }
-
-            if ($pcheck) {
-                $dcheck = StudentDetail::where('user_id', $user->id)->first();
-                if ($dcheck) {
-                    $data['user_details'] = array_merge($pcheck->toArray(), $dcheck->toArray());
-                } else {
-                    $data['user_details'] = $pcheck;
-                }
-
-                return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $data);
-            } else {
-                return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
-            }
+            return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
-            return $this->apiResponse->sendResponse(500, 'Users not logged in', null);
+            return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
         }
     }
 
-    public function get_mentor_profile()
+    function get_mentor_profile()
     {
         $user = Auth::user();
         try {
@@ -460,7 +365,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_mentor_price(Request $request)
+    public
+    function get_mentor_price(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'mentor_id' => 'required|integer',
@@ -482,7 +388,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_mentor_profile_from_slug(Request $request, $slug)
+    public
+    function get_mentor_profile_from_slug(Request $request, $slug)
     {
 
         try {
@@ -526,7 +433,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_org_profile()
+    public
+    function get_org_profile()
     {
         $user = Auth::user();
         try {
@@ -555,7 +463,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function save_opportunity(Request $request)
+    public
+    function save_opportunity(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -608,7 +517,8 @@ class PreciselyController extends Controller
         return $this->apiResponse->sendResponse(200, 'Opportunity saved', null);
     }
 
-    public function unsave_opportunity(Request $request)
+    public
+    function unsave_opportunity(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -652,7 +562,8 @@ class PreciselyController extends Controller
         return $this->apiResponse->sendResponse(200, 'Opportunity Unsaved', null);
     }
 
-    public function show_saved_opportunity()
+    public
+    function show_saved_opportunity()
     {
         if (Auth::check()) {
             $user = Auth::user();
@@ -668,7 +579,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function save_user_language(Request $request)
+    public
+    function save_user_language(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
@@ -747,7 +659,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function save_user_filters(Request $request)
+    public
+    function save_user_filters(Request $request)
     {
         try {
             if (Auth::check()) {
@@ -783,7 +696,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function save_user_domains(Request $request)
+    public
+    function save_user_domains(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -806,7 +720,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_user_domains()
+    public
+    function get_user_domains()
     {
         try {
             $userdomains = DomainUser::with('domains')->where('user_id', Auth::user()->id)->get();
@@ -819,7 +734,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_all_domains()
+    public
+    function get_all_domains()
     {
         try {
             $domains = Domain::all();
@@ -832,13 +748,15 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_all_countries(Request $request)
+    public
+    function get_all_countries(Request $request)
     {
         $countries = Country::all();
         return $this->apiResponse->sendResponse(200, 'All countries fetched.', $countries);
     }
 
-    public function get_location($location_id)
+    public
+    function get_location($location_id)
     {
         try {
             $country = DB::table('opportunity_locations')->select('location')->where('id', $location_id)->get();
@@ -848,7 +766,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_funding_status($id)
+    public
+    function get_funding_status($id)
     {
         try {
             $fund_status = DB::table('fund_types')->select('type')->where('id', $id)->get();
@@ -858,7 +777,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_user_language()
+    public
+    function get_user_language()
     {
         try {
             if (Auth::check()) {
@@ -874,7 +794,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function get_user_filters()
+    public
+    function get_user_filters()
     {
         try {
             if (Auth::check()) {
@@ -899,7 +820,8 @@ class PreciselyController extends Controller
         }
     }
 
-    public function segment_analytics(Request $request)
+    public
+    function segment_analytics(Request $request)
     {
 
         try {
