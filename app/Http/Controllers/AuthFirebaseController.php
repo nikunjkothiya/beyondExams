@@ -13,8 +13,8 @@ use DB;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
+use http\Client\Request;
 use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use InvalidArgumentException;
 use Validator;
 

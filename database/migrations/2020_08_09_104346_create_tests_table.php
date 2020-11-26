@@ -15,9 +15,7 @@ class CreateTestsTable extends Migration
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('url')->nullable();
             $table->string('title')->nullable();
-            $table->json('json_content')->nullable();
             $table->unsignedBigInteger('resource_id');
             $table->timestamps();
         });
