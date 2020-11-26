@@ -121,8 +121,10 @@ class AuthFirebaseController extends Controller
             $loginActivity->save();
 
             $response = $this->proxyLogin($firebase_user->uid, 'password', $flag);
+//	    return $response;
 
             $data = json_decode($response->getContent(), true)["data"];
+//	    return $data;
 
             $data["flag"] = $new_user->flag;
             $data["unique_id"] = $firebase_user->uid;

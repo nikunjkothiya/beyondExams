@@ -282,7 +282,10 @@ class PreciselyController extends Controller
                 $user->save;
 
                 // Updating Common User Details
-                $details = UserDeta1il::where('user_id', $user_id)->first();
+                $details = UserDetail::where('user_id', $user_id)->first();
+		if (is_null($details)){
+		    $details = new UserDetail();
+		}
                 $details->user_id = $user_id;
                 if (isset($request->firstname))
                     $details->firstname = $request->firstname;
