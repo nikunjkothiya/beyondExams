@@ -17,7 +17,7 @@ class CreateTestsTable extends Migration
             $table->bigIncrements('id');
             $table->string('title')->nullable();
             $table->json('mcqs')->nullable();
-            $table->unsignedBigInteger('resource_url');
+            $table->string('resource_url');
             $table->timestamps();
         });
     }

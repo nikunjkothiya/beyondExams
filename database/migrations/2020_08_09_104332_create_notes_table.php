@@ -17,7 +17,7 @@ class CreateNotesTable extends Migration
             $table->bigIncrements('id');
             $table->string('title')->nullable();
             $table->string('url')->nullable();
-            $table->unsignedBigInteger('resource_url');
+            $table->string('resource_url');
             $table->timestamps();
         });
     }
