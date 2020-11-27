@@ -39,7 +39,7 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
-Route::get('getCategories', ['uses' => 'UtilController@getCategories']);
+Route::get('get_categories', ['uses' => 'UtilController@getCategories']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 //Protected APIs via Auth Middleware

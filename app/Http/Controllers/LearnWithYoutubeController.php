@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Category;
 use App\Country;
 use App\Language;
-use Illuminate\Http\Request;
 use Auth;
+use Config;
 use DB;
 use Exception;
-use Config;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class LearnWithYoutubeController extends Controller
@@ -19,8 +20,10 @@ class LearnWithYoutubeController extends Controller
     {
         $this->apiResponse = $apiResponse;
     }
+
     //
-    public function submit_feedback(Request $request) {
+    public function submit_feedback(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'string',
             'email' => 'integer',
@@ -40,7 +43,7 @@ class LearnWithYoutubeController extends Controller
             $email = $request->email;
 
 
-        DB::table('feedbacks')->insert(['name'=>$name, 'email' => $email, 'message'=>$request->message]);
+        DB::table('feedbacks')->insert(['name' => $name, 'email' => $email, 'message' => $request->message]);
 
         return $this->apiResponse->sendResponse(200, 'Feedback saved successfully', null);
 
@@ -74,7 +77,7 @@ class LearnWithYoutubeController extends Controller
                     $user->profile_link = $request->profile_link;
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
@@ -100,5 +103,51 @@ class LearnWithYoutubeController extends Controller
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
         }
+    }
+
+    public function addNewCategory(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string',
+            'level' => 'required|integer',
+            'parent_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        if (Auth::user()->role() == 1)
+            return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
+
+        $category = Category::create(['title' => $request->title, 'level' => $request->level, 'previous_id' => $request->parent_id]);
+
+        return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+    }
+
+    public function getCategories(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'level' => 'required|integer',
+            'parent_id' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        if ($request->level > 1) {
+            if (!$request->parent_id) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing.', 'parent_id parameter not included');
+            }
+            $parent_id = $request->parent_id;
+        } else {
+            $parent_id = 0;
+        }
+
+        $categories = Category::where('level', $request->level)->where('previous_id', $parent_id)->get();
+
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
+
     }
 }

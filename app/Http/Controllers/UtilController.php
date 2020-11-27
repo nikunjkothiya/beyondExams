@@ -3,36 +3,18 @@
 namespace App\Http\Controllers;
 
 use App;
-use App\Category;
-use App\EligibleRegion;
-use App\FundType;
 use App\Language;
-use App\Opportunity;
-use App\OpportunityLocation;
-use App\PlusTransaction;
-use App\Tag;
-use App\User;
-use App\UserDetail;
-use App\VersionCode;
 use Auth;
-use Carbon\Carbon;
-use DateTime;
-use GuzzleHttp\Client;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use stdClass;
-use Illuminate\Support\Facades\Validator;
-
-use Spatie\Sitemap\SitemapIndex;
 use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\SitemapIndex;
 use Spatie\Sitemap\Tags\Url;
+use stdClass;
 
 class UtilController extends Controller
 {
-    private $apiResponse;
     protected $code = array();
+    private $apiResponse;
 
     public function __construct(ApiResponse $apiResponse)
     {
@@ -55,50 +37,6 @@ class UtilController extends Controller
             session()->put('locale', 'en');
             return redirect()->back();
         }
-    }
-
-    public function addNewCategory(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'level' => 'required|integer',
-            'previous_id' => 'required|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-        }
-
-        if (Auth::user()->role() == 1)
-            return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
-
-        $category = Category::create(['title'=>$request->title, 'level'=>$request->level, 'previous_id'=>$request->previous_id]);
-
-        return $this->apiResponse->sendResponse(200, 'New Category added', $category);
-    }
-
-    public function getCategories(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'level' => 'required|integer',
-            'previous_id' => 'integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-        }
-
-        if ($request->level > 1) {
-            if (!$request->previous_id) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing.', 'previous_id parameter not included');
-            }
-            $previous_id = $request->previous_id;
-        } else {
-            $previous_id = 0;
-        }
-
-        $categories = Category::where('level', $request->level)->where('previous_id', $previous_id)->get();
-
-        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
-
     }
 
     public function send($user_id, $user_name, $user_email, $opportunity_id, $opp_title, $opp_deadline)
@@ -127,7 +65,7 @@ class UtilController extends Controller
                 // Get Last 1000 Opportunity
                 $opportunities = Opportunity::where('id', '>', ($i * 1000))->limit(1000)->get();
                 // Start making sitemap
-                $sitemap =  Sitemap::create();
+                $sitemap = Sitemap::create();
                 // Loop through all opp
                 foreach ($opportunities as $opportunity) {
                     resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
@@ -141,9 +79,9 @@ class UtilController extends Controller
             }
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
             resolve('url')->forceRootUrl(env('APP_URL'));
-            return  $apiResponse->sendResponse(200, "Success", $index);
+            return $apiResponse->sendResponse(200, "Success", $index);
         } catch (\Exception $e) {
-            return  $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -158,7 +96,7 @@ class UtilController extends Controller
             $opportunities = Opportunity::where('id', '>', ($index * 1000))->limit(1000)->get();
             // Start making sitemap
             resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
-            $sitemap =  Sitemap::create();
+            $sitemap = Sitemap::create();
             // Loop through all opp
             foreach ($opportunities as $opportunity) {
                 $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
@@ -177,9 +115,9 @@ class UtilController extends Controller
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
 
             resolve('url')->forceRootUrl(env('APP_URL'));
-            return  $apiResponse->sendResponse(200, "Success", $index);
+            return $apiResponse->sendResponse(200, "Success", $index);
         } catch (\Exception $e) {
-            return  $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }
