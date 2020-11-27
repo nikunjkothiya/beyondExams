@@ -40,7 +40,7 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
 Route::get('getCategories', ['uses' => 'UtilController@getCategories']);
-Route::get('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
+Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
@@ -49,8 +49,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
-        Route::post('submit_user_profile', ['uses' => 'PreciselyController@submit_user_profile']);
-        Route::get('get_user_profile', ['uses' => 'PreciselyController@get_user_profile']);
+        Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
+        Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
         Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
         Route::post('submit_mentor_price', ['uses' => 'PreciselyController@update_mentor_price']);
         Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
