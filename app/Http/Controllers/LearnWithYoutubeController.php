@@ -120,7 +120,7 @@ class LearnWithYoutubeController extends Controller
         if (Auth::user()->role() == 1)
             return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
 
-        $category = Category::create(['title' => $request->title, 'level' => $request->level, 'previous_id' => $request->parent_id]);
+        $category = Category::create(['title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
 
         return $this->apiResponse->sendResponse(200, 'New Category added', $category);
     }
@@ -145,7 +145,7 @@ class LearnWithYoutubeController extends Controller
             $parent_id = 0;
         }
 
-        $categories = Category::where('level', $request->level)->where('previous_id', $parent_id)->get();
+        $categories = Category::where('level', $request->level)->where('parent_id', $parent_id)->get();
 
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
 
