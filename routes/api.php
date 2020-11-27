@@ -29,7 +29,7 @@ Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategorie
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
-Route::get('get_tests', ['uses' => 'LWYResourceController@get_test']);
+Route::get('get_tests', ['uses' => 'LWYResourceController@get_tests']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {

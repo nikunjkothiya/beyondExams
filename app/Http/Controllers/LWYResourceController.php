@@ -78,7 +78,7 @@ class LWYResourceController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'mcqs' => 'required|json',
-            'resource_url' => 'required|integer'
+            'resource_url' => 'required|string'
         ]);
 
         if ($validator->fails()) {
