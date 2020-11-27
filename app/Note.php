@@ -7,9 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class Note extends Model
 {
 
-    protected $fillable = ['url', 'title', 'type_id'];
-
-    public function resource(){
-        return $this->belongsTo('App\Resource');
-    }
+    protected $fillable = ['title', 'url', 'resource_url'];
 }

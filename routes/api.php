@@ -28,6 +28,9 @@ Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_
 Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
+Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
+Route::get('get_tests', ['uses' => 'LWYResourceController@get_test']);
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
@@ -61,8 +64,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_resource_like', ['uses' => 'ResourceController@add_resource_like']);
         Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
         Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
-        Route::post('upload_notes', ['uses' => 'ResourceController@upload_notes']);
-        Route::post('upload_test', ['uses' => 'ResourceController@upload_test']);
+        Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
+        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
         Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
         Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
         Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);

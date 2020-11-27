@@ -6,13 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Test extends Model
 {
-    protected $fillable = ['json_content', 'title'];
+    protected $fillable = ['title', 'mcqs', 'resource_url'];
 
-    protected $casts = ['json_content' => 'json'];
-
-    public function resource(){
-        return $this->belongsTo('App\Resource');
-    }
+    protected $casts = ['mcqs' => 'json'];
 
     public function scores(){
         return $this->hasMany('App\TestScore');
