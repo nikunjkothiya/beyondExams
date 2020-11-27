@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Country;
 use App\Language;
 use Illuminate\Http\Request;
+use Auth;
 use DB;
 use Exception;
 use Config;
@@ -73,10 +74,10 @@ class LearnWithYoutubeController extends Controller
                     $user->profile_link = $request->profile_link;
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                $slug = str_replace(" ", "-", strtolower($request->firstname . $request->lastname)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
+                $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 16);
                 $user->slug = $slug;
                 $user->age = $request->age;
-                $user->country = $request->country;
+                $user->country_id = $request->country;
 
                 $user->save();
 
@@ -93,7 +94,7 @@ class LearnWithYoutubeController extends Controller
     public function get_user_profile()
     {
         if (Auth::check()) {
-            $user = Auth::user()->get();
+            $user = Auth::user();
 
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
