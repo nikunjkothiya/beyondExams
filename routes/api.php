@@ -39,13 +39,13 @@ Route::get('get_mentor_price', ['uses' => 'PreciselyController@get_mentor_price'
 // Premium Plan
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
-Route::get('get_categories', ['uses' => 'UtilController@getCategories']);
+Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
-        Route::get('addNewCategory', ['uses' => 'UtilController@addNewCategory']);
+        Route::get('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
 
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
@@ -124,11 +124,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('get_all_mentors', ['uses' => 'ChatController@get_all_mentors']);
         Route::post('assign_mentor', ['uses' => 'ChatController@assign_mentor']);
         Route::post('create_anonymous_chat', ['uses' => 'ChatController@create_anonymous_chat']);
-
-        // Chat Categories
-        Route::get('get_categories', ['uses' => 'ChatController@get_categories']);
-        Route::post('add_category', ['uses' => 'ChatController@add_category']);
-        Route::post('assign_category', ['uses' => 'ChatController@assign_category']);
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
