@@ -13,10 +13,10 @@ class CategoryTableSeeder extends Seeder
     {
         //
         $currencies = array(
-            array('title' => 'English', 'level' => 1),
-            array('title' => 'Mathematics', 'level' => 1),
-            array('title' => 'Science', 'level' => 1),
-            array('title' => 'Computer Science', 'level' => 1),
+            array('title' => 'English', 'level' => 1, 'parent_id' => 0),
+            array('title' => 'Mathematics', 'level' => 1, 'parent_id' => 0),
+            array('title' => 'Science', 'level' => 1, 'parent_id' => 0),
+            array('title' => 'Computer Science', 'level' => 1, 'parent_id' => 0),
             array('title' => 'Nouns', 'level' => 2, 'parent_id' => 1),
             array('title' => 'Pronouns', 'level' => 2, 'parent_id' => 1),
             array('title' => 'Adjectives', 'level' => 2, 'parent_id' => 1),
