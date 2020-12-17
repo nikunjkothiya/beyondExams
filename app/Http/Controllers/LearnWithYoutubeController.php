@@ -28,7 +28,7 @@ class LearnWithYoutubeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'string',
-            'email' => 'integer',
+            'email' => 'string',
             'message' => 'string',
         ]);
 
