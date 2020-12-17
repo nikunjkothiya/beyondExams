@@ -58,17 +58,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Resources
         Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
         Route::post('add_resource_comment', ['uses' => 'LearnWithYoutubeController@add_resource_comment']);
-        Route::post('get_resource_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
+        Route::get('get_resource_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
         Route::post('add_resource_like', ['uses' => 'LearnWithYoutubeController@add_resource_like']);
 
-        Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
-        Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
-        Route::post('submit_test_score', ['uses' => 'ResourceController@submit_test_score']);
-        Route::get('get_test_scores', ['uses' => 'ResourceController@get_test_scores']);
-        Route::post('add_resource_reply', ['uses' => 'ResourceController@add_resource_reply']);
-        Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
 
         // Social
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
