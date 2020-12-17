@@ -170,6 +170,22 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Success', $comments);
     }
 
+    public function get_resource_likes(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'resource_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
+        }
+
+//        $num_likes = ResourceLike::where('resource_id', $request->resource_id)->select('role_id', DB::raw('count(*) as total'))->groupBy('role_id')->get();
+        $num_likes = ResourceLike::where('resource_id', $request->resource_id)->count();
+        // Send notification via Notification controller function or guzzle
+        return $this->apiResponse->sendResponse(200, 'Success', $num_likes);
+    }
+
     public function add_resource_comment(Request $request)
     {
         $validator = Validator::make($request->all(), [

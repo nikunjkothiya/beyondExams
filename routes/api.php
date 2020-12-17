@@ -56,9 +56,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
 
         // Resources
-        Route::get('get_resource_comments', ['uses' => 'ResourceController@get_resource_comments']);
-        Route::post('add_resource_comment', ['uses' => 'ResourceController@add_resource_comment']);
-        Route::post('add_resource_like', ['uses' => 'ResourceController@add_resource_like']);
+        Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
+        Route::post('add_resource_comment', ['uses' => 'LearnWithYoutubeController@add_resource_comment']);
+        Route::post('get_resource_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
+        Route::post('add_resource_like', ['uses' => 'LearnWithYoutubeController@add_resource_like']);
+
         Route::get('get_user_keys', ['uses' => 'ResourceController@get_user_keys']);
         Route::post('resource_checkout', ['uses' => 'ResourceController@resource_checkout']);
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
