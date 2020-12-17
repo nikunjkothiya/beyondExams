@@ -14,12 +14,12 @@ class CreateResourceLikesTable extends Migration
     public function up()
     {
         Schema::create('resource_likes', function (Blueprint $table) {
-            $table->unsignedBigInteger('resource_id');
+            $table->string('resource_id');
             $table->unsignedBigInteger('user_id');
+            $table->integer('value');
         });
 
         Schema::table('resource_likes',function($table){
-            $table->foreign('resource_id')->references('id')->on('resources');
             $table->foreign('user_id')->references('id')->on('users');
         });
     }
