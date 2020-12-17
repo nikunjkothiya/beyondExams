@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Category;
+use App\Comment;
 use App\Country;
 use App\Language;
+use App\ResourceLike;
 use Auth;
 use Config;
 use DB;
@@ -61,6 +63,7 @@ class LearnWithYoutubeController extends Controller
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
+                    'phone' => 'integer',
                 ]);
 
                 if ($validator->fails()) {
@@ -81,6 +84,7 @@ class LearnWithYoutubeController extends Controller
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
+                $user->phone = $request->phone;
 
                 $user->save();
 
@@ -149,5 +153,66 @@ class LearnWithYoutubeController extends Controller
 
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
 
+    }
+
+    public function get_resource_comments(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'resource_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
+        }
+
+        $comments = Comment::where('resource_id', $request->resource_id)->get();
+        // Send notification via Notification controller function or guzzle
+        return $this->apiResponse->sendResponse(200, 'Success', $comments);
+    }
+
+    public function add_resource_comment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string',
+            'resource_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $comment = new Comment();
+        $comment->message = $request->message;
+        $comment->user_id = Auth::id();
+        $comment->resource_id = $request->resource_id;
+        $comment->save();
+
+        // Send notification via Notification controller function or guzzle
+        return $this->apiResponse->sendResponse(200, 'Comment added successfully', $comment);
+    }
+
+    public function add_resource_like(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'resource_id' => 'required|string',
+            'value' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $liked = ResourceLike::where('resource_id', $request->resource_id)->where('user_id', Auth::id())->first();
+
+        if (!is_null($liked))
+            $liked->delete();
+
+        $new_like = new ResourceLike();
+        $new_like->resource_id = $request->resource_id;
+        $new_like->user_id = Auth::id();
+        $new_like->value = $request->value;
+        $new_like->save();
+
+        return $this->apiResponse->sendResponse(200, 'Resource like saved successfully', null);
     }
 }

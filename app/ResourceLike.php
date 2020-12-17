@@ -8,10 +8,10 @@ class ResourceLike extends Model
 {
     public $timestamps = false;
     protected $fillable = [
-        'resource_id', 'user_id'
+        'resource_id', 'user_id', 'value'
     ];
 
     public function user(){
-        return $this->belongsTo('App\UserDetail', 'user_id', 'user_id');
+        return $this->belongsTo('App\User');
     }
 }
