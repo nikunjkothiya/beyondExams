@@ -7,6 +7,8 @@ use App\Comment;
 use App\Country;
 use App\Language;
 use App\ResourceLike;
+use App\UserHistory;
+use App\Video;
 use Auth;
 use Config;
 use DB;
@@ -173,15 +175,14 @@ class LearnWithYoutubeController extends Controller
     public function get_resource_likes(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'resource_id' => 'required|string',
+            'video_url' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
         }
 
-//        $num_likes = ResourceLike::where('resource_id', $request->resource_id)->select('role_id', DB::raw('count(*) as total'))->groupBy('role_id')->get();
-        $num_likes = ResourceLike::where('resource_id', $request->resource_id)->count();
+        $num_likes = Video::where('url', $request->video_url)->num_likes();
         // Send notification via Notification controller function or guzzle
         return $this->apiResponse->sendResponse(200, 'Success', $num_likes);
     }
@@ -190,45 +191,74 @@ class LearnWithYoutubeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'message' => 'required|string',
-            'resource_id' => 'required|string',
+            'video_url' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
+        $video = Video::where('url', $request->video_url);
+
+        if (!$video) {
+            $video = new Video(['url' => $request->video_url]);
+            $video->save();
+        }
+
         $comment = new Comment();
         $comment->message = $request->message;
         $comment->user_id = Auth::id();
-        $comment->resource_id = $request->resource_id;
+        $comment->video_id = $video->id;
         $comment->save();
 
         // Send notification via Notification controller function or guzzle
         return $this->apiResponse->sendResponse(200, 'Comment added successfully', $comment);
     }
 
-    public function add_resource_like(Request $request)
+    public function switch_video_like(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'resource_id' => 'required|string',
-            'value' => 'required|integer',
+            'video_url' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        $liked = ResourceLike::where('resource_id', $request->resource_id)->where('user_id', Auth::id())->first();
+        $video = Video::where('url', $request->video_url)->first();
+        if (!$video) {
+            $video = new Video(['url' => $request->video_url]);
+            $video->save();
+        }
 
-        if (!is_null($liked))
-            $liked->delete();
+        Auth::user()->videos()->toggle([array('video_id'=>$video->id, 'type'=> 'liked')]);
 
-        $new_like = new ResourceLike();
-        $new_like->resource_id = $request->resource_id;
-        $new_like->user_id = Auth::id();
-        $new_like->value = $request->value;
-        $new_like->save();
+        return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
+    }
 
-        return $this->apiResponse->sendResponse(200, 'Resource like saved successfully', null);
+    public function addToWatchHistory(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'video_url' => 'required|string',
+//            'start_time' => 'required|date|date_format:Y-m-d H:i:s',
+//            'end_time' => 'required|date|date_format:Y-m-d H:i:s',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $video = Video::where('url', $request->video_url)->first();
+        if (!$video)
+            $video = new Video(['url'=>$request->video_url]);
+
+        $video->save();
+
+        Auth::user()->videos()->attach(array('video_id'=>$video->id, 'type', 'history'));
+
+        return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
+    }
+
+    public function getWatchHistory(Request $request){
+        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history);
     }
 }

@@ -143,4 +143,16 @@ class User extends Authenticatable
     public function test_scores(){
         return $this->hasMany('App\TestScore');
     }
+
+    public function videos(){
+        return $this->belongsToMany('Video', 'user_video')->withPivot('type');
+    }
+
+    public function history(){
+        return $this->videos()->where('type', 'history');
+    }
+
+    public function liked_videos(){
+        return $this->videos()->wherePivot('type', 'likes');
+    }
 }

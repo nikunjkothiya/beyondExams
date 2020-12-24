@@ -31,6 +31,9 @@ Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_fee
 Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
 Route::get('get_tests', ['uses' => 'LWYResourceController@get_tests']);
 
+Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
+Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
@@ -56,13 +59,18 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
 
         // Resources
-        Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
         Route::post('add_resource_comment', ['uses' => 'LearnWithYoutubeController@add_resource_comment']);
         Route::get('get_resource_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
-        Route::post('add_resource_like', ['uses' => 'LearnWithYoutubeController@add_resource_like']);
+
+        Route::post('switch_video_like', ['uses' => 'LearnWithYoutubeController@switch_video_like']);
+
+        Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
+        Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
 
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
+
+//        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
 
         // Social
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
