@@ -167,7 +167,14 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
         }
 
-        $comments = Comment::where('resource_id', $request->resource_id)->get();
+	$video = Video::where('url', $request->resource_id)->first();
+
+        if (!$video) {
+            $video = new Video(['url' => $request->resource_id]);
+            $video->save();
+        }
+
+        $comments = Comment::where('video_id', $video->id)->get();
         // Send notification via Notification controller function or guzzle
         return $this->apiResponse->sendResponse(200, 'Success', $comments);
     }
@@ -198,7 +205,7 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        $video = Video::where('url', $request->video_url);
+        $video = Video::where('url', $request->video_url)->first();
 
         if (!$video) {
             $video = new Video(['url' => $request->video_url]);

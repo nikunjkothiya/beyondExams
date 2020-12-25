@@ -145,7 +145,7 @@ class User extends Authenticatable
     }
 
     public function videos(){
-        return $this->belongsToMany('Video', 'user_video')->withPivot('type');
+        return $this->belongsToMany('App\Video', 'user_video')->withPivot('type');
     }
 
     public function history(){

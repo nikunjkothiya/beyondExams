@@ -26,6 +26,7 @@ class CreateMessageTypesTable extends Migration
      */
     public function down()
     {
+	Schema::dropIfExists('resource_comments');
         Schema::dropIfExists('message_types');
     }
 }
