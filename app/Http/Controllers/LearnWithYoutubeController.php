@@ -6,7 +6,6 @@ use App\Category;
 use App\Comment;
 use App\Country;
 use App\Language;
-use App\ResourceLike;
 use App\UserHistory;
 use App\Video;
 use Auth;
@@ -167,16 +166,15 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
         }
 
-	$video = Video::where('url', $request->resource_id)->first();
+        $video = Video::where('url', $request->resource_id)->first();
 
         if (!$video) {
             $video = new Video(['url' => $request->resource_id]);
             $video->save();
         }
 
-        $comments = Comment::where('video_id', $video->id)->get();
         // Send notification via Notification controller function or guzzle
-        return $this->apiResponse->sendResponse(200, 'Success', $comments);
+        return $this->apiResponse->sendResponse(200, 'Success', Comment::where('video_id', $video->id)->paginate(10));
     }
 
     public function get_resource_likes(Request $request)
@@ -189,7 +187,7 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Need a resource Id', $validator->errors());
         }
 
-        $num_likes = Video::where('url', $request->video_url)->num_likes();
+        $num_likes = Video::where('url', $request->video_url)->first()->num_likes();
         // Send notification via Notification controller function or guzzle
         return $this->apiResponse->sendResponse(200, 'Success', $num_likes);
     }
@@ -238,12 +236,13 @@ class LearnWithYoutubeController extends Controller
             $video->save();
         }
 
-        Auth::user()->videos()->toggle([array('video_id'=>$video->id, 'type'=> 'liked')]);
+        Auth::user()->videos()->toggle([array('video_id' => $video->id, 'type' => 'liked')]);
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }
 
-    public function addToWatchHistory(Request $request) {
+    public function addToWatchHistory(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
 //            'start_time' => 'required|date|date_format:Y-m-d H:i:s',
@@ -256,16 +255,17 @@ class LearnWithYoutubeController extends Controller
 
         $video = Video::where('url', $request->video_url)->first();
         if (!$video)
-            $video = new Video(['url'=>$request->video_url]);
+            $video = new Video(['url' => $request->video_url]);
 
         $video->save();
 
-        Auth::user()->videos()->attach(array('video_id'=>$video->id, 'type', 'history'));
+        Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
 
         return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
     }
 
-    public function getWatchHistory(Request $request){
-        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history);
+    public function getWatchHistory()
+    {
+        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history()->paginate(10));
     }
 }

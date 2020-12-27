@@ -31,8 +31,10 @@ class ModifyCommentsTable extends Migration
      */
     public function down()
     {
-        Schema::table('comments', function (Blueprint $table) {
-            $table->dropColumn('video_id');
-        });
+        if (Schema::hasColumn('comments', 'video_id')) {
+            Schema::table('comments', function (Blueprint $table) {
+                $table->dropColumn('video_id');
+            });
+        }
     }
 }

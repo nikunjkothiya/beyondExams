@@ -37,10 +37,13 @@ Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resourc
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
+        // ----------Browse videos----------
+        // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
 
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
+
         Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
         Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);

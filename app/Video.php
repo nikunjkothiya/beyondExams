@@ -16,6 +16,6 @@ class Video extends Model
     }
 
     public function likes(){
-        return $this->belongsToMany('User', 'user_video')->where('type', 'liked');
+        return $this->belongsToMany('App\User', 'user_video')->where('type', 'liked');
     }
 }
