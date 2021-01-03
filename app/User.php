@@ -148,11 +148,19 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Video', 'user_video')->withPivot('type');
     }
 
+//    public function history(){
+//        return $this->videos()->where('type', 'history');
+//    }
+
     public function history(){
-        return $this->videos()->where('type', 'history');
+        return $this->belongsToMany('App\Video', 'watched_history')->withTimestamps();
     }
 
+//    public function liked_videos(){
+//        return $this->videos()->wherePivot('type', 'liked');
+//    }
+
     public function liked_videos(){
-        return $this->videos()->wherePivot('type', 'likes');
+        return $this->videos()->wherePivot('type', 'liked');
     }
 }
