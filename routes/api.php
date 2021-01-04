@@ -34,6 +34,8 @@ Route::get('get_tests', ['uses' => 'LWYResourceController@get_tests']);
 Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
 Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
 
+Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learning_path']);
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
@@ -92,6 +94,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
+
+        // Chemistry Universe
+        Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
     });
 });
 

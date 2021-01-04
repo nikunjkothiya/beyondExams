@@ -6,6 +6,7 @@ use App\Category;
 use App\Comment;
 use App\Country;
 use App\Language;
+use App\LearningPath;
 use App\UserHistory;
 use App\Video;
 use Auth;
@@ -245,8 +246,8 @@ class LearnWithYoutubeController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
-//            'start_time' => 'required|date|date_format:Y-m-d H:i:s',
-//            'end_time' => 'required|date|date_format:Y-m-d H:i:s',
+            'start_time' => 'date|date_format:H:i:s',
+            'end_time' => 'date|date_format:H:i:s',
         ]);
 
         if ($validator->fails()) {
@@ -259,13 +260,71 @@ class LearnWithYoutubeController extends Controller
 
         $video->save();
 
-        Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
+        if (!Auth::user()->videos()->where('video_id', $video->id))
+            Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
+
+        if ($request->start_time && $request->end_time) {
+
+        }
 
         return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
     }
 
     public function getWatchHistory()
     {
-        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history()->paginate(10));
+        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history()->orderBy('id', 'desc')->paginate(20));
+    }
+
+    public function addToSearchHistory(){
+
+    }
+
+    public function uniquelyIdentifyDevice(Request $request){
+
+    }
+
+    public function add_video_to_learning_path(Request $request){
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|int',
+            'video_url' => 'string',
+            'ordering' => 'required|int'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        $video = Video::where('url', $request->video_url)->first();
+        if (!$video)
+            $video = new Video(['url' => $request->video_url]);
+
+        $video->save();
+
+        if ($request->ordering == -1) {
+            $lp = LearningPath::where('category_id', $request->category_id)->orderBy('ordering', 'desc')->first();
+            if ($lp)
+                $ordering = $lp->ordering + 1;
+            else
+                $ordering = 1;
+        } else {
+            $ordering = $request->ordering;
+        }
+
+
+        $new_lp_id = LearningPath::create(['category_id'=>$request->category_id, 'video_id'=>$video->id, 'ordering'=>$ordering]);
+
+        return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
+    }
+
+    public function get_learning_path(Request $request){
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|int',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        return $this->apiResponse->sendResponse(200, 'Learning path updated', LearningPath::with('video')->where('category_id', $request->category_id)->orderBy('ordering', 'asc')->get());
     }
 }
