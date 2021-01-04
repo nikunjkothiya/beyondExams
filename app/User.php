@@ -153,7 +153,8 @@ class User extends Authenticatable
 //    }
 
     public function history(){
-        return $this->belongsToMany('App\Video', 'watched_history')->withTimestamps();
+//        return $this->belongsToMany('App\Video', 'watched_history')->withTimestamps();
+	return $this->videos()->wherePivot('type', 'history')->withTimestamps();
     }
 
 //    public function liked_videos(){
