@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App;
+use App\Country;
 use App\Language;
+use App\Tag;
 use Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\SitemapIndex;
@@ -37,6 +40,23 @@ class UtilController extends Controller
             session()->put('locale', 'en');
             return redirect()->back();
         }
+    }
+
+    public function get_filters(Request $request)
+    {
+        try {
+            $filters = Tag::all();
+
+            return $this->apiResponse->sendResponse(200, 'All Tags fetched successfully', $filters);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e);
+        }
+    }
+
+    public function get_all_countries(Request $request)
+    {
+        $countries = Country::all();
+        return $this->apiResponse->sendResponse(200, 'All countries fetched.', $countries);
     }
 
     public function send($user_id, $user_name, $user_email, $opportunity_id, $opp_title, $opp_deadline)

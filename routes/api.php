@@ -10,8 +10,8 @@ Route::post('refreshFirebase', ['uses' => 'AuthFirebaseController@refresh']);
 
 // Signup Form and General APi
 Route::get('get_all_languages', ['uses' => 'PreciselyController@get_language']);
-Route::get('get_filters', ['uses' => 'PreciselyController@get_filters']);
-Route::get('get_all_countries', ['uses' => 'PreciselyController@get_all_countries']);
+Route::get('get_filters', ['uses' => 'UtilController@get_filters']);
+Route::get('get_all_countries', ['uses' => 'UtilController@get_all_countries']);
 
 // Misc APi
 Route::get('mentor/{slug}', ['uses' => 'PreciselyController@get_mentor_profile_from_slug']);
