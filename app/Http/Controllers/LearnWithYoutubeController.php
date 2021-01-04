@@ -7,6 +7,7 @@ use App\Comment;
 use App\Country;
 use App\Language;
 use App\LearningPath;
+use App\Role;
 use App\UserHistory;
 use App\Video;
 use Auth;
@@ -123,7 +124,7 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        if (Auth::user()->role() == 1)
+        if (Auth::user()->role() == Role::find(1))
             return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
 
         $category = Category::create(['title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
