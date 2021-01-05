@@ -132,6 +132,10 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'New Category added', $category);
     }
 
+    public function getAllCategories(Request $request){
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+    }
+
     public function getCategories(Request $request)
     {
         $validator = Validator::make($request->all(), [
