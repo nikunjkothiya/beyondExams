@@ -26,6 +26,7 @@ Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest
 Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
 
 Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
+Route::get('getAllCategories', ['uses' => 'LearnWithYoutubeController@getAllCategories']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
