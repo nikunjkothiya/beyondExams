@@ -261,7 +261,7 @@ class LearnWithYoutubeController extends Controller
 
         $video->save();
 
-        if (!Auth::user()->videos()->where('video_id', $video->id))
+//        if (!Auth::user()->videos()->where('video_id', $video->id))
             Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
 
         if ($request->start_time && $request->end_time) {
