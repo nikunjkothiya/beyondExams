@@ -132,7 +132,50 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'New Category added', $category);
     }
 
-    public function getAllCategories(Request $request){
+    public function getNextLevel(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'level' => 'required|integer',
+            'parent_id' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        if ($request->level > 1) {
+            if (!$request->parent_id) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing.', 'parent_id parameter not included');
+            }
+            $parent_id = $request->parent_id;
+        } else {
+            $parent_id = 0;
+        }
+
+        $categories = Category::where('level', $request->level)->where('parent_id', $parent_id)->get();
+        if (count($categories) == 0) {
+            $request->request->add(['category_id' => $parent_id]);
+            return $this->get_learning_path($request);
+        }
+
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
+    }
+
+    public function get_learning_path(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|int',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        return $this->apiResponse->sendResponse(200, 'Learning path fetched successfully', LearningPath::with('video')->where('category_id', $request->category_id)->orderBy('ordering', 'asc')->get());
+    }
+
+    public function getAllCategories(Request $request)
+    {
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
     }
 
@@ -280,15 +323,18 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history()->orderBy('id', 'desc')->paginate(20));
     }
 
-    public function addToSearchHistory(){
+    public function addToSearchHistory()
+    {
 
     }
 
-    public function uniquelyIdentifyDevice(Request $request){
+    public function uniquelyIdentifyDevice(Request $request)
+    {
 
     }
 
-    public function add_video_to_learning_path(Request $request){
+    public function add_video_to_learning_path(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|int',
             'video_url' => 'string',
@@ -316,20 +362,8 @@ class LearnWithYoutubeController extends Controller
         }
 
 
-        $new_lp_id = LearningPath::create(['category_id'=>$request->category_id, 'video_id'=>$video->id, 'ordering'=>$ordering]);
+        $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering]);
 
         return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
-    }
-
-    public function get_learning_path(Request $request){
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|int',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-        }
-
-        return $this->apiResponse->sendResponse(200, 'Learning path updated', LearningPath::with('video')->where('category_id', $request->category_id)->orderBy('ordering', 'asc')->get());
     }
 }

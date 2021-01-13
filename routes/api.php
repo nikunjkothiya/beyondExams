@@ -36,6 +36,7 @@ Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_r
 Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
 
 Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learning_path']);
+Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
