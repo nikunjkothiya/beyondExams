@@ -44,6 +44,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         // ----------Browse videos----------
         // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
+        Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);
 
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
