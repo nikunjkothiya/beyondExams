@@ -205,6 +205,20 @@ class LearnWithYoutubeController extends Controller
 
     }
 
+    public function removeCategory(Request $request){
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        Category::find($request->category_id)->delete();
+
+        return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
+    }
+
     public function get_resource_comments(Request $request)
     {
         $validator = Validator::make($request->all(), [
