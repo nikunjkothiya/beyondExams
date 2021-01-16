@@ -22,8 +22,8 @@ class CreateLearningPathsTable extends Migration
         });
 
         Schema::table('learning_paths',function($table){
-            $table->foreign('category_id')->references('id')->on('categories');
-            $table->foreign('video_id')->references('id')->on('videos');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
     }
 
