@@ -40,9 +40,6 @@ Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel
 
 Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
 
-Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
-Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-Route::post('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
@@ -108,6 +105,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
 
         // Searches term & search_user  Video_annotations
+        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
+        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
+        Route::post('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
     });
 });
