@@ -12,6 +12,6 @@ class Search extends Model
 
     public function users()
     {
-        return $this->belongsToMany('App\User', 'search_user');
+        return $this->belongsToMany('App\User', 'searches_users','search_id','users_id');
     }
 }

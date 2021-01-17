@@ -63,33 +63,22 @@ class SearchController extends Controller
             }
 
             try {
-                $last = Search::where('search_term', $request->search_term)->first();    
+                $found = Search::where('search_term', $request->search_term)->first();    
                 
-                if ($last) {
-                    $updateSearch = Search::find($last->id);
-                    $updateSearch->total_count = $last->total_count + 1;
-                    $updateSearch->daily_count = $last->daily_count + 1;
-                    $updateSearch->save();
+                if ($found) {
+                    $updateSearch = Search::find($found->id);
+                    $updateSearch->total_count = $found->total_count + 1;
+                    $updateSearch->daily_count = $found->daily_count + 1;
+                    $updateSearch->save();      
                 } else {  
                     $newSearch = new Search();
                     $newSearch->search_term = $request->search_term;
                     $newSearch->total_count = 1;
                     $newSearch->daily_count = 1;
                     $newSearch->save();
+                    $newSearch->users()->attach(Auth::user()->id);
+                    // Auth::user()->id->searches()->attach($newSearch->id)
                 }
-                
-               $latestid = $newSearch->id;
-
-               $newsearchuser = new Search_User();
-               if($last){
-                 $newsearchuser->search_id = $last->id;
-               }else{
-                 $newsearchuser->search_id = $latestid;
-               } 
-               $newsearchuser->user_id = Auth::user()->id;
-               $newsearchuser->save();
-
-              // $userid->searches()->attach($newSearch->id);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
