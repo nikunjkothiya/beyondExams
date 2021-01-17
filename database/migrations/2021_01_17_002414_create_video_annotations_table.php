@@ -17,7 +17,7 @@ class CreateVideoAnnotationsTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('video_id');
             $table->string('annotation');
-            $table->string('video_timestamp');
+            $table->dateTime('video_timestamp');
 
             $table->timestamps();
             $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');

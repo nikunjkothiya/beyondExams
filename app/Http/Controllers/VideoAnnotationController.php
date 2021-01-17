@@ -26,7 +26,7 @@ class VideoAnnotationController extends Controller
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
             'annotation' => 'required|string',
-            'video_timestamp' => 'required|string',
+            'video_timestamp' => 'required|dateTime',
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +49,7 @@ class VideoAnnotationController extends Controller
         $videoAnnotation->save();
 
         DB::commit();
-        return $this->apiResponse->sendResponse(200, 'Comment added successfully', null);
+        return $this->apiResponse->sendResponse(200, 'Video annotations added successfully', null);
     } catch (\Exception $e) {
         DB::rollback();
         throw new HttpException(500, $e->getMessage());
