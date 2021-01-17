@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Auth;
 
 class SearchController extends Controller
 {
+    private $apiResponse;
+
+    public function __construct(ApiResponse $apiResponse)
+    {
+        $this->apiResponse = $apiResponse;
+    }
+
     public function get_most_searched_terms()
     {
         DB::beginTransaction();

@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Auth;
 
 class VideoAnnotationController extends Controller  
 {
+    private $apiResponse;
+
+    public function __construct(ApiResponse $apiResponse)
+    {
+        $this->apiResponse = $apiResponse;
+    }
+    
     public function add_video_annotations(Request $request)
     {
         DB::beginTransaction();
