@@ -39,10 +39,16 @@ Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learn
 Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
 
 Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
-
+Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
+
+// Searches term & search_user  Video_annotations
+//Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
+Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
+Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
         // Add new category in Browse section
@@ -104,10 +110,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Chemistry Universe
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
 
-        // Searches term & search_user  Video_annotations
-        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
-        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-        Route::post('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+        
 
     });
 });
