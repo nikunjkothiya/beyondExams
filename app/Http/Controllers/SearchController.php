@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use DB;
 use App\Search;
-use App\Search_User;
+use DB;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class SearchController extends Controller
 {
@@ -24,18 +23,18 @@ class SearchController extends Controller
         DB::beginTransaction();
 
         try {
-           // $search =  $request->input('q');    // input serach box name parameter to access search value
-           
-           // if($search!=""){
-           // $getsearches = Search::where(function ($query) use ($search){
-           //     $query->where('search_term', 'like', '%'.$search.'%')
-           //           ->orderBy('total_count', 'desc');
-           // })->paginate(10);
+            // $search =  $request->input('q');    // input serach box name parameter to access search value
 
-           // $getsearches->appends(['q' => $search]);
-           //     DB::commit();
-           //     return $this->apiResponse->sendResponse(200, 'Successfully fetched search term.', $getsearches);
-           // }else{
+            // if($search!=""){
+            // $getsearches = Search::where(function ($query) use ($search){
+            //     $query->where('search_term', 'like', '%'.$search.'%')
+            //           ->orderBy('total_count', 'desc');
+            // })->paginate(10);
+
+            // $getsearches->appends(['q' => $search]);
+            //     DB::commit();
+            //     return $this->apiResponse->sendResponse(200, 'Successfully fetched search term.', $getsearches);
+            // }else{
             $getsearches = Search::select('search_term', 'total_count')
                 ->orderBy('total_count', 'desc')->paginate(10);   //10 records per call api
             if ($getsearches) {
@@ -63,33 +62,21 @@ class SearchController extends Controller
             }
 
             try {
-                $last = Search::where('search_term', $request->search_term)->first();    
-                
-                if ($last) {
-                    $updateSearch = Search::find($last->id);
-                    $updateSearch->total_count = $last->total_count + 1;
-                    $updateSearch->daily_count = $last->daily_count + 1;
-                    $updateSearch->save();
-                } else {  
-                    $newSearch = new Search();
-                    $newSearch->search_term = $request->search_term;
-                    $newSearch->total_count = 1;
-                    $newSearch->daily_count = 1;
-                    $newSearch->save();
+                $search_term = Search::where('search_term', $request->search_term)->first();
+
+                if ($search_term) {
+                    $search_term->total_count += 1;
+                    $search_term->daily_count += 1;
+                    $search_term->save();
+                } else {
+                    $search_term = new Search();
+                    $search_term->search_term = $request->search_term;
+                    $search_term->total_count = 1;
+                    $search_term->daily_count = 1;
+                    $search_term->save();
                 }
-                
-               $latestid = $newSearch->id;
 
-               $newsearchuser = new Search_User();
-               if($last){
-                 $newsearchuser->search_id = $last->id;
-               }else{
-                 $newsearchuser->search_id = $latestid;
-               } 
-               $newsearchuser->user_id = Auth::user()->id;
-               $newsearchuser->save();
-
-              // $userid->searches()->attach($newSearch->id);
+                Auth::user()->searches()->attach([$search_term->id]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
