@@ -166,7 +166,7 @@ class User extends Authenticatable
     }
 
     public function searches(){
-        return $this->belongsToMany('App\Search', 'searches_users','users_id','search_id');
+        return $this->belongsToMany('App\Search', 'search_user');
     }
 
 }
