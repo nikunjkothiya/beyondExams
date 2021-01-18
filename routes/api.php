@@ -39,15 +39,11 @@ Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learn
 Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
 
 Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
+Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
 
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
-
-// Searches term & search_user  Video_annotations
-Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
-Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
@@ -88,6 +84,9 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
 
 //        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
+
+        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
+        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
 
         // Social
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);

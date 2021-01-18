@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use DateTime;
 
 class VideoAnnotationController extends Controller  
 {
@@ -22,11 +23,11 @@ class VideoAnnotationController extends Controller
     public function add_video_annotations(Request $request)
     {
         DB::beginTransaction();
-        if (Auth::check()) {
+      //  if (Auth::check()) {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
             'annotation' => 'required|string',
-            'video_timestamp' => 'required|dateTime',
+            'video_timestamp' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -54,16 +55,16 @@ class VideoAnnotationController extends Controller
         DB::rollback();
         throw new HttpException(500, $e->getMessage());
     }
-    } else {
-        return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-    }
+  //  } else {
+  //      return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+  //  }
 
 }
 
 public function get_video_annotations(Request $request)
     {
         DB::beginTransaction();
-        if (Auth::check()) {
+      //  if (Auth::check()) {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string'
         ]);
@@ -87,9 +88,9 @@ public function get_video_annotations(Request $request)
         DB::rollback();
         throw new HttpException(500, $e->getMessage());
     }
-    } else {
-        return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-    }
+   // } else {
+   //     return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+   // }
 
 }
 }

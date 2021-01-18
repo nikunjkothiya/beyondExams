@@ -53,7 +53,7 @@ class SearchController extends Controller
     public function add_search_term(Request $request)
     {
         DB::beginTransaction();
-        if (Auth::check()) {
+       // if (Auth::check()) {
             $validator = Validator::make($request->all(), [
                 'search_term' => 'required|string',
             ]);
@@ -70,15 +70,20 @@ class SearchController extends Controller
                     $updateSearch->total_count = $found->total_count + 1;
                     $updateSearch->daily_count = $found->daily_count + 1;
                     $updateSearch->save();
-                    $updateSearch->users()->attach(Auth::user()->id);
+                    
+                    $exiting = $updateSearch->users()->where('user_id', Auth::id())->exists();
+                    if(!$exiting){
+                        $updateSearch->users()->attach(Auth::id());
+                    }
                 } else {  
                     $newSearch = new Search();
                     $newSearch->search_term = $request->search_term;
                     $newSearch->total_count = 1;
                     $newSearch->daily_count = 1;
                     $newSearch->save();
-                    $newSearch->users()->attach(Auth::user()->id);
+                    $newSearch->users()->attach(Auth::id());
                     // Auth::user()->id->searches()->attach($newSearch->id)
+                    // $updateSearch->users()->toggle(1, ['user_id' => 1]);
                 }
 
                 DB::commit();
@@ -87,9 +92,9 @@ class SearchController extends Controller
                 DB::rollback();
                 throw new HttpException(500, $e->getMessage());
             }
-        } else {
-            return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-        }
+     //   } else {
+     //       return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+     //   }
     }
 
 
