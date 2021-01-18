@@ -69,7 +69,8 @@ class SearchController extends Controller
                     $updateSearch = Search::find($found->id);
                     $updateSearch->total_count = $found->total_count + 1;
                     $updateSearch->daily_count = $found->daily_count + 1;
-                    $updateSearch->save();      
+                    $updateSearch->save();
+                    $updateSearch->users()->attach(Auth::user()->id);
                 } else {  
                     $newSearch = new Search();
                     $newSearch->search_term = $request->search_term;
