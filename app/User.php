@@ -164,4 +164,9 @@ class User extends Authenticatable
     public function liked_videos(){
         return $this->videos()->wherePivot('type', 'liked');
     }
+
+    public function searches(){
+        return $this->belongsToMany('App\Search', 'search_user');
+    }
+
 }
