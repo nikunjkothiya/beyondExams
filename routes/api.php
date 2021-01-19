@@ -42,6 +42,7 @@ Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searc
 Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
 
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
 

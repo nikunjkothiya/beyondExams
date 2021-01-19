@@ -9,6 +9,7 @@ use App\Language;
 use App\LearningPath;
 use App\Role;
 use App\UserHistory;
+use App\User;
 use App\Video;
 use Auth;
 use Config;
@@ -16,6 +17,8 @@ use DB;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Search;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
 {
@@ -51,7 +54,6 @@ class LearnWithYoutubeController extends Controller
         DB::table('feedbacks')->insert(['name' => $name, 'email' => $email, 'message' => $request->message]);
 
         return $this->apiResponse->sendResponse(200, 'Feedback saved successfully', null);
-
     }
 
     public function submit_user_profile(Request $request)
@@ -202,10 +204,10 @@ class LearnWithYoutubeController extends Controller
         $categories = Category::where('level', $request->level)->where('parent_id', $parent_id)->get();
 
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
-
     }
 
-    public function removeCategory(Request $request){
+    public function removeCategory(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
         ]);
@@ -326,7 +328,6 @@ class LearnWithYoutubeController extends Controller
             Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
 
         if ($request->start_time && $request->end_time) {
-
         }
 
         return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
@@ -334,17 +335,34 @@ class LearnWithYoutubeController extends Controller
 
     public function getWatchHistory()
     {
-        return $this->apiResponse->sendResponse(200, 'Video saved to history', Auth::user()->history()->orderBy('id', 'desc')->paginate(20));
+        //$user = User::find(1);
+        DB::beginTransaction();
+        try {
+            $getHistory = Auth::user()->history()->orderBy('id', 'desc')->paginate(30);
+            if (count($getHistory) > 0) {
+                $uniqueHistory = array();
+                foreach ($getHistory as $History) {
+                    array_push($uniqueHistory, $History);
+                }
+                $getUniqueHistory = array_unique($uniqueHistory);
+                $getUniqueNumberHistory = array_values($getUniqueHistory);
+            } else {
+                return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getUniqueNumberHistory);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 
     public function addToSearchHistory()
     {
-
     }
 
     public function uniquelyIdentifyDevice(Request $request)
     {
-
     }
 
     public function add_video_to_learning_path(Request $request)
