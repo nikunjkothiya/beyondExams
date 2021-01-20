@@ -205,7 +205,8 @@ class LearnWithYoutubeController extends Controller
 
     }
 
-    public function removeCategory(Request $request){
+    public function removeCategory(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
         ]);
@@ -379,5 +380,22 @@ class LearnWithYoutubeController extends Controller
         $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering]);
 
         return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
+    }
+
+    public function toggle_category_visibility(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $category = Category::find($request->category_id);
+
+        $category->toggle_visibility()->save();
+
+        return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }
 }
