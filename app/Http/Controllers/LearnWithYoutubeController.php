@@ -11,6 +11,8 @@ use App\Role;
 use App\UserHistory;
 use App\User;
 use App\Video;
+use App\UserVideo;
+use App\HistoryUserVidoes;
 use Auth;
 use Config;
 use DB;
@@ -308,29 +310,62 @@ class LearnWithYoutubeController extends Controller
 
     public function addToWatchHistory(Request $request)
     {
+     
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
-            'start_time' => 'date|date_format:H:i:s',
-            'end_time' => 'date|date_format:H:i:s',
+            'start_time' => 'required|date_format:H:i:s',
+            'end_time' => 'required|date_format:H:i:s',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
+        
+        try {
+            if (1 == 1) {
+                $video = Video::where('url', $request->video_url)->first();
+                if (!$video) {
+                    
+                    $video = new Video();
+                    $video->url = $request->video_url;
+                    $video->save();
 
-        $video = Video::where('url', $request->video_url)->first();
-        if (!$video)
-            $video = new Video(['url' => $request->video_url]);
+                    $uservideo = new UserVideo();
+                    $uservideo->user_id= Auth::id();
+                    $uservideo->video_id = $video->id;
+                    $uservideo->type = 'history';
+                    $uservideo->save();
+                    
+                    $ids = UserVideo::where(['user_id' => Auth::id(), 'video_id' => $uservideo->video_id])->first();
+                }else{
+                    $ids = UserVideo::where(['user_id' => Auth::id(), 'video_id' => $video->id])->first();
+                }                
 
-        $video->save();
+                $start_time = strtotime($request->start_time);
+                $end_time = strtotime($request->end_time);
+                if ($start_time && $end_time) {
+                    
+                    $done = new HistoryUserVidoes();
+                    $done->user_video_id = $ids->id;
+                    $done->start_time = $request->start_time;
+                    $done->end_time = $request->end_time;
+                    $done->type = 'history';
+                    $done->save();
 
-        if (!Auth::user()->videos()->where('video_id', $video->id))
-            Auth::user()->videos()->attach([['video_id' => $video->id, 'type' => 'history']]);
-
-        if ($request->start_time && $request->end_time) {
+                    DB::commit();
+                    // $ids->watchHistoryUsers()->attach([['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']]);
+                    return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
+                } else {
+                    return $this->apiResponse->sendResponse(200, 'Video not saved to history', null);
+                }
+            }else{
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
         }
-
-        return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
     }
 
     public function getWatchHistory()
