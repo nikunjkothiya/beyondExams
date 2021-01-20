@@ -15,13 +15,15 @@ class CreateHistoryUserVideosTable extends Migration
     {
         Schema::create('history_user_videos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('user_video_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('video_id');
             $table->string('start_time');
             $table->string('end_time');
             $table->string('type')->nullable();
             $table->timestamps();
 
-            $table->foreign('user_video_id')->references('id')->on('user_video')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
     }
 

@@ -42,7 +42,6 @@ Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searc
 Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 
 
-
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
 
@@ -78,8 +77,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('switch_video_like', ['uses' => 'LearnWithYoutubeController@switch_video_like']);
 
-        Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
-        Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
+       Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
+       Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
 
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);

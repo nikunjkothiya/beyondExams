@@ -310,6 +310,7 @@ class LearnWithYoutubeController extends Controller
 
     public function addToWatchHistory(Request $request)
     {
+        // remove user_video taken in one table
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
@@ -322,20 +323,45 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-            if (Auth::user()) {
+            if (1 == 1) {
                 $start_time = strtotime($request->start_time);
                 $end_time = strtotime($request->end_time);
                 $video = Video::where('url', $request->video_url)->first();
-               // $user = User::find(1);
+                $user = User::find(1);
                 if (!$video) {
+
                     $video = new Video();
                     $video->url = $request->video_url;
                     $video->save();
+    
+                 //   $user->watchHistoryVidoes()->attach($video->id,['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']);
+                 //   $uservideo = new UserVideo();
+                 //   $uservideo->user_id = Auth::id();
+                 //   $uservideo->video_id = $video->id;
+                 //   $uservideo->type = 'history';
+                 //   $uservideo->save();
+
+                 //   $ids = UserVideo::where(['user_id' => Auth::id(), 'video_id' => $uservideo->video_id])->first();
                 } 
-                    Auth::user()->watchHistoryVidoes()->attach($video->id,['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']);
+                    $user->watchHistoryVidoes()->attach($video->id,['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']);
+                   // $ids = UserVideo::where(['user_id' => $user, 'video_id' => $video->id])->first();
+                
+
+              //  if ($start_time && $end_time) {
+
+               //     $done = new HistoryUserVidoes();
+               //     $done->user_video_id = $ids->id;
+               //     $done->start_time = $request->start_time;
+               //     $done->end_time = $request->end_time;
+               //     $done->type = 'history';
+               //     $done->save();
 
                     DB::commit();
+                    // $ids->watchHistoryUsers()->attach([['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']]);
                     return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
+              //  } else {
+              //      return $this->apiResponse->sendResponse(200, 'Video not saved to history', null);
+              //  }
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -347,23 +373,31 @@ class LearnWithYoutubeController extends Controller
 
     public function getWatchHistory()
     {
+        //   $a =  [[ 'video_id'=>1,'timestamps'=>[[
+        //       'start_time' => 10,
+        //       'end_time'=> 11
+        //   ]]]];
+
         //$user = User::find(1);
         DB::beginTransaction();
-        try {   
-            $getHistory = HistoryUserVidoes::select('video_id','start_time','end_time')
-                        ->where('user_id',Auth::id())
-                        ->orderBy('id', 'desc')->paginate(30);
-            
+        try {
+            $getHistory = Auth::user()->history()->orderBy('id', 'desc')->distinct()->paginate(30);
+
+        //   if (count($getHistory) > 0) {
+        //       $uniqueHistory = array();
+        //       foreach ($getHistory as $History) {
+        //           array_push($uniqueHistory, $History);
+        //       }
+        //       $getUniqueHistory = array_unique($uniqueHistory);
+        //       $getUniqueNumberHistory = array_values($getUniqueHistory);
+        //   } else {
+        //       return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
+         //   }
+
+
             if (count($getHistory) > 0) {
-               $uniqueHistory = array();
-               foreach ($getHistory as $History) {
-                   array_push($uniqueHistory, $History);
-               }
-               $getUniqueHistory = array_unique(array_column($uniqueHistory, 'video_id'));
-               $getUniqueNumberHistory =  array_intersect_key( $uniqueHistory, $getUniqueHistory );
-            
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getUniqueNumberHistory);
+                return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
             } else {
                 return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
             }

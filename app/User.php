@@ -153,8 +153,8 @@ class User extends Authenticatable
 //    }
 
     public function history(){
-//        return $this->belongsToMany('App\Video', 'watched_history')->withTimestamps();
-	return $this->videos()->wherePivot('type', 'history')->withTimestamps();
+        return $this->belongsToMany('App\Video')->wherePivot('type', 'history')->withTimestamps();
+//	return $this->videos()->wherePivot('type', 'history')->withTimestamps();
     }
 
 //    public function liked_videos(){
@@ -167,6 +167,14 @@ class User extends Authenticatable
 
     public function searches(){
         return $this->belongsToMany('App\Search', 'search_user');
+    }
+
+    public function watchHistoryVidoes(){
+        return $this->belongsToMany('App\Video','history_user_videos')->withTimestamps();
+    }
+
+    public function getAllHistoryVideos(){
+        return $this->belongsToMany('App\HistoryUserVidoes')->withTimestamps();
     }
 
 }

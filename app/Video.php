@@ -18,4 +18,8 @@ class Video extends Model
     public function likes(){
         return $this->belongsToMany('App\User', 'user_video')->where('type', 'liked');
     }
+
+    public function users(){
+        return $this->belongsToMany('App\User')->wherePivot('type', 'history')->withTimestamps();
+    }
 }
