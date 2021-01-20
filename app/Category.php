@@ -11,6 +11,6 @@ class Category extends Model
     protected $fillable = [
         'title',
         'level',
-        'previous_id'
+        'parent_id'
     ];
 }
