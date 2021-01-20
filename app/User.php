@@ -39,7 +39,7 @@ class User extends Authenticatable
     ];
 
     public function role(){
-        return $this->hasOne('App\UserRole');
+        return $this->belongsToMany('App\Role', 'role_user');
     }
 
     public function session(){
@@ -164,4 +164,9 @@ class User extends Authenticatable
     public function liked_videos(){
         return $this->videos()->wherePivot('type', 'liked');
     }
+
+    public function searches(){
+        return $this->belongsToMany('App\Search', 'search_user');
+    }
+
 }

@@ -27,10 +27,6 @@ class AuthFirebaseController extends Controller
     private $apiConsumer;
     private $db;
     private $auth;
-    private $student_role_id = 1;
-    private $mentor_role_id = 2;
-    private $admin_role_id = 3;
-    private $org_role_id = 4;
 
     public function __construct(Application $app, ApiResponse $apiResponse)
     {
@@ -46,18 +42,21 @@ class AuthFirebaseController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
+                'role_id' => 'integer|exists:roles'
             ]);
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
             }
 
+//            Initialize Firebase
             $auth = app('firebase.auth');
 
             $flag = 0;
 
             $idTokenString = $request->access_token;
 
+//            Get Firebase user object
             try {
                 $firebase_tokens = $auth->verifyIdToken($idTokenString);
                 $firebase_user = $auth->getUser($firebase_tokens->getClaim('user_id'));
@@ -68,11 +67,20 @@ class AuthFirebaseController extends Controller
                     return $this->apiResponse->sendResponse(401, "Couldn't retrieve user", null);
             }
 
+//            Get User object from Firebase uid
             $new_user = User::where('unique_id', $firebase_user->uid)->first();
 
             if (!$new_user) {
                 $new_user = new User();
+            }
+
+            if ($request->role_id)
+                $new_user->role_id = $request->role_id;
+            else
                 $new_user->role_id = 1;
+
+            if ($request->role_id) {
+                $new_user->role()->attach([$request->role_id]);
             }
 
             if (!is_null($firebase_user->displayName))
@@ -90,26 +98,6 @@ class AuthFirebaseController extends Controller
                 $new_user->social_accounts()->create(
                     ['provider_id' => $firebase_user->uid, 'provider' => "google"]
                 );
-
-//            // Save user generic details
-//            $new_details = UserDetail::where('user_id', $new_user->id)->first();
-//            $break_name = explode(" ", $new_user->name, 2);
-//            if (is_null($new_details)) {
-//                $new_details = new UserDetail();
-//                $new_details->user_id = $new_user->id;
-//            }
-//            $new_details->name = $new_user->name;
-//            $new_details->firstname = $break_name[0];
-//            if (count($break_name) > 1)
-//                $new_details->lastname = $break_name[1];
-//
-//            if (!is_null($new_user->email))
-//                $new_details->email = $new_user->email;
-//
-//            if (!is_null($new_user->phone))
-//                $new_details->phone = $new_user->phone;
-//
-//            $new_details->save();
 
             $loginActivity = UserLastLogin::where('user_id', $new_user->id)->first();
 
@@ -132,7 +120,7 @@ class AuthFirebaseController extends Controller
             $data["phoenix_user_id"] = $new_user->id;
             $data["email"] = $new_user->email;
             $data["name"] = $new_user->name;
-            $data["role_id"] = $new_user->role_id;
+            $data["role_id"] = $new_user->role;
 
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
