@@ -181,4 +181,8 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Video','video_rating');
     }
 
+    public function bookmarkVideo(){
+        return $this->belongsToMany('App\Video','bookmark_video')->withTimestamps();
+    }
+
 }

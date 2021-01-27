@@ -23,4 +23,7 @@ class Video extends Model
         return $this->belongsToMany('App\User')->wherePivot('type', 'history')->withTimestamps();
     }
 
+    public function bookmarkByUser(){
+        return $this->belongsToMany('App\User','bookmark_video')->withTimestamps();
+    }
 }

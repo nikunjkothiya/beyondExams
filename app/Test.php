@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Test extends Model
 {
-    protected $fillable = ['title', 'mcqs', 'resource_url'];
+    protected $fillable = ['title', 'mcqs', 'video_id'];
 
     protected $casts = ['mcqs' => 'json'];
 

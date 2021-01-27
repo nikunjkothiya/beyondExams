@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHistoryUserVideosTable extends Migration
+class CreateBookmarkVideoTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,17 +13,14 @@ class CreateHistoryUserVideosTable extends Migration
      */
     public function up()
     {
-        Schema::create('history_user_videos', function (Blueprint $table) {
+        Schema::create('bookmark_video', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('video_id');
-            $table->string('start_time');
-            $table->string('end_time');
-            $table->string('type')->nullable();
             $table->timestamps();
         });
 
-        Schema::table('history_user_videos',function($table){
+        Schema::table('bookmark_video',function($table){
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
@@ -36,6 +33,6 @@ class CreateHistoryUserVideosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('history_user_videos');
+        Schema::dropIfExists('bookmark_video');
     }
 }

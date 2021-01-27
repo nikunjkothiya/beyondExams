@@ -12,6 +12,7 @@ use App\UserHistory;
 use App\User;
 use App\Video;
 use App\UserVideo;
+use App\BookmarkVideo;
 use App\HistoryUserVidoes;
 use Auth;
 use Config;
@@ -347,13 +348,15 @@ class LearnWithYoutubeController extends Controller
 
     public function getWatchHistory()
     {
-        //$user = User::find(1);
+        $user = User::find(1);
         DB::beginTransaction();
         try {   
-            $getHistory = HistoryUserVidoes::select('video_id','start_time','end_time')
-                        ->where('user_id',Auth::id())
-                        ->orderBy('id', 'desc')->paginate(30);
-            
+            $getHistory = DB::table('history_user_videos as hu')
+                        ->join('videos','videos.id','=','hu.video_id')
+                        ->select('hu.video_id','videos.url','hu.created_at','hu.updated_at','hu.start_time','hu.end_time')
+                        ->where('user_id',1)
+                        ->orderBy('hu.id', 'desc')->paginate(30);
+            // dd($getHistory);
             if (count($getHistory) > 0) {
                $uniqueHistory = array();
                foreach ($getHistory as $History) {
@@ -361,7 +364,7 @@ class LearnWithYoutubeController extends Controller
                }
                $getUniqueHistory = array_unique(array_column($uniqueHistory, 'video_id'));
                $getUniqueNumberHistory =  array_intersect_key( $uniqueHistory, $getUniqueHistory );
-            
+              // dd($getUniqueNumberHistory);
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getUniqueNumberHistory);
             } else {
@@ -440,6 +443,34 @@ class LearnWithYoutubeController extends Controller
 
                     DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Video Rating added successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function user_bookmark_video(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'video_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (Auth::user()) {
+                $video = BookmarkVideo::where('video_id', $request->video_id)->first();
+                if (!$video) {
+                    Auth::user()->bookmarkVideo()->attach($video->id);
+                } 
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Video Bookmark successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
