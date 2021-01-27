@@ -414,4 +414,38 @@ class LearnWithYoutubeController extends Controller
 
         return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
     }
+
+    public function give_video_rating(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'video_url' => 'required|string',
+            'rating' => 'required|integer|between:1,5',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (Auth::user()) {
+                $video = Video::where('url', $request->video_url)->first();
+               // $user = User::find(1);
+                if (!$video) {
+                    $video = new Video();
+                    $video->url = $request->video_url;
+                    $video->save();
+                } 
+                Auth::user()->giveVideoRating()->attach($video->id,['rating' => $request->rating]);
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Video Rating added successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
 }

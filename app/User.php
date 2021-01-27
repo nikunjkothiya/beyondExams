@@ -177,4 +177,8 @@ class User extends Authenticatable
         return $this->belongsToMany('App\HistoryUserVidoes')->withTimestamps();
     }
 
+    public function giveVideoRating(){
+        return $this->belongsToMany('App\Video','video_rating');
+    }
+
 }

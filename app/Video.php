@@ -22,4 +22,5 @@ class Video extends Model
     public function users(){
         return $this->belongsToMany('App\User')->wherePivot('type', 'history')->withTimestamps();
     }
+
 }

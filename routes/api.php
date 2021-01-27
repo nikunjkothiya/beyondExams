@@ -77,8 +77,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('switch_video_like', ['uses' => 'LearnWithYoutubeController@switch_video_like']);
 
-       Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
-       Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
+        Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
+        Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
+
+        // Video_Rating
+        Route::post('give_rate_video',['uses' => 'LearnWithYoutubeController@give_video_rating']);
 
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
