@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Search;
 use App\VideoRating;
+use App\AttemptTest;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
@@ -472,4 +473,34 @@ class LearnWithYoutubeController extends Controller
             throw new HttpException(500, $e->getMessage());
         }
     }
+
+    public function attempt_test(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'test_id' => 'required|integer',
+            'test_answer' => 'required', //array
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (Auth::user()) {
+                $where_rating = ['user_id'=> Auth::user()->id, 'test_id'=> $request->test_id ];
+                $insert_rating = ['test_answer'=> $request->test_answer];
+                $attempt_test = AttemptTest::updateOrCreate($where_rating,$insert_rating);
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Test answers saved successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
 }

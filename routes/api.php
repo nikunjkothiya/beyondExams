@@ -43,6 +43,7 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 
 
 //Protected APIs via Auth Middleware
+//Route::group(['middleware' => 'admin_access'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
@@ -85,6 +86,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         //Book-Mark Video 
         Route::post('user_bookmark_video',['uses' => 'LearnWithYoutubeController@user_bookmark_video']);
+
+        //Attempt Test
+        Route::post('attempt_test',['uses' => 'LearnWithYoutubeController@attempt_test']);
 
         Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
