@@ -178,7 +178,7 @@ class User extends Authenticatable
     }
 
     public function giveVideoRating(){
-        return $this->belongsToMany('App\Video','video_rating');
+        return $this->hasOne('App\VideoRating','user_id','id');
     }
 
     public function bookmarkVideo(){

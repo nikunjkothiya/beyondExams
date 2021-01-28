@@ -21,6 +21,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Search;
+use App\VideoRating;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
@@ -327,16 +328,16 @@ class LearnWithYoutubeController extends Controller
                 $start_time = strtotime($request->start_time);
                 $end_time = strtotime($request->end_time);
                 $video = Video::where('url', $request->video_url)->first();
-               // $user = User::find(1);
+                // $user = User::find(1);
                 if (!$video) {
                     $video = new Video();
                     $video->url = $request->video_url;
                     $video->save();
-                } 
-                    Auth::user()->watchHistoryVidoes()->attach($video->id,['start_time' => $start_time,'end_time' => $end_time, 'type' => 'history']);
+                }
+                Auth::user()->watchHistoryVidoes()->attach($video->id, ['start_time' => $start_time, 'end_time' => $end_time, 'type' => 'history']);
 
-                    DB::commit();
-                    return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Video saved to history', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -348,32 +349,25 @@ class LearnWithYoutubeController extends Controller
 
     public function getWatchHistory()
     {
-        $user = User::find(1);
         DB::beginTransaction();
-        try {   
-            $getHistory = DB::table('history_user_videos as hu')
-                        ->join('videos','videos.id','=','hu.video_id')
-                        ->select('hu.video_id','videos.url','hu.created_at','hu.updated_at','hu.start_time','hu.end_time')
-                        ->where('user_id',1)
-                        ->orderBy('hu.id', 'desc')->paginate(30);
-            // dd($getHistory);
-            if (count($getHistory) > 0) {
-               $uniqueHistory = array();
-               foreach ($getHistory as $History) {
-                   array_push($uniqueHistory, $History);
-               }
-               $getUniqueHistory = array_unique(array_column($uniqueHistory, 'video_id'));
-               $getUniqueNumberHistory =  array_intersect_key( $uniqueHistory, $getUniqueHistory );
-              // dd($getUniqueNumberHistory);
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getUniqueNumberHistory);
+        try {
+           // $user_id = 1;
+            $user_id = Auth::user()->id;
+            $getHistory = Video::select('*')
+                                ->with('duration_history:video_id,start_time,end_time')
+                                ->whereHas('duration_history',function($query) use($user_id){
+                                    $query->where('user_id',$user_id);
+                                })->get();
+            DB::commit();
+            if(count($getHistory) > 0){
+                return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
             } else {
                 return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
             }
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw new HttpException(500, $e->getMessage());
-        }
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw new HttpException(500, $e->getMessage());
+            }
     }
 
     public function addToSearchHistory()
@@ -429,20 +423,19 @@ class LearnWithYoutubeController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-
+       // $user = User::find(1);
         try {
             if (Auth::user()) {
-                $video = Video::where('url', $request->video_url)->first();
-               // $user = User::find(1);
-                if (!$video) {
-                    $video = new Video();
-                    $video->url = $request->video_url;
-                    $video->save();
-                } 
-                Auth::user()->giveVideoRating()->attach($video->id,['rating' => $request->rating]);
+                $where_video = ['url'=> $request->video_url];
+                $insert_video = ['url'=> $request->video_url];
+                $video_save = Video::updateOrCreate($where_video,$insert_video);
 
-                    DB::commit();
-                    return $this->apiResponse->sendResponse(200, 'Video Rating added successfully', null);
+                $where_rating = ['user_id'=> Auth::user()->id, 'video_id'=> $video_save->id ];
+                $insert_rating = ['rating'=> $request->rating];
+                $video_rating = VideoRating::updateOrCreate($where_rating,$insert_rating);
+               
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Video Rating added successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -468,7 +461,7 @@ class LearnWithYoutubeController extends Controller
                 $video = BookmarkVideo::where('video_id', $request->video_id)->first();
                 if (!$video) {
                     Auth::user()->bookmarkVideo()->attach($video->id);
-                } 
+                }
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Bookmark successfully', null);
             } else {

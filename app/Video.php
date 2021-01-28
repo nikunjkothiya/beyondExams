@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Video extends Model
 {
-    //
     protected $fillable = [
         'url'
     ];
@@ -25,5 +24,8 @@ class Video extends Model
 
     public function bookmarkByUser(){
         return $this->belongsToMany('App\User','bookmark_video')->withTimestamps();
+    }
+    public function duration_history(){
+        return $this->hasMany('App\HistoryUserVidoes','video_id','id');
     }
 }
