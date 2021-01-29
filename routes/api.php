@@ -48,6 +48,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
+        
         // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
         Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);

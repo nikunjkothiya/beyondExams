@@ -11,7 +11,6 @@ use App\Role;
 use App\UserHistory;
 use App\User;
 use App\Video;
-use App\UserVideo;
 use App\BookmarkVideo;
 use App\HistoryUserVidoes;
 use Auth;
@@ -121,6 +120,7 @@ class LearnWithYoutubeController extends Controller
 
     public function addNewCategory(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'level' => 'required|integer',
@@ -131,12 +131,16 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        if (Auth::user()->role() == Role::find(1))
-            return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
-
-        $category = Category::create(['title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
-
-        return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+        try{
+        // if (Auth::user()->role() == Role::find(1))
+        //     return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
+            $category = Category::create(['user_id'=>Auth::user()->id,'title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 
     public function getNextLevel(Request $request)
@@ -213,6 +217,7 @@ class LearnWithYoutubeController extends Controller
 
     public function removeCategory(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
         ]);
@@ -221,9 +226,20 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        Category::find($request->category_id)->delete();
-
-        return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
+        try{
+             $category = Category::find($request->category_id);
+             if($category->user_id == Auth::user()->id)
+             {
+                 $category->delete();
+                 DB::commit();
+                 return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
+             }else{
+                 return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
+             }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 
     public function get_resource_comments(Request $request)
@@ -365,10 +381,10 @@ class LearnWithYoutubeController extends Controller
             } else {
                 return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
             }
-            } catch (\Exception $e) {
-                DB::rollback();
-                throw new HttpException(500, $e->getMessage());
-            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 
     public function addToSearchHistory()
