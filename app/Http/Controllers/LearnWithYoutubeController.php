@@ -519,4 +519,40 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
+    public function add_image_to_category(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+            'image' => 'required|file',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try{
+            if($request->file('image'))
+            { 
+              $file = $request->file('image');  
+              $destinationPath = public_path(). '/images/';
+              $image = time().$file->getClientOriginalName();
+              $file->move($destinationPath, $image);
+              $imgpath = 'images/'.$image;
+
+              $category = Category::find($request->category_id);
+              $category->image_url = $imgpath;
+              $category->save();
+
+              DB::commit();
+              return $this->apiResponse->sendResponse(200, 'Category image added successfully', null);
+            }else{
+              return $this->apiResponse->sendResponse(401, 'File not supported or File not found', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
 }

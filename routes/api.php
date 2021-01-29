@@ -48,10 +48,14 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
-        
+
         // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
         Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);
+
+        // Add Image of category in category tabel
+        Route::post('add_image_to_category', ['uses' => 'LearnWithYoutubeController@add_image_to_category']);
+        
 
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);

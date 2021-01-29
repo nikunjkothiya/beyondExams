@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddUserIdToCategoriesTable extends Migration
+class AddImageUrlToCategoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,11 +14,7 @@ class AddUserIdToCategoriesTable extends Migration
     public function up()
     {
         Schema::table('categories', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id')->after('id')->nullable();
-        });
-
-        Schema::table('categories',function($table){
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('image_url')->nullable()->after('parent_id');
         });
     }
 
@@ -30,7 +26,7 @@ class AddUserIdToCategoriesTable extends Migration
     public function down()
     {
         Schema::table('categories', function (Blueprint $table) {
-            $table->dropColumn('user_id');
+            $table->dropColumn('image_url');
         });
     }
 }
