@@ -52,7 +52,7 @@ class SearchController extends Controller
     public function add_search_term(Request $request)
     {
         DB::beginTransaction();
-        if (Auth::check()) {
+//        if (Auth::check()) {
             $validator = Validator::make($request->all(), [
                 'search_term' => 'required|string',
             ]);
@@ -76,7 +76,7 @@ class SearchController extends Controller
                     $search_term->save();
                 }
 
-                Auth::user()->searches()->attach([$search_term->id]);
+//                Auth::user()->searches()->attach([$search_term->id]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
@@ -84,9 +84,9 @@ class SearchController extends Controller
                 DB::rollback();
                 throw new HttpException(500, $e->getMessage());
             }
-        } else {
-            return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-        }
+//        } else {
+//            return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+//        }
     }
 
 
