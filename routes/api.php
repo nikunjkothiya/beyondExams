@@ -42,6 +42,8 @@ Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searc
 Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
+Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
+
 //Protected APIs via Auth Middleware
 Route::group(['middleware' => 'auth:api'], function () {
 
@@ -49,6 +51,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 //Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
     Route::group(['middleware' => ['login_status']], function () {
+        Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
+        Route::post('add_ses_video',['uses' => 'ChemistryUniverse@add_ses_video']);
 
 //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
         Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);

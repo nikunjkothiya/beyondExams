@@ -13,4 +13,8 @@ class Category extends Model
         'level',
         'parent_id'
     ];
+
+    public function toggle_visibility(){
+        $this->visibility = !$this->visibility;
+    }
 }
