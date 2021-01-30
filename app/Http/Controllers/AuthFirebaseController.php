@@ -74,6 +74,9 @@ class AuthFirebaseController extends Controller
                 $new_user = new User();
             }
 
+            if (!is_null($new_user->age))
+                $flag = 1;
+
             if ($request->role_id)
                 $new_user->role_id = $request->role_id;
             else
