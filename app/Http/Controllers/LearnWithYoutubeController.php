@@ -62,7 +62,7 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
-                    'college' => 'required|string|max:1024',
+                    'college' => 'string|max:1024',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
@@ -82,12 +82,15 @@ class LearnWithYoutubeController extends Controller
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
 
+                if (isset($request->phone))
+                    $user->phone = $request->phone;
+
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
-                $user->phone = $request->phone;
+                $user->flag = 1;
 
                 $user->save();
 
