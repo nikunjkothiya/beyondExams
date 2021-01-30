@@ -230,6 +230,7 @@ class LearnWithYoutubeController extends Controller
              $category = Category::find($request->category_id);
              if($category->user_id == Auth::user()->id)
              {
+                 $subcategories = Category::where('parent_id',$category->id)->delete();
                  $category->delete();
                  DB::commit();
                  return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);

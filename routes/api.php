@@ -56,7 +56,6 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Add Image of category in category tabel
         Route::post('add_image_to_category', ['uses' => 'LearnWithYoutubeController@add_image_to_category']);
         
-
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
 
