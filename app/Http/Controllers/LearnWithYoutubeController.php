@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Validator;
 use App\Search;
 use App\VideoRating;
 use App\AttemptTest;
+use App\Keyword;
+use App\KeywordUser;
+use App\KeywordVideo;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
@@ -556,4 +559,65 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
+    public function add_keyword_to_video(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'keyword'   => 'required|string',
+            'video_url' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (Auth::user()) {
+                $keyword = Keyword::where('keyword', $request->keyword)->first();
+                $video = Video::where('url', $request->video_url)->first();
+                
+                if (!$keyword) {
+                    $keyword = new Keyword();
+                    $keyword->keyword = $request->keyword;
+                    $keyword->save();
+                }
+                if (!$video) {
+                    $video = new Video();
+                    $video->url = $request->video_url;
+                    $video->save();
+                }
+                 
+                $keywordByUserExits = KeywordUser::where(['user_id'=>Auth::user()->id,'keyword_id'=>$keyword->id])->first();
+                $keywordOfVideoExits = KeywordVideo::where(['video_id'=>$video->id,'keyword_id'=>$keyword->id])->first();
+
+                if(!$keywordByUserExits && !$keywordOfVideoExits)
+                { 
+                    Auth::user()->keywords()->attach($keyword->id);
+                    $video->keywords()->attach($keyword->id);
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
+                }elseif(!$keywordByUserExits){
+                    Auth::user()->keywords()->attach($keyword->id);
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
+                }elseif(!$keywordOfVideoExits){
+                    $video->keywords()->attach($keyword->id);
+                    
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
+                }else{
+
+                    return $this->apiResponse->sendResponse(200, 'Already keyword exits by you', null);
+                }
+
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
 }

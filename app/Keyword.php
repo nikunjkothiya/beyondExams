@@ -11,4 +11,12 @@ class Keyword extends Model
     public function key(){
         return $this->belongsToMany('App\Opportunity');
     }
+
+    public function users(){
+        return $this->belongsToMany('App\User');
+    }
+
+    public function videos() {
+        return $this->belongsToMany('App\Video')->withTimestamps();
+    }
 }

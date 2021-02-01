@@ -43,8 +43,8 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 
 
 //Protected APIs via Auth Middleware
-//Route::group(['middleware' => 'admin_access'], function () {
-Route::group(['middleware' => 'auth:api'], function () {
+Route::group(['middleware' => 'admin_access'], function () {
+//Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
@@ -55,7 +55,10 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Add Image of category in category tabel
         Route::post('add_image_to_category', ['uses' => 'LearnWithYoutubeController@add_image_to_category']);
-        
+
+        // Keyword add to video
+        Route::post('add_keyword_to_video', ['uses' => 'LearnWithYoutubeController@add_keyword_to_video']);
+
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
 

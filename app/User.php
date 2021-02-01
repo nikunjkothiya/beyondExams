@@ -185,4 +185,8 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Video','bookmark_video')->withTimestamps();
     }
 
+    public function keywords() {
+        return $this->belongsToMany('App\Keyword')->withTimestamps();
+    }
+
 }

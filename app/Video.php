@@ -28,4 +28,8 @@ class Video extends Model
     public function duration_history(){
         return $this->hasMany('App\HistoryUserVidoes','video_id','id');
     }
+
+    public function keywords() {
+        return $this->belongsToMany('App\Keyword')->withTimestamps();
+    }
 }
