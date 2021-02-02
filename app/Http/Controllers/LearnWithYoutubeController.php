@@ -134,10 +134,10 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        try{
-        // if (Auth::user()->role() == Role::find(1))
-        //     return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
-            $category = Category::create(['user_id'=>Auth::user()->id,'title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
+        try {
+            // if (Auth::user()->role() == Role::find(1))
+            //     return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
+            $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'New Category added', $category);
         } catch (\Exception $e) {
@@ -218,6 +218,7 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
     }
 
+    ///// Start removeCategory Function /////
     public function removeCategory(Request $request)
     {
         DB::beginTransaction();
@@ -229,22 +230,62 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        try{
-             $category = Category::find($request->category_id);
-             if($category->user_id == Auth::user()->id)
-             {
-                 $subcategories = Category::where('parent_id',$category->id)->delete();
-                 $category->delete();
-                 DB::commit();
-                 return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
-             }else{
-                 return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
-             }
+        try {
+            $category = Category::find($request->category_id);
+            if ($category->user_id == Auth::user()->id) {
+                $success = $this->deleteAllCategory($category->id);
+                Category::whereIn('id', $success)->delete();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
+            }
         } catch (\Exception $e) {
             DB::rollback();
             throw new HttpException(500, $e->getMessage());
         }
     }
+
+    // for removeCategory Recursive function
+    private function deleteAllCategory($id)
+    {
+        $theArray = array();
+
+        $category = Category::find($id);
+        array_push($theArray, $category->id);
+
+        $toRecurses = Category::where('parent_id', $category->id)->get();
+        foreach ($toRecurses as $toRecurse) {
+            array_push($theArray, $toRecurse->id);
+        }
+
+        foreach ($toRecurses as $toRecurse) {
+            if (Category::where('parent_id', $toRecurse->id)->get()) {
+                $children = $this->deleteAllCategory($toRecurse->id);
+                if ($children) {
+                    $theArray[] = $children;
+                }
+            }
+        }
+
+        $theArray1 = $this->flatten($theArray);
+        $filteredArray = array_unique($theArray1);
+        $reversed = array_reverse($filteredArray);
+        return $reversed;
+    }
+  
+    // for deleteAllCategory Recursive function
+    function flatten(array $array)
+    {
+        $return = array();
+        array_walk_recursive($array, function ($a) use (&$return) {
+            $return[] = $a;
+        });
+        return $return;
+    }
+
+    ///// End removeCategory Function /////
 
     public function get_resource_comments(Request $request)
     {
@@ -372,15 +413,15 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-           // $user_id = 1;
+            // $user_id = 1;
             $user_id = Auth::user()->id;
             $getHistory = Video::select('*')
-                                ->with('duration_history:video_id,start_time,end_time')
-                                ->whereHas('duration_history',function($query) use($user_id){
-                                    $query->where('user_id',$user_id);
-                                })->get();
+                ->with('duration_history:video_id,start_time,end_time')
+                ->whereHas('duration_history', function ($query) use ($user_id) {
+                    $query->where('user_id', $user_id);
+                })->get();
             DB::commit();
-            if(count($getHistory) > 0){
+            if (count($getHistory) > 0) {
                 return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
             } else {
                 return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
@@ -444,17 +485,17 @@ class LearnWithYoutubeController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-       // $user = User::find(1);
+        // $user = User::find(1);
         try {
             if (Auth::user()) {
-                $where_video = ['url'=> $request->video_url];
-                $insert_video = ['url'=> $request->video_url];
-                $video_save = Video::updateOrCreate($where_video,$insert_video);
+                $where_video = ['url' => $request->video_url];
+                $insert_video = ['url' => $request->video_url];
+                $video_save = Video::updateOrCreate($where_video, $insert_video);
 
-                $where_rating = ['user_id'=> Auth::user()->id, 'video_id'=> $video_save->id ];
-                $insert_rating = ['rating'=> $request->rating];
-                $video_rating = VideoRating::updateOrCreate($where_rating,$insert_rating);
-               
+                $where_rating = ['user_id' => Auth::user()->id, 'video_id' => $video_save->id];
+                $insert_rating = ['rating' => $request->rating];
+                $video_rating = VideoRating::updateOrCreate($where_rating, $insert_rating);
+
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Rating added successfully', null);
             } else {
@@ -508,9 +549,9 @@ class LearnWithYoutubeController extends Controller
 
         try {
             if (Auth::user()) {
-                $where_rating = ['user_id'=> Auth::user()->id, 'test_id'=> $request->test_id ];
-                $insert_rating = ['test_answer'=> $request->test_answer];
-                $attempt_test = AttemptTest::updateOrCreate($where_rating,$insert_rating);
+                $where_rating = ['user_id' => Auth::user()->id, 'test_id' => $request->test_id];
+                $insert_rating = ['test_answer' => $request->test_answer];
+                $attempt_test = AttemptTest::updateOrCreate($where_rating, $insert_rating);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Test answers saved successfully', null);
@@ -535,23 +576,22 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
 
-        try{
-            if($request->file('image'))
-            { 
-              $file = $request->file('image');  
-              $destinationPath = public_path(). '/images/';
-              $image = time().$file->getClientOriginalName();
-              $file->move($destinationPath, $image);
-              $imgpath = 'images/'.$image;
+        try {
+            if ($request->file('image')) {
+                $file = $request->file('image');
+                $destinationPath = public_path() . '/images/';
+                $image = time() . $file->getClientOriginalName();
+                $file->move($destinationPath, $image);
+                $imgpath = 'images/' . $image;
 
-              $category = Category::find($request->category_id);
-              $category->image_url = $imgpath;
-              $category->save();
+                $category = Category::find($request->category_id);
+                $category->image_url = $imgpath;
+                $category->save();
 
-              DB::commit();
-              return $this->apiResponse->sendResponse(200, 'Category image added successfully', null);
-            }else{
-              return $this->apiResponse->sendResponse(401, 'File not supported or File not found', null);
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Category image added successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'File not supported or File not found', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -575,7 +615,7 @@ class LearnWithYoutubeController extends Controller
             if (Auth::user()) {
                 $keyword = Keyword::where('keyword', $request->keyword)->first();
                 $video = Video::where('url', $request->video_url)->first();
-                
+
                 if (!$keyword) {
                     $keyword = new Keyword();
                     $keyword->keyword = $request->keyword;
@@ -586,32 +626,30 @@ class LearnWithYoutubeController extends Controller
                     $video->url = $request->video_url;
                     $video->save();
                 }
-                 
-                $keywordByUserExits = KeywordUser::where(['user_id'=>Auth::user()->id,'keyword_id'=>$keyword->id])->first();
-                $keywordOfVideoExits = KeywordVideo::where(['video_id'=>$video->id,'keyword_id'=>$keyword->id])->first();
 
-                if(!$keywordByUserExits && !$keywordOfVideoExits)
-                { 
+                $keywordByUserExits = KeywordUser::where(['user_id' => Auth::user()->id, 'keyword_id' => $keyword->id])->first();
+                $keywordOfVideoExits = KeywordVideo::where(['video_id' => $video->id, 'keyword_id' => $keyword->id])->first();
+
+                if (!$keywordByUserExits && !$keywordOfVideoExits) {
                     Auth::user()->keywords()->attach($keyword->id);
                     $video->keywords()->attach($keyword->id);
 
                     DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
-                }elseif(!$keywordByUserExits){
+                } elseif (!$keywordByUserExits) {
                     Auth::user()->keywords()->attach($keyword->id);
 
                     DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
-                }elseif(!$keywordOfVideoExits){
+                } elseif (!$keywordOfVideoExits) {
                     $video->keywords()->attach($keyword->id);
-                    
+
                     DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
-                }else{
+                } else {
 
                     return $this->apiResponse->sendResponse(200, 'Already keyword exits by you', null);
                 }
-
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
