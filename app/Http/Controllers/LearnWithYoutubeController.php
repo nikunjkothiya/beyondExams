@@ -182,6 +182,34 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
     }
 
+    public function getAllCategoriesHierarchically(Request $request){
+        $categories = Category::get();
+        $tree = function ($elements, $parentId = 0) use (&$tree) {
+            $branch = array();
+            foreach ($elements as $element) {
+
+                if ($element['parent_id'] == $parentId) {
+
+                    $children = $tree($elements, $element['id']);
+                    if ($children) {
+                        $element['children'] = $children;
+                    }  else {
+                        // $element['children'] = [];
+                    }
+                    $branch[] = $element;
+                }
+
+            }
+
+            return $branch;
+        };
+
+        $tree = $tree($categories);
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $tree );
+
+    }
+
+
     public function getCategories(Request $request)
     {
         $validator = Validator::make($request->all(), [
