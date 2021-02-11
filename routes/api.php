@@ -20,6 +20,7 @@ Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest
 
 Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
 Route::get('get_all_categories', ['uses' => 'LearnWithYoutubeController@getAllCategories']);
+Route::get('get_all_categories_hierarchically', ['uses' => 'LearnWithYoutubeController@getAllCategoriesHierarchically']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
