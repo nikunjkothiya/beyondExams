@@ -42,7 +42,7 @@ class User extends Authenticatable
         return $this->hasOne('App\UserRole');
     }
 
-    public function session(){
+    public function session(){/////
         return $this->hasMany('App\Session');
     }
 
@@ -58,29 +58,29 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Tag');
     }
 
-    public function domains(){
+    public function domains(){/////
         return $this->belongsToMany('App\DomainUser');
     }
 
-    public function saved_opportunities(){
+    public function saved_opportunities(){/////
         return $this->belongsToMany('App\Opportunity');
     }
 
-    public function viewed_opportunity(){
+    public function viewed_opportunity(){/////
         return $this->belongsToMany('App\UserViewedOpportunity');
     }
 
-    public function premium_subscription(){
+    public function premium_subscription(){/////
         return $this->hasOne('App\Transaction');
     }
-    public function plus_subscription(){
+    public function plus_subscription(){/////
         return $this->hasMany('App\PlusTransaction');
     }
-    public function premium_txn(){
+    public function premium_txn(){/////
         return $this->hasOne('App\PremiumTxn');
     }
 
-    public function details(){
+    public function details(){/////
         return $this->hasOne('App\UserDetail');
     }
 
@@ -96,11 +96,11 @@ class User extends Authenticatable
         return $this->hasMany('App\UserFollower', 'influencer_id');
     }
 
-    public function opportunities(){
+    public function opportunities(){/////
         return $this->belongsToMany('App\Opportunity');
     }
 
-    public function validateForPassportPasswordGrant($password)
+    public function validateForPassportPasswordGrant($password)/////
     {
         //$owerridedPassword = 'password';
         //return Hash::check($password, $this->password);
@@ -112,23 +112,23 @@ class User extends Authenticatable
         return $this->where('unique_id', $username)->first();
     }
 
-    public function analytics(){
+    public function analytics(){/////
         return $this->hasMany('App\Analytics');
     }
 
-    public function user_key(){
+    public function user_key(){/////
         return $this->hasMany('App\UserKey');
     }
 
-    public function user_resource(){
+    public function user_resource(){/////
         return $this->hasMany('App\UserResource');
     }
 
-    public function student_firebase_id(){
+    public function student_firebase_id(){/////
         return $this->hasMany('App\StudentFirebase');
     }
 
-    public function admin_firebase_id(){
+    public function admin_firebase_id(){//////
         return $this->hasMany('App\AdminFirebase');
     }
 

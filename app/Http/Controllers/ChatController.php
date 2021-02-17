@@ -8,9 +8,11 @@ use App\MessageType;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use App\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Events\NewMessage;
 
 
 // Models
@@ -54,7 +56,7 @@ class ChatController extends Controller
         }
 
         try {
-
+            //$user = User::find(2);
             if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
                 $messages = ChatMessage::with(['sender' => function ($query) {
                     $query->select('id', 'name', 'avatar');
@@ -80,6 +82,7 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('receiver_id', $request->user_id)->first();
+           ////// why we check only receiver_id rather than title
 
             if (is_null($chat)) {
 
@@ -92,8 +95,8 @@ class ChatController extends Controller
                 $this->add_admin_message("Hey! How may I help you?", $chat->id, 3);
 
                 $chat->users()->attach([Auth::user()->id, $request->user_id]);
+                /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
             }
-
 
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
@@ -117,6 +120,7 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('is_support', true)->first();
+        
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->title = "Precisely Support";
@@ -152,6 +156,7 @@ class ChatController extends Controller
             }
 
             $chat->users()->attach([$request->user_id]);
+            ///// I think if we have alredy then don't add duplicate
 
             return $this->apiResponse->sendResponse(200, 'User added to chat', null);
         } catch (Exception $e) {
@@ -191,6 +196,9 @@ class ChatController extends Controller
             $chat_message = ChatMessage::with(['sender' => function ($query) {
                 $query->select('id', 'name', 'avatar', 'role_id');
             }])->find($chat_message->id);
+            
+            //make event by php artisan make:event cmd and init these three value and brodcast event
+            broadcast(new NewMessage($chat_message));
 
             return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
@@ -219,14 +227,14 @@ class ChatController extends Controller
 
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
-
+            //$ext = "." . $request->file('file')->getClientOriginalExtension();(both are same)
             $name = time() . uniqid() . $ext;
 
             $message_type = MessageType::find($request->type_id)["type"] . "/";
             $filePath = storage_path() . '/app/public/chats/' . $message_type;
-
             $file->move($filePath, $name);
 
+           // dd(url('/storage/chats/' . $message_type . $name));
             $chat_message = new ChatMessage();
             $chat_message->message = url('/storage/chats/' . $message_type . $name);
             $chat_message->chat_id = $request->chat_id;

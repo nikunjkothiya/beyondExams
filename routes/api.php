@@ -43,8 +43,8 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 
 
 // Protected APIs via Auth Middleware
-//Route::group(['middleware' => 'admin_access'], function () {
-Route::group(['middleware' => 'auth:api'], function () {
+Route::group(['middleware' => 'admin_access'], function () {
+//nRoute::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
