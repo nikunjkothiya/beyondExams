@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
 
         Route::post('add_time_table', ['uses' => 'ChatController@add_time_table']);
+        Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);

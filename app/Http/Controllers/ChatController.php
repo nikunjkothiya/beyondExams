@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Events\NewMessage;
 use App\TimeTable;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use App\TeacherDocument;
 
 // Models
 
@@ -309,6 +310,48 @@ class ChatController extends Controller
         }
         DB::commit();
         return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_teacher_document(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'document_name' => 'required|file',
+            'type' => 'required|int|min:1|max:3',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+
+        if($entryFound == 0){
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }else{
+            $attachment = $request->file('document_name');
+            $original_name = $request->file('document_name')->getClientOriginalName();
+            $storage_path = '/chats/teacher_document/';
+            $imgpath = commonUploadImage($storage_path, $attachment);
+
+            $teacherDocument = new TeacherDocument();
+            $teacherDocument->timetable_id = $request->timetable_id;
+            $teacherDocument->creator_id = Auth::user()->id;
+            $teacherDocument->document_name = $original_name;
+            $teacherDocument->document_path = $imgpath;
+            $teacherDocument->type = $request->type;
+            $teacherDocument->save();
+        }
+           
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Document Store Successfully.', null);
 
         } catch (\Exception $e) {
             DB::rollback();
