@@ -43,8 +43,8 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 
 
 // Protected APIs via Auth Middleware
-Route::group(['middleware' => 'admin_access'], function () {
-//nRoute::group(['middleware' => 'auth:api'], function () {
+//Route::group(['middleware' => 'admin_access'], function () {
+Route::group(['middleware' => 'auth:api'], function () {
 
     Route::group(['middleware' => ['login_status']], function () {
         // ----------Browse videos----------
@@ -119,6 +119,8 @@ Route::group(['middleware' => 'admin_access'], function () {
         Route::post('send_message', ['uses' => 'ChatController@send_message']);
         Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
         Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
+
+        Route::post('add_time_table', ['uses' => 'ChatController@add_time_table']);
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);

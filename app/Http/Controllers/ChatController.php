@@ -13,7 +13,8 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Events\NewMessage;
-
+use App\TimeTable;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 // Models
 
@@ -35,11 +36,9 @@ class ChatController extends Controller
     public function get_all_chats(request $request)
     {
         try {
-
             $chats = Auth::user()->chats()->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
 
             return $this->apiResponse->sendResponse(200, 'Success', $chats);
-
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -82,7 +81,6 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('receiver_id', $request->user_id)->first();
-           ////// why we check only receiver_id rather than title
 
             if (is_null($chat)) {
 
@@ -120,7 +118,7 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('is_support', true)->first();
-        
+
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->title = "Precisely Support";
@@ -156,7 +154,6 @@ class ChatController extends Controller
             }
 
             $chat->users()->attach([$request->user_id]);
-            ///// I think if we have alredy then don't add duplicate
 
             return $this->apiResponse->sendResponse(200, 'User added to chat', null);
         } catch (Exception $e) {
@@ -196,7 +193,7 @@ class ChatController extends Controller
             $chat_message = ChatMessage::with(['sender' => function ($query) {
                 $query->select('id', 'name', 'avatar', 'role_id');
             }])->find($chat_message->id);
-            
+
             //make event by php artisan make:event cmd and init these three value and brodcast event
             broadcast(new NewMessage($chat_message));
 
@@ -234,7 +231,7 @@ class ChatController extends Controller
             $filePath = storage_path() . '/app/public/chats/' . $message_type;
             $file->move($filePath, $name);
 
-           // dd(url('/storage/chats/' . $message_type . $name));
+            // dd(url('/storage/chats/' . $message_type . $name));
             $chat_message = new ChatMessage();
             $chat_message->message = url('/storage/chats/' . $message_type . $name);
             $chat_message->chat_id = $request->chat_id;
@@ -243,6 +240,8 @@ class ChatController extends Controller
             $chat_message->save();
 
             // Send Notifications via get firebaseIDs
+            //make event by php artisan make:event cmd and init these three value and brodcast event
+            //broadcast(new NewMessage($chat_message));
 
             return $this->apiResponse->sendResponse(200, 'Multimedia message Added', $chat_message);
         } catch (Exception $e) {
@@ -266,5 +265,54 @@ class ChatController extends Controller
         $chat->save();
 
         return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
+    }
+
+    public function add_time_table(Request $request)
+    {
+        
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|int',
+            'start_time' => 'required|string',
+            'end_time' => 'required|string',
+            'period_name' => 'required|string',
+            'date' => 'required|string',
+            'day' => 'required|int|min:1|max:7',
+        ]);
+        
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+        
+
+        if (!is_null(Chat::where('id', $request->chat_id)->first())) {
+            
+            $old_timetable = TimeTable::where(['chat_id' => $request->chat_id, 'start_time' => $request->start_time, 'end_time' => $request->end_time, 'period_name' => $request->period_name, 'date' => $request->date, 'day' => $request->day])->count();
+            
+            if ($old_timetable > 0) {
+                return $this->apiResponse->sendResponse(201, 'Already Exits.', null);
+            } else {
+                $timetable = new TimeTable();
+                $timetable->teacher_id = Auth::user()->id;
+                $timetable->chat_id = $request->chat_id;
+                $timetable->start_time = $request->start_time;
+                $timetable->end_time = $request->end_time;
+                $timetable->period_name = $request->period_name;
+                $timetable->date = $request->date;
+                $timetable->day = $request->day;
+                $timetable->save();
+            }
+        } else {
+            return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+        }
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 }
