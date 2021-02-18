@@ -274,10 +274,10 @@ class ChatController extends Controller
         try{
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|int',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string',
+            'start_time' => 'required|string|date_format:H:i A',
+            'end_time' => 'required|string|date_format:H:i A|after:start_time',
             'period_name' => 'required|string',
-            'date' => 'required|string',
+            'date' => 'required|string|date_format:d/m/Y',
             'day' => 'required|int|min:1|max:7',
         ]);
         
