@@ -62,7 +62,7 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
-                    'college' => 'required|string|max:1024',
+                    'college' => 'string|max:1024',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
@@ -82,12 +82,15 @@ class LearnWithYoutubeController extends Controller
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
 
+                if (isset($request->phone))
+                    $user->phone = $request->phone;
+
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
-                $user->phone = $request->phone;
+                $user->flag = 1;
 
                 $user->save();
 
@@ -179,6 +182,34 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
     }
 
+    public function getAllCategoriesHierarchically(Request $request){
+        $categories = Category::get();
+        $tree = function ($elements, $parentId = 0) use (&$tree) {
+            $branch = array();
+            foreach ($elements as $element) {
+
+                if ($element['parent_id'] == $parentId) {
+
+                    $children = $tree($elements, $element['id']);
+                    if ($children) {
+                        $element['children'] = $children;
+                    }  else {
+                        // $element['children'] = [];
+                    }
+                    $branch[] = $element;
+                }
+
+            }
+
+            return $branch;
+        };
+
+        $tree = $tree($categories);
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $tree );
+
+    }
+
+
     public function getCategories(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -205,7 +236,8 @@ class LearnWithYoutubeController extends Controller
 
     }
 
-    public function removeCategory(Request $request){
+    public function removeCategory(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
         ]);
@@ -379,5 +411,22 @@ class LearnWithYoutubeController extends Controller
         $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering]);
 
         return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
+    }
+
+    public function toggle_category_visibility(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $category = Category::find($request->category_id);
+
+        $category->toggle_visibility()->save();
+
+        return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }
 }
