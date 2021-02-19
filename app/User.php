@@ -189,4 +189,8 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Keyword')->withTimestamps();
     }
 
+    public function certificates(){
+        return $this->hasMany('App\UserCertificate','user_id','id');
+    }
+
 }

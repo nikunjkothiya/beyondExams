@@ -25,6 +25,7 @@ use App\AttemptTest;
 use App\Keyword;
 use App\KeywordUser;
 use App\KeywordVideo;
+use App\UserCertificate;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
@@ -67,7 +68,6 @@ class LearnWithYoutubeController extends Controller
     {
         try {
             if (Auth::check()) {
-
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
@@ -75,6 +75,7 @@ class LearnWithYoutubeController extends Controller
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
+                    'short_bio' => 'sometimes|string',
                     'phone' => 'integer',
                 ]);
 
@@ -83,13 +84,27 @@ class LearnWithYoutubeController extends Controller
                 }
 
                 $user = Auth::user();
-
                 // Save data to users table
                 $user->name = $request->name;
                 $user->email = $request->email;
 
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
+                    
+                if (isset($request->facebook_link))
+                    {$user->facebook_link = $request->facebook_link;}
+                
+                if (isset($request->instagram_link))
+                    {$user->instagram_link = $request->instagram_link;}
+
+                if (isset($request->github_link))
+                    {$user->github_link = $request->github_link;}
+                
+                if (isset($request->twitter_url))
+                    {$user->twitter_url = $request->twitter_url;}        
+        
+                if (isset($request->linkedin_url))
+                    {$user->linkedin_url = $request->linkedin_url;}
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
@@ -97,8 +112,20 @@ class LearnWithYoutubeController extends Controller
                 $user->age = $request->age;
                 $user->country_id = $request->country;
                 $user->phone = $request->phone;
-
                 $user->save();
+
+            if ($request->file('image')) {
+                foreach ($request->file('image') as $image) { 
+                    $attachment = $image;
+                    $storage_path = '/user/certificates/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+
+                    $user_certidicate = new UserCertificate();
+                    $user_certidicate->user_id = $user->id ;
+                    $user_certidicate->image = $imgpath;
+                    $user_certidicate->save();
+                }
+            }
 
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
             } else {
@@ -113,8 +140,9 @@ class LearnWithYoutubeController extends Controller
     public function get_user_profile()
     {
         if (Auth::check()) {
-            $user = Auth::user();
-
+            //$user = Auth::user();
+            $user = User::with('certificates')->where('id', Auth::user()->id)->get();
+       
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);

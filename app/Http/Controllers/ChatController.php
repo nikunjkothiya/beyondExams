@@ -269,8 +269,7 @@ class ChatController extends Controller
     }
 
     public function add_time_table(Request $request)
-    {
-        
+    {   
         DB::beginTransaction();
         try{
         $validator = Validator::make($request->all(), [
@@ -287,7 +286,6 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
         }
         
-
         if (!is_null(Chat::where('id', $request->chat_id)->first())) {
             
             $old_timetable = TimeTable::where(['chat_id' => $request->chat_id, 'start_time' => $request->start_time, 'end_time' => $request->end_time, 'period_name' => $request->period_name, 'date' => $request->date, 'day' => $request->day])->count();
