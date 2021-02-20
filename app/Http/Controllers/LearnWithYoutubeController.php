@@ -201,9 +201,9 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                    $user_link = User::find(Auth::user()->id);
-                    $user_link->facebook_link = $request->facebook_link;
-                    $user_link->save();
+                $user_link = User::find(Auth::user()->id);
+                $user_link->facebook_link = $request->facebook_link;
+                $user_link->save();
 
                 return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', null);
             } else {
@@ -225,9 +225,9 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                    $user_link = User::find(Auth::user()->id);
-                    $user_link->instagram_link = $request->instagram_link;
-                    $user_link->save();
+                $user_link = User::find(Auth::user()->id);
+                $user_link->instagram_link = $request->instagram_link;
+                $user_link->save();
 
                 return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', null);
             } else {
@@ -249,9 +249,9 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                    $user_link = User::find(Auth::user()->id);
-                    $user_link->github_link = $request->github_link;
-                    $user_link->save();
+                $user_link = User::find(Auth::user()->id);
+                $user_link->github_link = $request->github_link;
+                $user_link->save();
 
                 return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', null);
             } else {
@@ -273,9 +273,9 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                    $user_link = User::find(Auth::user()->id);
-                    $user_link->twitter_url = $request->twitter_url;
-                    $user_link->save();
+                $user_link = User::find(Auth::user()->id);
+                $user_link->twitter_url = $request->twitter_url;
+                $user_link->save();
 
                 return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', null);
             } else {
@@ -297,9 +297,9 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                    $user_link = User::find(Auth::user()->id);
-                    $user_link->linkedin_url = $request->linkedin_url;
-                    $user_link->save();
+                $user_link = User::find(Auth::user()->id);
+                $user_link->linkedin_url = $request->linkedin_url;
+                $user_link->save();
 
                 return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', null);
             } else {
@@ -785,7 +785,8 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
-            'image' => 'required|file',
+            'image' => 'required',
+            'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -793,21 +794,21 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-            if ($request->file('image')) {
-                $file = $request->file('image');
-                $destinationPath = public_path() . '/images/';
-                $image = time() . $file->getClientOriginalName();
-                $file->move($destinationPath, $image);
-                $imgpath = 'images/' . $image;
+            $searchCategory = Category::find($request->category_id);
+            if ($searchCategory && $request->file('image')) {
+
+                $attachment = $request->file('image');
+                $storage_path = '/category/images/';
+                $imgpath = commonUploadImage($storage_path, $attachment);
 
                 $category = Category::find($request->category_id);
                 $category->image_url = $imgpath;
                 $category->save();
 
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Category image added successfully', null);
+                return $this->apiResponse->sendResponse(200, 'Category image added successfully', $category);
             } else {
-                return $this->apiResponse->sendResponse(401, 'File not supported or File not found', null);
+                return $this->apiResponse->sendResponse(201, 'Category Not Exits', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
