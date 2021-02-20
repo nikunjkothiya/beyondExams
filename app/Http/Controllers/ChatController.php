@@ -439,4 +439,30 @@ class ChatController extends Controller
             throw new HttpException(500, $e->getMessage());
         }
     }
+
+    public function search_filter_messages(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $timetable = TimeTable::where('id', $request->timetable_id)->first();
+            if(is_null($timetable)){
+                return $this->apiResponse->sendResponse(201, 'Chat or Timetable Not Found', null);
+            }else{
+                $messages = ChatMessage::with(['sender' => function ($query) {
+                    $query->select('id', 'name');
+                }])->where(['chat_id' => $timetable->chat_id,'sender_id' => $request->user_id])->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+            }
+            return $this->apiResponse->sendResponse(200, 'Filtered Messages', $messages);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
 }
