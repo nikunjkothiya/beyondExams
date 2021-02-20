@@ -37,7 +37,6 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 
 Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
 
-
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
@@ -69,6 +68,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
+        Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);
 
         Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
         Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);

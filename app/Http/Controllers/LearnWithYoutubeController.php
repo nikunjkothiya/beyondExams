@@ -145,7 +145,39 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
-    //    TODO: CORRECT RETURN TYPE
+    public function add_user_certificate(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'image' => 'required',
+                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                foreach ($request->file('image') as $image) {
+                    $attachment = $image;
+                    $storage_path = '/user/certificates/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+
+                    $user_certidicate = new UserCertificate();
+                    $user_certidicate->user_id = Auth::user()->id;
+                    $user_certidicate->image = $imgpath;
+                    $user_certidicate->save();
+                }
+
+                return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function get_user_profile()
     {
         if (Auth::check()) {
