@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTestsTable extends Migration
+class CreateHistoryUserVideosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,18 +13,20 @@ class CreateTestsTable extends Migration
      */
     public function up()
     {
-        Schema::create('tests', function (Blueprint $table) {
+        Schema::create('history_user_videos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('title')->nullable();
-            $table->json('mcqs')->nullable();
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('video_id');
+            $table->string('start_time');
+            $table->string('end_time');
+            $table->string('type')->nullable();
             $table->timestamps();
         });
 
-        Schema::table('tests', function (Blueprint $table) {
+        Schema::table('history_user_videos',function($table){
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
-
     }
 
     /**
@@ -34,6 +36,6 @@ class CreateTestsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tests');
+        Schema::dropIfExists('history_user_videos');
     }
 }

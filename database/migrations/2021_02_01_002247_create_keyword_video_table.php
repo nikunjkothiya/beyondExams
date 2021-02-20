@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTestsTable extends Migration
+class CreateKeywordVideoTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,18 +13,17 @@ class CreateTestsTable extends Migration
      */
     public function up()
     {
-        Schema::create('tests', function (Blueprint $table) {
+        Schema::create('keyword_video', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('title')->nullable();
-            $table->json('mcqs')->nullable();
+            $table->unsignedBigInteger('keyword_id');
             $table->unsignedBigInteger('video_id');
             $table->timestamps();
         });
 
-        Schema::table('tests', function (Blueprint $table) {
+        Schema::table('keyword_video',function($table){
+            $table->foreign('keyword_id')->references('id')->on('keywords')->onDelete('cascade');
             $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
-
     }
 
     /**
@@ -34,6 +33,6 @@ class CreateTestsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tests');
+        Schema::dropIfExists('keyword_video');
     }
 }

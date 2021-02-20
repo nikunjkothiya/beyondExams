@@ -12,7 +12,7 @@ class Tag extends Model
         return $this->belongsToMany('App\User');
     }
 
-    public function opportunities(){
+    public function opportunities(){/////
     	return $this->belongsToMany('App\Opportunity');
     }
 
