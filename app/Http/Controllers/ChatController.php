@@ -14,6 +14,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Events\NewMessage;
+use App\StudentHomework;
 use App\TimeTable;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\TeacherDocument;
@@ -392,6 +393,46 @@ class ChatController extends Controller
 
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Review Added Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_student_homework(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'document_name' => 'required|file',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+
+        if($entryFound == 0){
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }else{
+            $attachment = $request->file('document_name');
+            $original_name = $request->file('document_name')->getClientOriginalName();
+            $storage_path = '/chats/student_homework/';
+            $imgpath = commonUploadImage($storage_path, $attachment);
+
+            $studentHomweork = new StudentHomework();
+            $studentHomweork->timetable_id = $request->timetable_id;
+            $studentHomweork->student_id = Auth::user()->id;
+            $studentHomweork->document_name = $original_name;
+            $studentHomweork->document_path = $imgpath;
+            $studentHomweork->save();
+        }
+           
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Homework Store Successfully.', null);
 
         } catch (\Exception $e) {
             DB::rollback();

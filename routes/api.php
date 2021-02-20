@@ -124,6 +124,7 @@ Route::group(['middleware' => 'admin_access'], function () {
         Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
 
         Route::post('add_chat_review', ['uses' => 'ChatController@add_chat_review']);
+        Route::post('add_student_homework', ['uses' => 'ChatController@add_student_homework']);
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
