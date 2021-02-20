@@ -39,7 +39,7 @@ class User extends Authenticatable
     ];
 
     public function role(){
-        return $this->hasOne('App\UserRole');
+        return $this->belongsToMany('App\Role', 'role_user');
     }
 
     public function session(){/////

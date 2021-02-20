@@ -15,4 +15,8 @@ class Category extends Model
         'previous_id',
         'image_url'
     ];
+
+    public function toggle_visibility(){
+        $this->visibility = !$this->visibility;
+    }
 }

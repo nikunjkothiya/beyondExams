@@ -71,7 +71,7 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
-                    'college' => 'required|string|max:1024',
+                    'college' => 'string|max:1024',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
@@ -90,21 +90,29 @@ class LearnWithYoutubeController extends Controller
 
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
-                    
-                if (isset($request->facebook_link))
-                    {$user->facebook_link = $request->facebook_link;}
-                
-                if (isset($request->instagram_link))
-                    {$user->instagram_link = $request->instagram_link;}
 
-                if (isset($request->github_link))
-                    {$user->github_link = $request->github_link;}
-                
-                if (isset($request->twitter_url))
-                    {$user->twitter_url = $request->twitter_url;}        
-        
-                if (isset($request->linkedin_url))
-                    {$user->linkedin_url = $request->linkedin_url;}
+                if (isset($request->facebook_link)) {
+                    $user->facebook_link = $request->facebook_link;
+                }
+
+                if (isset($request->instagram_link)) {
+                    $user->instagram_link = $request->instagram_link;
+                }
+
+                if (isset($request->github_link)) {
+                    $user->github_link = $request->github_link;
+                }
+
+                if (isset($request->twitter_url)) {
+                    $user->twitter_url = $request->twitter_url;
+                }
+
+                if (isset($request->linkedin_url)) {
+                    $user->linkedin_url = $request->linkedin_url;
+                }
+
+                if (isset($request->phone))
+                    $user->phone = $request->phone;
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
@@ -112,20 +120,21 @@ class LearnWithYoutubeController extends Controller
                 $user->age = $request->age;
                 $user->country_id = $request->country;
                 $user->phone = $request->phone;
+                $user->flag = 1;
                 $user->save();
 
-            if ($request->file('image')) {
-                foreach ($request->file('image') as $image) { 
-                    $attachment = $image;
-                    $storage_path = '/user/certificates/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                if ($request->file('image')) {
+                    foreach ($request->file('image') as $image) {
+                        $attachment = $image;
+                        $storage_path = '/user/certificates/';
+                        $imgpath = commonUploadImage($storage_path, $attachment);
 
-                    $user_certidicate = new UserCertificate();
-                    $user_certidicate->user_id = $user->id ;
-                    $user_certidicate->image = $imgpath;
-                    $user_certidicate->save();
+                        $user_certidicate = new UserCertificate();
+                        $user_certidicate->user_id = $user->id;
+                        $user_certidicate->image = $imgpath;
+                        $user_certidicate->save();
+                    }
                 }
-            }
 
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
             } else {
@@ -142,7 +151,7 @@ class LearnWithYoutubeController extends Controller
         if (Auth::check()) {
             //$user = Auth::user();
             $user = User::with('certificates')->where('id', Auth::user()->id)->get();
-       
+
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
@@ -220,6 +229,33 @@ class LearnWithYoutubeController extends Controller
     {
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
     }
+
+    public function getAllCategoriesHierarchically(Request $request)
+    {
+        $categories = Category::get();
+        $tree = function ($elements, $parentId = 0) use (&$tree) {
+            $branch = array();
+            foreach ($elements as $element) {
+
+                if ($element['parent_id'] == $parentId) {
+
+                    $children = $tree($elements, $element['id']);
+                    if ($children) {
+                        $element['children'] = $children;
+                    } else {
+                        // $element['children'] = [];
+                    }
+                    $branch[] = $element;
+                }
+            }
+
+            return $branch;
+        };
+
+        $tree = $tree($categories);
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $tree);
+    }
+
 
     public function getCategories(Request $request)
     {
@@ -302,7 +338,7 @@ class LearnWithYoutubeController extends Controller
         $reversed = array_reverse($filteredArray);
         return $reversed;
     }
-  
+
     // for deleteAllCategory Recursive function
     function flatten(array $array)
     {
@@ -685,5 +721,22 @@ class LearnWithYoutubeController extends Controller
             DB::rollback();
             throw new HttpException(500, $e->getMessage());
         }
+    }
+
+    public function toggle_category_visibility(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $category = Category::find($request->category_id);
+
+        $category->toggle_visibility()->save();
+
+        return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }
 }
