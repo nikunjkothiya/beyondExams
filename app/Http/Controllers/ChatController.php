@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Chat;
 use App\ChatMessage;
+use App\ChatReview;
 use App\MessageType;
 use Auth;
 use Carbon\Carbon;
@@ -350,6 +351,47 @@ class ChatController extends Controller
            
         DB::commit();
         return $this->apiResponse->sendResponse(200, 'Document Store Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_chat_review(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'review_message' => 'sometimes|string',
+            'rating' => 'required|int|min:1|max:5',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->first();
+
+        if(!is_null($entryFound)){
+            $chatFound = Chat::where('id', $entryFound->chat_id)->first();
+            if(is_null($chatFound)){
+                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+            }else{
+                $addReview = new ChatReview();
+                $addReview->timetable_id = $request->timetable_id;
+                $addReview->student_id = Auth::user()->id;
+                $addReview->review_message = $request->review_message;
+                $addReview->rating = $request->rating;
+                $addReview->save();
+            }
+        }else{
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Review Added Successfully.', null);
 
         } catch (\Exception $e) {
             DB::rollback();

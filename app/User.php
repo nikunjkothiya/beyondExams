@@ -193,4 +193,8 @@ class User extends Authenticatable
         return $this->hasMany('App\UserCertificate','user_id','id');
     }
 
+    public function chat_reviews(){
+        return $this->hasMany('App\ChatReview','student_id','id');
+    }
+
 }
