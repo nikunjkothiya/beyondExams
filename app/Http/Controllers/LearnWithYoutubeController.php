@@ -190,6 +190,126 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
+    public function add_user_facebook_link(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'facebook_link' => 'required|string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                    $user_link = User::find(Auth::user()->id);
+                    $user_link->facebook_link = $request->facebook_link;
+                    $user_link->save();
+
+                return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_user_instagram_link(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'instagram_link' => 'required|string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                    $user_link = User::find(Auth::user()->id);
+                    $user_link->instagram_link = $request->instagram_link;
+                    $user_link->save();
+
+                return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_user_github_link(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'github_link' => 'required|string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                    $user_link = User::find(Auth::user()->id);
+                    $user_link->github_link = $request->github_link;
+                    $user_link->save();
+
+                return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_user_twitter_url(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'twitter_url' => 'required|string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                    $user_link = User::find(Auth::user()->id);
+                    $user_link->twitter_url = $request->twitter_url;
+                    $user_link->save();
+
+                return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_user_linkedin_url(Request $request)
+    {
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'linkedin_url' => 'required|string',
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                    $user_link = User::find(Auth::user()->id);
+                    $user_link->linkedin_url = $request->linkedin_url;
+                    $user_link->save();
+
+                return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function addNewCategory(Request $request)
     {
         DB::beginTransaction();

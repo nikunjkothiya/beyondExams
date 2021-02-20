@@ -70,6 +70,13 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
         Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);
 
+        // User Social Links add
+        Route::post('add_user_facebook_link', ['uses' => 'LearnWithYoutubeController@add_user_facebook_link']);
+        Route::post('add_user_instagram_link', ['uses' => 'LearnWithYoutubeController@add_user_instagram_link']);
+        Route::post('add_user_github_link', ['uses' => 'LearnWithYoutubeController@add_user_github_link']);
+        Route::post('add_user_twitter_url', ['uses' => 'LearnWithYoutubeController@add_user_twitter_url']);
+        Route::post('add_user_linkedin_url', ['uses' => 'LearnWithYoutubeController@add_user_linkedin_url']);
+
         Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
         Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
 
