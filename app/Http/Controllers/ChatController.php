@@ -460,7 +460,7 @@ class ChatController extends Controller
                     $query->select('id', 'name');
                 }])->where(['chat_id' => $timetable->chat_id,'sender_id' => $request->user_id])->orderByDesc('created_at')->paginate($this->num_entries_per_page);
             }
-            return $this->apiResponse->sendResponse(200, 'Filtered Messages', $messages);
+            return $this->apiResponse->sendResponse(200, 'Filtered Messages get Successfully', $messages);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }

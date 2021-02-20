@@ -121,6 +121,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('add_chat_review', ['uses' => 'ChatController@add_chat_review']);
         Route::post('add_student_homework', ['uses' => 'ChatController@add_student_homework']);
+        Route::get('search_filter_messages', ['uses' => 'ChatController@search_filter_messages']);
 
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
