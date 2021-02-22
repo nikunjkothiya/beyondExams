@@ -65,6 +65,6 @@ class ChemistryUniverseController extends Controller
     }
 
     public function get_ses_videos(){
-        return $this->apiResponse->sendResponse(200, 'SES video saved successfully.', Ses::with('videos')->paginate(15));
+        return $this->apiResponse->sendResponse(200, 'SES video saved successfully.', Ses::with('video')->paginate(15));
     }
 }

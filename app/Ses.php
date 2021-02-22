@@ -8,7 +8,7 @@ class Ses extends Model
 {
     protected $table = 'ses';
     //
-    public function videos(){
-        return $this->hasOne('App\Video');
+    public function video(){
+        return $this->belongsTo('App\Video');
     }
 }

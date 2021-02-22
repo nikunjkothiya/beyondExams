@@ -394,7 +394,8 @@ class LearnWithYoutubeController extends Controller
 
         $category = Category::find($request->category_id);
 
-        $category->toggle_visibility()->save();
+        $category->toggle_visibility();
+	$category->save();
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }

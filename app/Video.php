@@ -18,4 +18,8 @@ class Video extends Model
     public function likes(){
         return $this->belongsToMany('App\User', 'user_video')->where('type', 'liked');
     }
+
+    public function ses(){
+	return $this->hasOne('App\Ses');
+    }
 }
