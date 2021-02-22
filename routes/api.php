@@ -9,24 +9,18 @@ Route::post('{provider}/verifyAdminAccessToken', ['uses' => 'AuthFirebaseControl
 Route::post('refreshFirebase', ['uses' => 'AuthFirebaseController@refresh']);
 
 // Signup Form and General APi
-Route::get('get_all_languages', ['uses' => 'PreciselyController@get_language']);
 Route::get('get_filters', ['uses' => 'UtilController@get_filters']);
 Route::get('get_all_countries', ['uses' => 'UtilController@get_all_countries']);
 
 // Misc APi
-Route::get('mentor/{slug}', ['uses' => 'PreciselyController@get_mentor_profile_from_slug']);
-Route::get('get_location/{location_id}', ['uses' => 'PreciselyController@get_location']);
-Route::get('get_funding_status/{id}', ['uses' => 'PreciselyController@get_funding_status']);
 Route::post('show_comments', ['uses' => 'ApiRecordCommentController@show_comment']);
 Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
 Route::get('generate_all_sitemap', ['uses' => 'UtilController@generate_all_sitemap']);
 Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest_sitemap']);
 
-// Premium Plan
-Route::get('list_premium_plans', ['uses' => 'PremiumSubscriptionController@list_premium_plans']);
-
 Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
 Route::get('get_all_categories', ['uses' => 'LearnWithYoutubeController@getAllCategories']);
+Route::get('get_all_categories_hierarchically', ['uses' => 'LearnWithYoutubeController@getAllCategoriesHierarchically']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
@@ -66,15 +60,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
-        Route::post('submit_mentor_profile', ['uses' => 'PreciselyController@submit_mentor_profile']);
-        Route::post('submit_mentor_price', ['uses' => 'PreciselyController@update_mentor_price']);
-        Route::get('get_mentor_profile', ['uses' => 'PreciselyController@get_mentor_profile']);
-
-        // User Misc Data
-        Route::post('save_user_language', ['uses' => 'PreciselyController@save_user_language']);
-        Route::get('get_user_language', ['uses' => 'PreciselyController@get_user_language']);
-        Route::post('save_user_filters', ['uses' => 'PreciselyController@save_user_filters']);
-        Route::get('get_user_filters', ['uses' => 'PreciselyController@get_user_filters']);
 
         Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
         Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
@@ -120,18 +105,3 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     });
 });
-
-Route::post('razorpay_demo_checkout', ['uses' => 'PreciselyController@razorpay_demo_checkout']);
-
-
-Route::get('get_resource_from_slug', ['uses' => 'AWSApiController@get_resource_from_slug']);
-
-//AWS API
-Route::get('list_s3_files', ['uses' => 'AWSApiController@list_s3_files']);
-Route::get('list_paginated_s3_files', ['uses' => 'AWSApiController@list_paginated_s3_files']);
-Route::get('get_recommendations', ['uses' => 'AWSApiController@get_recommendations']);
-Route::post('search_s3_files', ['uses' => 'AWSApiController@search_s3_files']);
-Route::post('store_s3_file', ['uses' => 'AWSApiController@store_s3_file']);
-Route::post('save_playlist', ['uses' => 'AWSApiController@save_playlist']);
-Route::post('save_resource_thumbnail', ['uses' => 'AWSApiController@save_thumbnail']);
-Route::post('upload_single_image', ['uses' => 'AWSApiController@upload_single_image']);
