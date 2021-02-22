@@ -629,8 +629,8 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            // $user_id = 1;
-            $user_id = Auth::user()->id;
+             $user_id = 1;
+            //$user_id = Auth::user()->id;
             $getHistory = Video::select('*')
                 ->with('duration_history:video_id,start_time,end_time')
                 ->whereHas('duration_history', function ($query) use ($user_id) {
