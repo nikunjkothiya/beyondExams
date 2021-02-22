@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Chat;
 use App\ChatMessage;
 use App\ChatReview;
+use App\ClassroomChatMessage;
 use App\MessageType;
 use Auth;
 use Carbon\Carbon;
@@ -483,6 +484,36 @@ class ChatController extends Controller
             } else {
                 $save_chat_message = new SaveMessage();
                 $save_chat_message->student_id = Auth::user()->id;
+                $save_chat_message->chat_message_id = $request->chat_message_id;
+                $save_chat_message->save();
+            }
+            return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+    public function classroom_chat_message(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'chat_message_id' => 'required|integer',
+            'timetable_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $timetable = TimeTable::where('id', $request->timetable_id)->first();
+            $data = ChatMessage::where(['id' => $request->chat_message_id])->first();
+            if (is_null($timetable)) {
+                return $this->apiResponse->sendResponse(404, 'Time Table does not exist.', null);
+            } elseif (is_null($data)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Message Not Found.', null);
+            } else {
+                $save_chat_message = new ClassroomChatMessage();
+                $save_chat_message->timetable_id = $request->timetable_id;
                 $save_chat_message->chat_message_id = $request->chat_message_id;
                 $save_chat_message->save();
             }
