@@ -78,7 +78,8 @@ class LWYResourceController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'mcqs' => 'required|json',
-            'resource_url' => 'required|string'
+            'video_id' => 'required|integer',
+           // 'resource_url' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +91,8 @@ class LWYResourceController extends Controller
         if ($request->title)
             $title = $request->title;
 
-        $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
+       // $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
+       $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'video_id'=>$request->video_id]);
 
         $test->save();
 
@@ -99,14 +101,14 @@ class LWYResourceController extends Controller
 
     public function get_tests(Request $request){
         $validator = Validator::make($request->all(), [
-            'resource_url' => 'required|string'
+            'video_id' => 'required|integer'
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        return $this->apiResponse->sendResponse(200, 'Tests fetched successfully', Test::where('resource_url', $request->resource_url)->get());
+        return $this->apiResponse->sendResponse(200, 'Tests fetched successfully', Test::where('video_id', $request->video_id)->get());
     }
 
     public function get_test_scores(Request $request)

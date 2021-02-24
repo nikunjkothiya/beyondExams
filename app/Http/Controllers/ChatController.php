@@ -4,14 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Chat;
 use App\ChatMessage;
+use App\ChatReview;
 use App\MessageType;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use App\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use App\Events\NewMessage;
+use App\StudentHomework;
+use App\TimeTable;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use App\TeacherDocument;
 
 // Models
 
@@ -33,11 +39,9 @@ class ChatController extends Controller
     public function get_all_chats(request $request)
     {
         try {
-
             $chats = Auth::user()->chats()->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
 
             return $this->apiResponse->sendResponse(200, 'Success', $chats);
-
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -54,7 +58,7 @@ class ChatController extends Controller
         }
 
         try {
-
+            //$user = User::find(2);
             if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
                 $messages = ChatMessage::with(['sender' => function ($query) {
                     $query->select('id', 'name', 'avatar');
@@ -92,8 +96,8 @@ class ChatController extends Controller
                 $this->add_admin_message("Hey! How may I help you?", $chat->id, 3);
 
                 $chat->users()->attach([Auth::user()->id, $request->user_id]);
+                /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
             }
-
 
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
@@ -117,6 +121,7 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('is_support', true)->first();
+
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->title = "Precisely Support";
@@ -192,6 +197,9 @@ class ChatController extends Controller
                 $query->select('id', 'name', 'avatar', 'role_id');
             }])->find($chat_message->id);
 
+            //make event by php artisan make:event cmd and init these three value and brodcast event
+            broadcast(new NewMessage($chat_message));
+
             return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
@@ -219,14 +227,14 @@ class ChatController extends Controller
 
             $file = $request->file('file');
             $ext = "." . pathinfo($_FILES["file"]["name"])['extension'];
-
+            //$ext = "." . $request->file('file')->getClientOriginalExtension();(both are same)
             $name = time() . uniqid() . $ext;
 
             $message_type = MessageType::find($request->type_id)["type"] . "/";
             $filePath = storage_path() . '/app/public/chats/' . $message_type;
-
             $file->move($filePath, $name);
 
+            // dd(url('/storage/chats/' . $message_type . $name));
             $chat_message = new ChatMessage();
             $chat_message->message = url('/storage/chats/' . $message_type . $name);
             $chat_message->chat_id = $request->chat_id;
@@ -235,6 +243,8 @@ class ChatController extends Controller
             $chat_message->save();
 
             // Send Notifications via get firebaseIDs
+            //make event by php artisan make:event cmd and init these three value and brodcast event
+            //broadcast(new NewMessage($chat_message));
 
             return $this->apiResponse->sendResponse(200, 'Multimedia message Added', $chat_message);
         } catch (Exception $e) {
@@ -258,5 +268,201 @@ class ChatController extends Controller
         $chat->save();
 
         return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
+    }
+
+    public function add_time_table(Request $request)
+    {   
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|int',
+            'start_time' => 'required|string|date_format:H:i A',
+            'end_time' => 'required|string|date_format:H:i A|after:start_time',
+            'period_name' => 'required|string',
+            'date' => 'required|string|date_format:d/m/Y',
+            'day' => 'required|int|min:1|max:7',
+        ]);
+        
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+        
+        if (!is_null(Chat::where('id', $request->chat_id)->first())) {
+            
+            $old_timetable = TimeTable::where(['chat_id' => $request->chat_id, 'start_time' => $request->start_time, 'end_time' => $request->end_time, 'period_name' => $request->period_name, 'date' => $request->date, 'day' => $request->day])->count();
+            
+            if ($old_timetable > 0) {
+                return $this->apiResponse->sendResponse(201, 'Already Exits.', null);
+            } else {
+                $timetable = new TimeTable();
+                $timetable->teacher_id = Auth::user()->id;
+                $timetable->chat_id = $request->chat_id;
+                $timetable->start_time = $request->start_time;
+                $timetable->end_time = $request->end_time;
+                $timetable->period_name = $request->period_name;
+                $timetable->date = $request->date;
+                $timetable->day = $request->day;
+                $timetable->save();
+            }
+        } else {
+            return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+        }
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_teacher_document(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'document_name' => 'required|file',
+            'type' => 'required|int|min:1|max:3',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+
+        if($entryFound == 0){
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }else{
+            $attachment = $request->file('document_name');
+            $original_name = $request->file('document_name')->getClientOriginalName();
+            $storage_path = '/chats/teacher_document/';
+            $imgpath = commonUploadImage($storage_path, $attachment);
+
+            $teacherDocument = new TeacherDocument();
+            $teacherDocument->timetable_id = $request->timetable_id;
+            $teacherDocument->creator_id = Auth::user()->id;
+            $teacherDocument->document_name = $original_name;
+            $teacherDocument->document_path = $imgpath;
+            $teacherDocument->type = $request->type;
+            $teacherDocument->save();
+        }
+           
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Document Store Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_chat_review(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'review_message' => 'sometimes|string',
+            'rating' => 'required|int|min:1|max:5',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->first();
+
+        if(!is_null($entryFound)){
+            $chatFound = Chat::where('id', $entryFound->chat_id)->first();
+            if(is_null($chatFound)){
+                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+            }else{
+                $addReview = new ChatReview();
+                $addReview->timetable_id = $request->timetable_id;
+                $addReview->student_id = Auth::user()->id;
+                $addReview->review_message = $request->review_message;
+                $addReview->rating = $request->rating;
+                $addReview->save();
+            }
+        }else{
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Review Added Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function add_student_homework(Request $request)
+    {  
+        DB::beginTransaction();
+        try{
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|int',
+            'document_name' => 'required|file',
+        ]);
+        
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+
+        if($entryFound == 0){
+            return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+        }else{
+            $attachment = $request->file('document_name');
+            $original_name = $request->file('document_name')->getClientOriginalName();
+            $storage_path = '/chats/student_homework/';
+            $imgpath = commonUploadImage($storage_path, $attachment);
+
+            $studentHomweork = new StudentHomework();
+            $studentHomweork->timetable_id = $request->timetable_id;
+            $studentHomweork->student_id = Auth::user()->id;
+            $studentHomweork->document_name = $original_name;
+            $studentHomweork->document_path = $imgpath;
+            $studentHomweork->save();
+        }
+           
+        DB::commit();
+        return $this->apiResponse->sendResponse(200, 'Homework Store Successfully.', null);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw new HttpException(500, $e->getMessage());
+        }
+    }
+
+    public function search_filter_messages(request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'timetable_id' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $timetable = TimeTable::where('id', $request->timetable_id)->first();
+            if(is_null($timetable)){
+                return $this->apiResponse->sendResponse(201, 'Chat or Timetable Not Found', null);
+            }else{
+                $messages = ChatMessage::with(['sender' => function ($query) {
+                    $query->select('id', 'name');
+                }])->where(['chat_id' => $timetable->chat_id,'sender_id' => $request->user_id])->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+            }
+            return $this->apiResponse->sendResponse(200, 'Filtered Messages get Successfully', $messages);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 }

@@ -7,6 +7,7 @@ use App\VideoAnnotation;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use DateTime;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -57,12 +58,12 @@ class VideoAnnotationController extends Controller
         } else {
             return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
         }
-
-    }
+  }
 
     public function get_video_annotations(Request $request)
     {
         DB::beginTransaction();
+      //  if (Auth::check()) {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string'
         ]);
