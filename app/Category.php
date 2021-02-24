@@ -10,8 +10,11 @@ class Category extends Model
 
     protected $fillable = [
         'title',
+        'user_id',
         'level',
-        'parent_id'
+        'parent_id',
+        'previous_id',
+        'image_url'
     ];
 
     public function toggle_visibility(){

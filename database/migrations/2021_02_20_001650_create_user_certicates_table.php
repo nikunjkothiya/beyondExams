@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTestsTable extends Migration
+class CreateUserCerticatesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,18 +13,16 @@ class CreateTestsTable extends Migration
      */
     public function up()
     {
-        Schema::create('tests', function (Blueprint $table) {
+        Schema::create('user_certicates', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('title')->nullable();
-            $table->json('mcqs')->nullable();
-            $table->unsignedBigInteger('video_id');
+            $table->unsignedBigInteger('user_id');
+            $table->string('image')->nullable();
             $table->timestamps();
         });
 
-        Schema::table('tests', function (Blueprint $table) {
-            $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
+        Schema::table('user_certicates',function($table){
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
-
     }
 
     /**
@@ -34,6 +32,6 @@ class CreateTestsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tests');
+        Schema::dropIfExists('user_certicates');
     }
 }
