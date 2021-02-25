@@ -197,4 +197,8 @@ class User extends Authenticatable
         return $this->hasMany('App\ChatReview','student_id','id');
     }
 
+    public function time_tables(){
+        return $this->hasMany('App\TimeTable','teacher_id','id');
+    }
+
 }
