@@ -20,7 +20,7 @@ use App\StudentHomework;
 use App\TimeTable;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\TeacherDocument;
-
+use Maatwebsite\Excel\Facades\Excel;
 // Models
 
 class ChatController extends Controller
@@ -136,6 +136,127 @@ class ChatController extends Controller
             }
 
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+    public function is_supprot_to_chat_type_id()
+    {
+        try {
+            $chat = Chat::where('is_support', true)->update(['chat_type_id'=>2]);
+
+            return $this->apiResponse->sendResponse(200, 'Support Type Update Successfully', null);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+    public function get_all_whatsapp_chats()
+    {
+        try {
+            $chat = Chat::where('chat_type_id', 3)->get();
+
+            return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chats', $chat);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+  // public function get_whattsapp_chat_messages()
+  // {
+  //     try {
+  //         $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
+  //         $messages = ChatMessage::whereIn('chat_id',$chat)->get();
+
+  //         return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
+  //     } catch (Exception $e) {
+  //         return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+  //     }
+  // }
+
+    public function load_whatsapp_chat_into_db(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'chat_name' => 'required',
+            ]);
+    
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+            
+            $file = public_path('classroom_assets/'.$request->chat_name);
+            
+            $chat = new Chat();
+            $chat->title = $request->chat_name;
+            $chat->creator_id = Auth::user()->id;
+            $chat->receiver_id = 1;
+            $chat->chat_type_id = 3; // whattsapp
+            $chat->save();
+
+                $path = $file.'/chat.csv';
+                $data = Excel::load($path, function($reader) {})->get();
+                
+                if(!empty($data) && $data->count()){
+                    foreach ($data->toArray() as $key => $value) {
+                        if(!empty($value)){
+                            foreach ($value as $v) {
+                                //$insert[] = ['title' => $v['title'], 'description' => $v['description'],'description' => $v['description'],'description' => $v['description']];
+                                $name= $v['name'];
+                                $findUser = User::where('name','=',$name)->first();
+                                if(is_null($findUser))
+                                {
+                                    $newUser = new User();
+                                    $newUser->name = $name;
+                                    $newUser->unique_id = uniqid();
+                                    $newUser->flag = 0;
+                                    if(str_contains($v['name'], '( Student)'))
+                                    {
+                                        $newUser->role_id = 1;
+                                    }else{
+                                        $newUser->role_id = 2;
+                                    }
+                                    $newUser->language_id = 3;
+                                    $newUser->created_at = $v['datetime'];
+                                    $newUser->updated_at = $v['datetime'];
+                                    $newUser->save();
+                                }    
+
+                                    $chat_message = new ChatMessage();
+                                    $chat_message->chat_id = $chat->id;
+                                    $chat_message->message = $v['message'];
+
+                                    if($v['File Type'] == 'Text'){
+                                        $chat_message->type_id = 1;
+                                    }elseif($v['File Type'] == 'Photo'){
+                                        $chat_message->type_id = 2;
+                                    }elseif($v['File Type'] == 'Video'){
+                                        $chat_message->type_id = 3;
+                                    }elseif($v['File Type'] == 'Audio'){
+                                        $chat_message->type_id = 4;
+                                    }elseif($v['File Type'] == 'File'){
+                                        $chat_message->type_id = 5;
+                                    }else{
+                                        $chat_message->type_id = 1;
+                                    }
+                                    
+                                    if(is_null($findUser)){
+                                        $chat_message->sender_id = $newUser->id;
+                                        $chat->users()->attach([$newUser->id]);
+                                    }else{
+                                        $chat_message->sender_id = $findUser->id;
+                                        $chat->users()->attach([$findUser->id]);
+                                    }
+                                    
+                                    $chat_message->created_at = $v['datetime'];
+                                    $chat_message->updated_at = $v['datetime'];
+                                    $chat_message->save();
+                                }
+                        }
+                    }
+                }
+            return $this->apiResponse->sendResponse(200, 'Whattsapp Chat Updated Successfully', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
