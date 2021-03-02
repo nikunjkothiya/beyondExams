@@ -59,12 +59,16 @@ class ChatController extends Controller
         }
 
         try {
-            //$user = User::find(2);
-            if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
-                $messages = ChatMessage::with(['sender' => function ($query) {
-                    $query->select('id', 'name', 'avatar');
-                }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
-                return $this->apiResponse->sendResponse(200, 'Success', $messages);
+            if (Auth::user()) {
+                if (!is_null(Auth::user()->chats()->where('chat_id', $request->chat_id)->first())) {
+                    $messages = ChatMessage::with(['sender' => function ($query) {
+                        $query->select('id', 'name', 'avatar');
+                    }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
+
+                    return $this->apiResponse->sendResponse(200, 'Successfully Get Chat Messages', $messages);
+                } else {
+                    return $this->apiResponse->sendResponse(201, 'Chat Not Found', null);
+                }
             }
             return $this->apiResponse->sendResponse(403, 'Access to the chat is forbidden', null);
         } catch (Exception $e) {
@@ -85,9 +89,7 @@ class ChatController extends Controller
 
         try {
             $chat = Auth::user()->chats()->where('receiver_id', $request->user_id)->first();
-
             if (is_null($chat)) {
-
                 $chat = new Chat();
                 $chat->creator_id = Auth::user()->id;
                 $chat->title = $request->title;
@@ -98,9 +100,9 @@ class ChatController extends Controller
 
                 $chat->users()->attach([Auth::user()->id, $request->user_id]);
                 /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
+                return $this->apiResponse->sendResponse(200, 'Successfully Create Chat', $chat);
             }
-
-            return $this->apiResponse->sendResponse(200, 'Success', $chat);
+            return $this->apiResponse->sendResponse(200, 'Already Created Chat', $chat);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
@@ -143,7 +145,7 @@ class ChatController extends Controller
     public function is_supprot_to_chat_type_id()
     {
         try {
-            $chat = Chat::where('is_support', true)->update(['chat_type_id'=>2]);
+            $chat = Chat::where('is_support', true)->update(['chat_type_id' => 2]);
 
             return $this->apiResponse->sendResponse(200, 'Support Type Update Successfully', null);
         } catch (Exception $e) {
@@ -162,16 +164,16 @@ class ChatController extends Controller
         }
     }
 
-  public function get_whattsapp_chat_messages()
-  {
-      try {
-          $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
-          $messages = ChatMessage::whereIn('chat_id',$chat)->get();
-          return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
-      } catch (Exception $e) {
-          return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
-      }
-  }
+    public function get_whattsapp_chat_messages()
+    {
+        try {
+            $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
+            $messages = ChatMessage::whereIn('chat_id', $chat)->get();
+            return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
 
     public function load_whatsapp_chat_into_db(Request $request)
     {
@@ -179,13 +181,13 @@ class ChatController extends Controller
             $validator = Validator::make($request->all(), [
                 'chat_name' => 'required',
             ]);
-    
+
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-            
-            $file = public_path('classroom_assets/'.$request->chat_name);
-            
+
+            $file = public_path('classroom_assets/' . $request->chat_name);
+
             $chat = new Chat();
             $chat->title = $request->chat_name;
             $chat->creator_id = Auth::user()->id;
@@ -193,72 +195,70 @@ class ChatController extends Controller
             $chat->chat_type_id = 3; // whattsapp
             $chat->save();
 
-                $path = $file.'/chat.csv';
-                //$data = Excel::load($path, function($reader) {})->get();
-                $data = array_map('str_getcsv', file($path));
+            $path = $file . '/chat.csv';
+            //$data = Excel::load($path, function($reader) {})->get();
+            $data = array_map('str_getcsv', file($path));
 
-                
-                if(!empty($data)){
-                    foreach ($data as $key => $value) {
-                        if($key != 0){
-                        if(!empty($value)){
-                          //  dd(date('Y-m-d H:i:s', strtotime($value[0])));
+
+            if (!empty($data)) {
+                foreach ($data as $key => $value) {
+                    if ($key != 0) {
+                        if (!empty($value)) {
+                            //  dd(date('Y-m-d H:i:s', strtotime($value[0])));
                             //foreach ($value as $v) {  
-                                $name= $value[1];
-                                $findUser = User::where('name','=',$name)->first();
-                                if(is_null($findUser))
-                                {
-                                    $newUser = new User();
-                                    $newUser->name = $name;
-                                    $newUser->unique_id = uniqid();
-                                    $newUser->flag = 0;
-                                    if(str_contains($value[1], '( Student)'))
-                                    {
-                                        $newUser->role_id = 1;
-                                    }else{
-                                        $newUser->role_id = 2;
-                                    }
-                                    $newUser->language_id = 3;
-                                    
-                                    $newUser->created_at = date('Y-m-d H:i:s', strtotime($value[0]));
-                                    $newUser->updated_at = date('Y-m-d H:i:s', strtotime($value[0]));
-                                    $newUser->save();
-                                }    
-
-                                    $chat_message = new ChatMessage();
-                                    $chat_message->chat_id = $chat->id;
-                                    $chat_message->message = $value[2];
-
-                                    if($value[3] == 'Text'){
-                                        $chat_message->type_id = 1;
-                                    }elseif($value[3] == 'Photo'){
-                                        $chat_message->type_id = 2;
-                                    }elseif($value[3] == 'Video'){
-                                        $chat_message->type_id = 3;
-                                    }elseif($value[3] == 'Audio'){
-                                        $chat_message->type_id = 4;
-                                    }elseif($value[3] == 'File'){
-                                        $chat_message->type_id = 5;
-                                    }else{
-                                        $chat_message->type_id = 1;
-                                    }
-                                    
-                                    if(is_null($findUser)){
-                                        $chat_message->sender_id = $newUser->id;
-                                        $chat->users()->attach([$newUser->id]);
-                                    }else{
-                                        $chat_message->sender_id = $findUser->id;
-                                        $chat->users()->attach([$findUser->id]);
-                                    }
-                                    
-                                    $chat_message->created_at = date('Y-m-d H:i:s', strtotime($value[0]));
-                                    $chat_message->updated_at = date('Y-m-d H:i:s', strtotime($value[0]));
-                                    $chat_message->save();
-                              //  }
+                            $name = $value[1];
+                            $findUser = User::where('name', '=', $name)->first();
+                            if (is_null($findUser)) {
+                                $newUser = new User();
+                                $newUser->name = $name;
+                                $newUser->unique_id = uniqid();
+                                $newUser->flag = 0;
+                                if (str_contains($value[1], '( Student)')) {
+                                    $newUser->role_id = 1;
+                                } else {
+                                    $newUser->role_id = 2;
                                 }
+                                $newUser->language_id = 3;
+
+                                $newUser->created_at = date('Y-m-d H:i:s', strtotime($value[0]));
+                                $newUser->updated_at = date('Y-m-d H:i:s', strtotime($value[0]));
+                                $newUser->save();
+                            }
+
+                            $chat_message = new ChatMessage();
+                            $chat_message->chat_id = $chat->id;
+                            $chat_message->message = $value[2];
+
+                            if ($value[3] == 'Text') {
+                                $chat_message->type_id = 1;
+                            } elseif ($value[3] == 'Photo') {
+                                $chat_message->type_id = 2;
+                            } elseif ($value[3] == 'Video') {
+                                $chat_message->type_id = 3;
+                            } elseif ($value[3] == 'Audio') {
+                                $chat_message->type_id = 4;
+                            } elseif ($value[3] == 'File') {
+                                $chat_message->type_id = 5;
+                            } else {
+                                $chat_message->type_id = 1;
+                            }
+
+                            if (is_null($findUser)) {
+                                $chat_message->sender_id = $newUser->id;
+                                $chat->users()->attach([$newUser->id]);
+                            } else {
+                                $chat_message->sender_id = $findUser->id;
+                                $chat->users()->attach([$findUser->id]);
+                            }
+
+                            $chat_message->created_at = date('Y-m-d H:i:s', strtotime($value[0]));
+                            $chat_message->updated_at = date('Y-m-d H:i:s', strtotime($value[0]));
+                            $chat_message->save();
+                            //  }
                         }
                     }
                 }
+            }
             return $this->apiResponse->sendResponse(200, 'Whattsapp Chat Updated Successfully', null);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
@@ -394,6 +394,7 @@ class ChatController extends Controller
         $chat->save();
 
         return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
+        
     }
 
     public function add_time_table(Request $request)
@@ -438,9 +439,47 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
+
+    public function get_time_tables(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'chat_id' => 'sometimes|int',
+                'teacher_id' => 'sometimes|int',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            if (Auth::user()) {
+                if($request->chat_id && $request->teacher_id){
+                    $timetable = TimeTable::with(['teacher','classroom'])->where(['chat_id'=>$request->chat_id,'teacher_id'=>$request->teacher_id])->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                }elseif($request->chat_id){
+                    $timetable = TimeTable::with(['teacher','classroom'])->where('chat_id',$request->chat_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                }elseif($request->teacher_id){
+                    $timetable = TimeTable::with(['teacher','classroom'])->where('teacher_id',$request->teacher_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                }else{
+                    $timetable = TimeTable::with(['teacher','classroom'])->orderByRaw("date ASC, day ASC,  start_time ASC")->get();
+                }
+                DB::commit();
+
+                if($timetable){
+                    return $this->apiResponse->sendResponse(200, 'Timetable Get Successfully.', $timetable);
+                }
+                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+            } else {
+                return $this->apiResponse->sendResponse(201, 'Unauthorize User.', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }    
 
     public function add_teacher_document(Request $request)
     {
@@ -479,7 +518,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Document Store Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -519,7 +558,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Review Added Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -558,7 +597,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Homework Store Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -584,7 +623,7 @@ class ChatController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Filtered Messages get Successfully', $messages);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 

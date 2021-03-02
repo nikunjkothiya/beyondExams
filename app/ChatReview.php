@@ -10,7 +10,7 @@ class ChatReview extends Model
     protected $guarded = [];
 
     public function student(){
-        return $this->belongsTo('App\User','id','student_id');
+        return $this->belongsTo('App\User','student_id');
     }
 
 }

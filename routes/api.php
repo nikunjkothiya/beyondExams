@@ -122,7 +122,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
         Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
-        Route::post('create_chat', ['uses' => 'ChatController@create_chat']);
+        Route::post('add_chat_user', ['uses' => 'ChatController@create_chat']);
         Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
         Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
         Route::post('send_message', ['uses' => 'ChatController@send_message']);
@@ -131,6 +131,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::post('add_time_table', ['uses' => 'ChatController@add_time_table']);
         Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
+        Route::get('get_time_tables', ['uses' => 'ChatController@get_time_tables']);
 
         Route::post('add_chat_review', ['uses' => 'ChatController@add_chat_review']);
         Route::post('add_student_homework', ['uses' => 'ChatController@add_student_homework']);

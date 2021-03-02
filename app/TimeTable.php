@@ -9,11 +9,12 @@ class TimeTable extends Model
     protected $table = 'timetables';
     protected $guarded = [];
 
-    public function user(){
-        return $this->belongsTo('App\User','id','teacher_id');
+    public function teacher(){
+        return $this->belongsTo('App\User','teacher_id');
     }
 
-    public function chats(){
-        return $this->belongsToMany('App\chat','id','chat_id');
+    public function classroom(){
+        return $this->belongsTo('App\chat','chat_id');
     }
+
 }
