@@ -139,6 +139,10 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('save_chat_message', ['uses' => 'ChatController@save_chat_message']);
         Route::post('classroom_chat_message', ['uses' => 'ChatController@classroom_chat_message']);
 
+        //Attendance of classroom
+        Route::post('add_teacher_attendance', ['uses' => 'ChatController@add_teacher_attendance']);
+        Route::post('add_student_attendance', ['uses' => 'ChatController@add_student_attendance']);
+
         // Notifications
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 

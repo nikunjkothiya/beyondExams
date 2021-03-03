@@ -4,16 +4,16 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class StudentHomework extends Model
+class StudentAttendance extends Model
 {
-    protected $table = 'student_homeworks';
+    protected $table = 'student_attendances';
     protected $guarded = [];
 
-    public function user(){
+    public function student(){
         return $this->belongsTo('App\User','student_id');
     }
 
-    public function timetable(){
+    public function classroom(){
         return $this->belongsTo('App\TimeTable','timetable_id');
     }
 }

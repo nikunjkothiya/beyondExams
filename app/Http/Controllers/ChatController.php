@@ -20,6 +20,8 @@ use App\StudentHomework;
 use App\TimeTable;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\TeacherDocument;
+use App\StudentAttendance;
+use App\TeacherAttendance;
 // Models
 
 class ChatController extends Controller
@@ -682,6 +684,69 @@ class ChatController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+    public function add_teacher_attendance(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'timetable_id' => 'required|int',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+
+            if ($entryFound == 0) {
+                return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+            } else {
+                $teacherAttendance = new TeacherAttendance();
+                $teacherAttendance->timetable_id = $request->timetable_id;
+                $teacherAttendance->teacher_id = Auth::user()->id;
+                $teacherAttendance->save();
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Attendance Created Successfully.', $teacherAttendance);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
+        }
+    }
+
+    public function add_student_attendance(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'timetable_id' => 'required|int',
+                'teacher_attendance_id' => 'required|int',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $entryFound = TimeTable::where('id', $request->timetable_id)->count();
+            if ($entryFound == 0) {
+                return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+            } else {
+                $studentAttendance = new StudentAttendance();
+                $studentAttendance->timetable_id = $request->timetable_id;
+                $studentAttendance->student_id = Auth::user()->id;
+                $studentAttendance->teacher_attendance_id = $request->teacher_attendance_id;
+                $studentAttendance->save();
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Attendance Stored Successfully.', null);
+        } catch (\Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
