@@ -166,11 +166,23 @@ class ChatController extends Controller
         }
     }
 
-    public function get_whattsapp_chat_messages()
+    public function get_whattsapp_chat_messages(Request $request)
     {
         try {
-            $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
-            $messages = ChatMessage::whereIn('chat_id', $chat)->get();
+            $validator = Validator::make($request->all(), [
+                'chat_id' => 'sometimes|int',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+            if($request->chat_id){
+                $messages = ChatMessage::where('chat_id', $request->chat_id)->get();
+            }else{
+                $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
+                $messages = ChatMessage::whereIn('chat_id', $chat)->get();
+            }
+
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
         } catch (Exception $e) {
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());

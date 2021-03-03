@@ -149,7 +149,5 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Chemistry Universe
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
 
-
-
     });
 });
