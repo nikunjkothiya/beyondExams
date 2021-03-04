@@ -176,9 +176,9 @@ class ChatController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-            if($request->chat_id){
+            if ($request->chat_id) {
                 $messages = ChatMessage::where('chat_id', $request->chat_id)->get();
-            }else{
+            } else {
                 $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
                 $messages = ChatMessage::whereIn('chat_id', $chat)->get();
             }
@@ -210,16 +210,21 @@ class ChatController extends Controller
             $chat->save();
 
             $path = $file . '/chat.csv';
-            //$data = Excel::load($path, function($reader) {})->get();
-            $data = array_map('str_getcsv', file($path));
+            $data = [];
 
+            $lines = file($path);
+            foreach ($lines as $key=>$line) {    
+                $values = str_getcsv($line, '|');
+                array_push($data, $values);    
+            } 
+            //$data = array_map('str_getcsv', file($path));
 
             if (!empty($data)) {
                 foreach ($data as $key => $value) {
                     if ($key != 0) {
                         if (!empty($value)) {
                             //  dd(date('Y-m-d H:i:s', strtotime($value[0])));
-                            //foreach ($value as $v) {  
+                            //foreach ($value as $v) {
                             $name = $value[1];
                             $findUser = User::where('name', '=', $name)->first();
                             if (is_null($findUser)) {
@@ -408,7 +413,6 @@ class ChatController extends Controller
         $chat->save();
 
         return $this->apiResponse->sendResponse(200, 'Chat title changed successfully.', $chat);
-        
     }
 
     public function add_time_table(Request $request)
@@ -471,21 +475,21 @@ class ChatController extends Controller
             }
 
             if (Auth::user()) {
-                if($request->chat_id && $request->teacher_id){
-                    $timetable = TimeTable::with(['teacher','classroom'])->where(['chat_id'=>$request->chat_id,'teacher_id'=>$request->teacher_id])->orderByRaw("date ASC, day ASC,start_time ASC")->get();
-                }elseif($request->chat_id){
-                    $timetable = TimeTable::with(['teacher','classroom'])->where('chat_id',$request->chat_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
-                }elseif($request->teacher_id){
-                    $timetable = TimeTable::with(['teacher','classroom'])->where('teacher_id',$request->teacher_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
-                }else{
-                    $timetable = TimeTable::with(['teacher','classroom'])->orderByRaw("date ASC, day ASC,  start_time ASC")->get();
+                if ($request->chat_id && $request->teacher_id) {
+                    $timetable = TimeTable::with(['teacher', 'classroom'])->where(['chat_id' => $request->chat_id, 'teacher_id' => $request->teacher_id])->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                } elseif ($request->chat_id) {
+                    $timetable = TimeTable::with(['teacher', 'classroom'])->where('chat_id', $request->chat_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                } elseif ($request->teacher_id) {
+                    $timetable = TimeTable::with(['teacher', 'classroom'])->where('teacher_id', $request->teacher_id)->orderByRaw("date ASC, day ASC,start_time ASC")->get();
+                } else {
+                    $timetable = TimeTable::with(['teacher', 'classroom'])->orderByRaw("date ASC, day ASC,  start_time ASC")->get();
                 }
                 DB::commit();
 
-                if($timetable){
+                if ($timetable) {
                     return $this->apiResponse->sendResponse(200, 'Timetable Get Successfully.', $timetable);
                 }
-                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
             } else {
                 return $this->apiResponse->sendResponse(201, 'Unauthorize User.', null);
             }
@@ -493,7 +497,7 @@ class ChatController extends Controller
             DB::rollback();
             return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
-    }    
+    }
 
     public function add_teacher_document(Request $request)
     {
