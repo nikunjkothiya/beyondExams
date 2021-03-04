@@ -37,6 +37,8 @@ Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_vid
 Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
 Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
+Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
+//Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
 
 
 // Protected APIs via Auth Middleware
@@ -116,7 +118,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('start_following', ['uses' => 'SocialController@start_following']);
 
 //        Chat
-        Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
+//        Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
         Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
         Route::get('get_all_whatsapp_chats', ['uses' => 'ChatController@get_all_whatsapp_chats']);
         Route::get('get_whattsapp_chat_messages', ['uses' => 'ChatController@get_whattsapp_chat_messages']);
