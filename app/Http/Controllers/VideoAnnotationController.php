@@ -42,9 +42,8 @@ class VideoAnnotationController extends Controller
                     $video->save();
                 }
 
-                $video_id = $video->id;
                 $videoAnnotation = new VideoAnnotation();
-                $videoAnnotation->video_id = $video_id;
+                $videoAnnotation->video_id = $video->id;
                 $videoAnnotation->annotation = $request->annotation;
                 $videoAnnotation->video_timestamp = $request->video_timestamp;
                 $videoAnnotation->save();
@@ -53,7 +52,7 @@ class VideoAnnotationController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Video annotations added successfully', null);
             } catch (\Exception $e) {
                 DB::rollback();
-                throw new HttpException(500, $e->getMessage());
+                return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
             }
         } else {
             return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
@@ -63,7 +62,6 @@ class VideoAnnotationController extends Controller
     public function get_video_annotations(Request $request)
     {
         DB::beginTransaction();
-      //  if (Auth::check()) {
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string'
         ]);
@@ -85,7 +83,7 @@ class VideoAnnotationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 }

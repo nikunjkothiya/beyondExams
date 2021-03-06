@@ -331,7 +331,7 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(200, 'New Category added', $category);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -459,7 +459,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -621,7 +621,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -644,7 +644,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -719,7 +719,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -736,10 +736,11 @@ class LearnWithYoutubeController extends Controller
 
         try {
             if (Auth::user()) {
-                $video = BookmarkVideo::where('video_id', $request->video_id)->first();
-                if (!$video) {
-                    Auth::user()->bookmarkVideo()->attach($video->id);
-                }
+                //$video = BookmarkVideo::where('video_id', $request->video_id)->first();
+                //if (!$video) {
+                //    Auth::user()->bookmarkVideo()->attach($video_id);
+               // }
+                Auth::user()->bookmarkVideo()->toggle($request->video_id);
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Bookmark successfully', null);
             } else {
@@ -747,7 +748,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -776,7 +777,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -812,7 +813,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -872,7 +873,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
