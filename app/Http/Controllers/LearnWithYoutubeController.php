@@ -179,11 +179,16 @@ class LearnWithYoutubeController extends Controller
 
     public function getAllCategories(Request $request)
     {
-        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+	if ($request->role_id && $request->role_id == 3)
+	    return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::where('visibility', 1)->get());
     }
 
     public function getAllCategoriesHierarchically(Request $request){
-        $categories = Category::get();
+        if ($request->role_id && $request->role_id == 3)
+	    $categories = Category::get();
+	else
+            $categories = Category::where('visibility', 1)->get();
         $tree = function ($elements, $parentId = 0) use (&$tree) {
             $branch = array();
             foreach ($elements as $element) {
