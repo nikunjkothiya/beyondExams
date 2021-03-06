@@ -125,7 +125,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
         Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
-        Route::post('add_chat_user', ['uses' => 'ChatController@create_chat']);
+        Route::post('create_chat', ['uses' => 'ChatController@create_chat']);
         Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
         Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
         Route::post('send_message', ['uses' => 'ChatController@send_message']);
