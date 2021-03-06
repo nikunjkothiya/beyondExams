@@ -17,9 +17,14 @@ class CreateTestsTable extends Migration
             $table->bigIncrements('id');
             $table->string('title')->nullable();
             $table->json('mcqs')->nullable();
-            $table->string('resource_url');
+            $table->unsignedBigInteger('video_id');
             $table->timestamps();
         });
+
+        Schema::table('tests', function (Blueprint $table) {
+            $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
+        });
+
     }
 
     /**

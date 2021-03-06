@@ -19,4 +19,13 @@ class ChatMessage extends Model
     public function sender(){
         return $this->belongsTo('App\User', 'sender_id');
     }
+
+    public function fromContact()
+    {
+        return $this->hasOne('App\User', 'id', 'sender_id');
+    }
+    public function user()
+    {
+	return $this->hasOne('App\User', 'id', 'sender_id');
+    }
 }

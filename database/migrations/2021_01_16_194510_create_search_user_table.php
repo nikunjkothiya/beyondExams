@@ -17,6 +17,7 @@ class CreateSearchUserTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('search_id');
             $table->unsignedBigInteger('user_id');
+            $table->string('type');
             $table->timestamps();
 
             $table->foreign('search_id')->references('id')->on('searches')->onDelete('cascade');

@@ -42,7 +42,7 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Role', 'role_user');
     }
 
-    public function session(){
+    public function session(){/////
         return $this->hasMany('App\Session');
     }
 
@@ -58,29 +58,29 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Tag');
     }
 
-    public function domains(){
+    public function domains(){/////
         return $this->belongsToMany('App\DomainUser');
     }
 
-    public function saved_opportunities(){
+    public function saved_opportunities(){/////
         return $this->belongsToMany('App\Opportunity');
     }
 
-    public function viewed_opportunity(){
+    public function viewed_opportunity(){/////
         return $this->belongsToMany('App\UserViewedOpportunity');
     }
 
-    public function premium_subscription(){
+    public function premium_subscription(){/////
         return $this->hasOne('App\Transaction');
     }
-    public function plus_subscription(){
+    public function plus_subscription(){/////
         return $this->hasMany('App\PlusTransaction');
     }
-    public function premium_txn(){
+    public function premium_txn(){/////
         return $this->hasOne('App\PremiumTxn');
     }
 
-    public function details(){
+    public function details(){/////
         return $this->hasOne('App\UserDetail');
     }
 
@@ -96,11 +96,11 @@ class User extends Authenticatable
         return $this->hasMany('App\UserFollower', 'influencer_id');
     }
 
-    public function opportunities(){
+    public function opportunities(){/////
         return $this->belongsToMany('App\Opportunity');
     }
 
-    public function validateForPassportPasswordGrant($password)
+    public function validateForPassportPasswordGrant($password)/////
     {
         //$owerridedPassword = 'password';
         //return Hash::check($password, $this->password);
@@ -112,23 +112,23 @@ class User extends Authenticatable
         return $this->where('unique_id', $username)->first();
     }
 
-    public function analytics(){
+    public function analytics(){/////
         return $this->hasMany('App\Analytics');
     }
 
-    public function user_key(){
+    public function user_key(){/////
         return $this->hasMany('App\UserKey');
     }
 
-    public function user_resource(){
+    public function user_resource(){/////
         return $this->hasMany('App\UserResource');
     }
 
-    public function student_firebase_id(){
+    public function student_firebase_id(){/////
         return $this->hasMany('App\StudentFirebase');
     }
 
-    public function admin_firebase_id(){
+    public function admin_firebase_id(){//////
         return $this->hasMany('App\AdminFirebase');
     }
 
@@ -153,8 +153,13 @@ class User extends Authenticatable
 //    }
 
     public function history(){
+//<<<<<<< HEAD
 //        return $this->belongsToMany('App\Video', 'watched_history')->withTimestamps();
 	return $this->videos()->wherePivot('type', 'history')->orderByDesc('updated_at');
+//=======
+//        return $this->belongsToMany('App\Video')->wherePivot('type', 'history')->withTimestamps();
+//	return $this->videos()->wherePivot('type', 'history')->withTimestamps();
+//>>>>>>> 9fb88ecc34adf5cbd520f34430d64fe6592fd603
     }
 
 //    public function liked_videos(){
@@ -167,6 +172,38 @@ class User extends Authenticatable
 
     public function searches(){
         return $this->belongsToMany('App\Search', 'search_user');
+    }
+
+    public function watchHistoryVidoes(){
+        return $this->belongsToMany('App\Video','history_user_videos')->withTimestamps();
+    }
+
+    public function getAllHistoryVideos(){
+        return $this->belongsToMany('App\HistoryUserVidoes')->withTimestamps();
+    }
+
+    public function giveVideoRating(){
+        return $this->hasOne('App\VideoRating','user_id','id');
+    }
+
+    public function bookmarkVideo(){
+        return $this->belongsToMany('App\Video','bookmark_video')->withTimestamps();
+    }
+
+    public function keywords() {
+        return $this->belongsToMany('App\Keyword')->withTimestamps();
+    }
+
+    public function certificates(){
+        return $this->hasMany('App\UserCertificate','user_id','id');
+    }
+
+    public function chat_reviews(){
+        return $this->hasMany('App\ChatReview','student_id','id');
+    }
+
+    public function time_tables(){
+        return $this->hasMany('App\TimeTable','teacher_id','id');
     }
 
 }

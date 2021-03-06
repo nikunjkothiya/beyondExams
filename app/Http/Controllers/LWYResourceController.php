@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Note;
 use App\Test;
+use App\Video;
 use App\TestScore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -78,7 +79,8 @@ class LWYResourceController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'mcqs' => 'required|json',
-            'resource_url' => 'required|string'
+            'video_id' => 'required|string',
+           // 'resource_url' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +92,15 @@ class LWYResourceController extends Controller
         if ($request->title)
             $title = $request->title;
 
-        $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
+	$video = Video::where('url', $request->video_id)->first();
+
+        if (!$video) {
+            $video = new Video(['url' => $request->video_id]);
+            $video->save();
+        }
+
+       // $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
+       $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->video_id]);
 
         $test->save();
 
@@ -99,14 +109,21 @@ class LWYResourceController extends Controller
 
     public function get_tests(Request $request){
         $validator = Validator::make($request->all(), [
-            'resource_url' => 'required|string'
+            'video_id' => 'required|string'
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-        return $this->apiResponse->sendResponse(200, 'Tests fetched successfully', Test::where('resource_url', $request->resource_url)->get());
+	$video = Video::where('url', $request->video_id)->first();
+
+        if (!$video) {
+            $video = new Video(['url' => $request->video_id]);
+            $video->save();
+        }
+
+        return $this->apiResponse->sendResponse(200, 'Tests fetched successfully', Test::where('resource_url', $video->id)->get());
     }
 
     public function get_test_scores(Request $request)
