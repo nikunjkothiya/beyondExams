@@ -133,8 +133,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
         Route::get('get_time_tables', ['uses' => 'ChatController@get_time_tables']);
 
-        Route::post('add_chat_review', ['uses' => 'ChatController@add_chat_review']);
-        Route::post('add_student_homework', ['uses' => 'ChatController@add_student_homework']);
+        Route::post('submit_chat_review', ['uses' => 'ChatController@submit_chat_review']);
+        Route::post('submit_student_homework', ['uses' => 'ChatController@submit_student_homework']);
         Route::get('search_filter_messages', ['uses' => 'ChatController@search_filter_messages']);
         Route::post('save_chat_message', ['uses' => 'ChatController@save_chat_message']);
         Route::post('classroom_chat_message', ['uses' => 'ChatController@classroom_chat_message']);

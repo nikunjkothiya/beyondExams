@@ -331,7 +331,7 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(200, 'New Category added', $category);
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -448,18 +448,23 @@ class LearnWithYoutubeController extends Controller
 
         try {
             $category = Category::find($request->category_id);
-            if ($category->user_id == Auth::user()->id) {
-                $success = $this->deleteAllCategory($category->id);
-                Category::whereIn('id', $success)->delete();
-
+            if (is_null($category)) {
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
+                return $this->apiResponse->sendResponse(201, 'Category Not Found', null);
+            }else {
+                if ($category->user_id == Auth::user()->id) {
+                    $success = $this->deleteAllCategory($category->id);
+                    Category::whereIn('id', $success)->delete();
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
+                } else {
+                    return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
+                }
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -621,7 +626,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -629,7 +634,7 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-             $user_id = 1;
+            $user_id = 1;
             //$user_id = Auth::user()->id;
             $getHistory = Video::select('*')
                 ->with('duration_history:video_id,start_time,end_time')
@@ -644,7 +649,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -719,7 +724,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -747,7 +752,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -776,7 +781,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -812,7 +817,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -872,7 +877,7 @@ class LearnWithYoutubeController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
