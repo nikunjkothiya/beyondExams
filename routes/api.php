@@ -39,8 +39,8 @@ Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
 
 
 // Protected APIs via Auth Middleware
-Route::group(['middleware' => 'admin_access'], function () {
-//Route::group(['middleware' => 'auth:api'], function () {
+//Route::group(['middleware' => 'admin_access'], function () {
+Route::group(['middleware' => 'auth:api'], function () {
 
     // Searches term & search_user  Video_annotations
       Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
@@ -122,7 +122,7 @@ Route::group(['middleware' => 'admin_access'], function () {
 
         Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
         Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
-        Route::post('create_chat', ['uses' => 'ChatController@create_chat']);
+        Route::post('add_chat_user', ['uses' => 'ChatController@create_chat']);
         Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
         Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
         Route::post('send_message', ['uses' => 'ChatController@send_message']);
@@ -136,8 +136,8 @@ Route::group(['middleware' => 'admin_access'], function () {
         Route::post('add_chat_review', ['uses' => 'ChatController@add_chat_review']);
         Route::post('add_student_homework', ['uses' => 'ChatController@add_student_homework']);
         Route::get('search_filter_messages', ['uses' => 'ChatController@search_filter_messages']);
-        Route::post('save_chat_note', ['uses' => 'ChatController@save_chat_note']);
-        Route::get('get_saved_chat_notes', ['uses' => 'ChatController@get_saved_chat_notes']);
+        Route::post('save_chat_message', ['uses' => 'ChatController@save_chat_message']);
+        Route::post('classroom_chat_message', ['uses' => 'ChatController@classroom_chat_message']);
 
         //Attendance of classroom
         Route::post('add_teacher_attendance', ['uses' => 'ChatController@add_teacher_attendance']);

@@ -81,7 +81,7 @@ class ChatController extends Controller
     public function create_chat(request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'sometimes|integer',
+            'user_id' => 'required|integer',
             'title' => 'required|string',
         ]);
 
@@ -90,29 +90,17 @@ class ChatController extends Controller
         }
 
         try {
-            if ($request->user_id) {
-                $chat = Auth::user()->chats()->where('receiver_id', $request->user_id)->first();
-            } else {
-                $chat = null;
-            }
+            $chat = Auth::user()->chats()->where('receiver_id', $request->user_id)->first();
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->creator_id = Auth::user()->id;
                 $chat->title = $request->title;
-                if ($request->user_id) {
-                    $chat->receiver_id = $request->user_id;
-                } else {
-                    $chat->receiver_id = 1;
-                }
+                $chat->receiver_id = $request->user_id;
                 $chat->save();
 
                 $this->add_admin_message("Hey! How may I help you?", $chat->id, 3);
 
-                if ($request->user_id) {
-                    $chat->users()->attach([Auth::user()->id, $request->user_id]);
-                } else {
-                    $chat->users()->attach([Auth::user()->id, 1]);
-                }
+                $chat->users()->attach([Auth::user()->id, $request->user_id]);
                 /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
                 return $this->apiResponse->sendResponse(200, 'Successfully Create Chat', $chat);
             }
@@ -152,7 +140,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -163,7 +151,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Support Type Update Successfully', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -174,7 +162,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chats', $chat);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -197,7 +185,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -225,10 +213,10 @@ class ChatController extends Controller
             $data = [];
 
             $lines = file($path);
-            foreach ($lines as $key => $line) {
+            foreach ($lines as $key=>$line) {    
                 $values = str_getcsv($line, '|');
-                array_push($data, $values);
-            }
+                array_push($data, $values);    
+            } 
             //$data = array_map('str_getcsv', file($path));
 
             if (!empty($data)) {
@@ -292,7 +280,7 @@ class ChatController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Whattsapp Chat Updated Successfully', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -317,7 +305,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'User added to chat', null);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -359,7 +347,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Message Added', $chat_message);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -405,7 +393,7 @@ class ChatController extends Controller
 
             return $this->apiResponse->sendResponse(200, 'Multimedia message Added', $chat_message);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -440,6 +428,7 @@ class ChatController extends Controller
                 'day' => 'required|int|min:1|max:7',
             ]);
 
+
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
@@ -468,7 +457,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -506,7 +495,7 @@ class ChatController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -547,7 +536,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Document Store Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -587,7 +576,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Review Added Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -626,7 +615,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Homework Store Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -652,11 +641,11 @@ class ChatController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Filtered Messages get Successfully', $messages);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
-    public function save_chat_note(request $request)
+    public function save_chat_message(request $request)
     {
         $validator = Validator::make($request->all(), [
             'chat_message_id' => 'required|integer',
@@ -668,7 +657,7 @@ class ChatController extends Controller
 
         try {
             $chat = ChatMessage::where('id', $request->chat_message_id)->first();
-            $data = SaveMessage::with('chat_message')->where(['chat_message_id' => $request->chat_message_id, 'student_id' => Auth::user()->id])->first();
+            $data = SaveMessage::where(['chat_message_id' => $request->chat_message_id, 'student_id' => Auth::user()->id])->first();
             if (is_null($chat)) {
                 return $this->apiResponse->sendResponse(404, 'Chat Message does not exist.', null);
             } elseif (!is_null($data)) {
@@ -679,24 +668,39 @@ class ChatController extends Controller
                 $save_chat_message->chat_message_id = $request->chat_message_id;
                 $save_chat_message->save();
             }
-            return $this->apiResponse->sendResponse(200, 'Message For Note Saved Successfully', $save_chat_message);
+            return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
-    public function get_saved_chat_notes()
+    public function classroom_chat_message(request $request)
     {
-        try {
-            $data = SaveMessage::with('chat_message')->where(['student_id' => Auth::user()->id])->get();
+        $validator = Validator::make($request->all(), [
+            'chat_message_id' => 'required|integer',
+            'timetable_id' => 'required|integer',
+        ]);
 
-            if (is_null($data)) {
-                return $this->apiResponse->sendResponse(201, 'Saved Message Not Found.', null);
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $timetable = TimeTable::where('id', $request->timetable_id)->first();
+            $data = ChatMessage::where(['id' => $request->chat_message_id])->first();
+            if (is_null($timetable)) {
+                return $this->apiResponse->sendResponse(404, 'Time Table does not exist.', null);
+            } elseif (is_null($data)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Message Not Found.', null);
             } else {
-                return $this->apiResponse->sendResponse(200, 'Retrived Note Saved Successfully', $data);
+                $save_chat_message = new ClassroomChatMessage();
+                $save_chat_message->timetable_id = $request->timetable_id;
+                $save_chat_message->chat_message_id = $request->chat_message_id;
+                $save_chat_message->save();
             }
+            return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -727,7 +731,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Attendance Created Successfully.', $teacherAttendance);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 
@@ -759,7 +763,7 @@ class ChatController extends Controller
             return $this->apiResponse->sendResponse(200, 'Attendance Stored Successfully.', null);
         } catch (\Exception $e) {
             DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            return $this->apiResponse->sendResponse(500, 'Internal Server Error', $e->getMessage());
         }
     }
 }

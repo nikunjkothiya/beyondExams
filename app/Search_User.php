@@ -3,9 +3,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class Search_User extends Pivot
+class Search_User extends Model
 {
     protected $table = 'search_user';
     protected $guarded = [];

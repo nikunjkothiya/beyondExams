@@ -166,7 +166,7 @@ class User extends Authenticatable
     }
 
     public function searches(){
-        return $this->belongsToMany('App\Search', 'search_user')->withTimestamps();
+        return $this->belongsToMany('App\Search', 'search_user');
     }
 
     public function watchHistoryVidoes(){
