@@ -170,18 +170,13 @@ class ChatController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'chat_id' => 'sometimes|int',
+                'chat_id' => 'required|int',
             ]);
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
-            if ($request->chat_id) {
-                $messages = ChatMessage::where('chat_id', $request->chat_id)->get();
-            } else {
-                $chat = Chat::where('chat_type_id', 3)->pluck('id')->toArray();
-                $messages = ChatMessage::whereIn('chat_id', $chat)->get();
-            }
+            $messages = ChatMessage::with('user')->where('chat_id', $request->chat_id)->orderBy('created_at', 'desc')->paginate(15);
 
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
         } catch (Exception $e) {
