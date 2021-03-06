@@ -647,6 +647,7 @@ class ChatController extends Controller
 
     public function save_chat_message(request $request)
     {
+        
         $validator = Validator::make($request->all(), [
             'chat_message_id' => 'required|integer',
         ]);
