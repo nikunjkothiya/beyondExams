@@ -379,12 +379,16 @@ class LearnWithYoutubeController extends Controller
 
     public function getAllCategories(Request $request)
     {
-        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+	if ($request->role_id && $request->role_id == 3)
+	    return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+        return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::where('visibility', 1)->get());
     }
 
-    public function getAllCategoriesHierarchically(Request $request)
-    {
-        $categories = Category::get();
+    public function getAllCategoriesHierarchically(Request $request){
+        if ($request->role_id && $request->role_id == 3)
+	    $categories = Category::get();
+	else
+            $categories = Category::where('visibility', 1)->get();
         $tree = function ($elements, $parentId = 0) use (&$tree) {
             $branch = array();
             foreach ($elements as $element) {
@@ -642,13 +646,13 @@ class LearnWithYoutubeController extends Controller
                 ->with('duration_history:video_id,start_time,end_time')
                 ->whereHas('duration_history', function ($query) use ($user_id) {
                     $query->where('user_id', $user_id);
-                })->get();
+                })->paginate();
             DB::commit();
-            if (count($getHistory) > 0) {
+//            if (count($getHistory) > 0) {
                 return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
-            } else {
-                return $this->apiResponse->sendResponse(200, 'User watch history not found', null);
-            }
+//            } else {
+//                return $this->apiResponse->sendResponse(404, 'User watch history not found', null);
+//            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -895,7 +899,8 @@ class LearnWithYoutubeController extends Controller
 
         $category = Category::find($request->category_id);
 
-        $category->toggle_visibility()->save();
+        $category->toggle_visibility();
+	$category->save();
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }

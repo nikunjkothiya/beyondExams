@@ -12,6 +12,7 @@ class Category extends Model
         'title',
         'user_id',
         'level',
+        'parent_id',
         'previous_id',
         'image_url'
     ];

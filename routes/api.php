@@ -34,8 +34,11 @@ Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel
 
 Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
 Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
-Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
+Route::get('get_ses_videos',['uses' => 'ChemistryUniverseController@get_ses_videos']);
+Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
+//Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
 
 
 // Protected APIs via Auth Middleware
@@ -43,13 +46,13 @@ Route::get('get_ses_videos',['uses' => 'ChemistryUniverse@get_ses_videos']);
 Route::group(['middleware' => 'auth:api'], function () {
 
     // Searches term & search_user  Video_annotations
-      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
+//      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
     Route::group(['middleware' => ['login_status']], function () {
         Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
-        Route::post('add_ses_video',['uses' => 'ChemistryUniverse@add_ses_video']);
+        Route::post('add_ses_video',['uses' => 'ChemistryUniverseController@add_ses_video']);
 
-        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
+//        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
         Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
 
         // ----------Browse videos----------
@@ -106,8 +109,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 //        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
 
-        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
-        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
+//        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
+//        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
 
         // Social
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
@@ -115,14 +118,14 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('start_following', ['uses' => 'SocialController@start_following']);
 
 //        Chat
-        Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
+//        Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
         Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
         Route::get('get_all_whatsapp_chats', ['uses' => 'ChatController@get_all_whatsapp_chats']);
         Route::get('get_whattsapp_chat_messages', ['uses' => 'ChatController@get_whattsapp_chat_messages']);
 
         Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
         Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);
-        Route::post('add_chat_user', ['uses' => 'ChatController@create_chat']);
+        Route::post('create_chat', ['uses' => 'ChatController@create_chat']);
         Route::post('create_support_chat', ['uses' => 'ChatController@create_support_chat']);
         Route::post('add_chat_user', ['uses' => 'ChatController@add_chat_user']);
         Route::post('send_message', ['uses' => 'ChatController@send_message']);

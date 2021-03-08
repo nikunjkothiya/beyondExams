@@ -52,7 +52,6 @@ class SearchController extends Controller
     public function add_search_term(Request $request)
     {
         DB::beginTransaction();
-       // if (Auth::check()) {
             $validator = Validator::make($request->all(), [
                 'search_term' => 'required|string',
             ]);
@@ -63,6 +62,7 @@ class SearchController extends Controller
 
             try {
                 $found = Search::where('search_term', $request->search_term)->first();    
+		$authorization = $request->header('Authorization');
                 
                 if ($found) {
                     $updateSearch = Search::find($found->id);
@@ -70,17 +70,22 @@ class SearchController extends Controller
                     $updateSearch->daily_count = $found->daily_count + 1;
                     $updateSearch->save();
                     
-                    $exiting = $updateSearch->users()->where('user_id', Auth::id())->exists();
+                    
+		    if ($authorization) {
+	            $auth_user = User::where('api_token',$authorization)->first();
+		    $exiting = $updateSearch->users()->where('user_id', $auth_user->id)->exists();
                     if(!$exiting){
                         $updateSearch->users()->attach(Auth::id());
                     }
+}
                 } else {  
                     $newSearch = new Search();
                     $newSearch->search_term = $request->search_term;
                     $newSearch->total_count = 1;
                     $newSearch->daily_count = 1;
                     $newSearch->save();
-                    $newSearch->users()->attach(Auth::id());
+		    if ($authorization)
+                        $newSearch->users()->attach(Auth::id());
                     // Auth::user()->id->searches()->attach($newSearch->id)
                     // $updateSearch->users()->toggle(1, ['user_id' => 1]);
                 }
@@ -98,7 +103,7 @@ class SearchController extends Controller
                     $search_term->save();
                 }
 
-                Auth::user()->searches()->attach([$search_term->id]);
+//                Auth::user()->searches()->attach([$search_term->id]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
@@ -106,9 +111,6 @@ class SearchController extends Controller
                 DB::rollback();
                 return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
             }
-     //   } else {
-     //       return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-     //   }
     }
 
 

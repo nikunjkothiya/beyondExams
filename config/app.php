@@ -178,7 +178,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         Kreait\Laravel\Firebase\ServiceProvider::class,
         Laravel\Passport\PassportServiceProvider::class,
-        Maatwebsite\Excel\ExcelServiceProvider::class,
+//        Maatwebsite\Excel\ExcelServiceProvider::class,
     ],
 
     /*

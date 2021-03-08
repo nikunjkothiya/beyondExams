@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateVideosTable extends Migration
+class AddIdToSesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,11 @@ class CreateVideosTable extends Migration
      */
     public function up()
     {
-if (!Schema::hasTable('videos')) {
-        Schema::create('videos', function (Blueprint $table) {
+        Schema::table('ses', function (Blueprint $table) {
+//	    $table->dropPrimary();
+//	    $table->unsignedBigInteger('video_id')->change();
             $table->bigIncrements('id');
-            $table->string('url');
-            $table->timestamps();
         });
-}
     }
 
     /**
@@ -29,6 +27,8 @@ if (!Schema::hasTable('videos')) {
      */
     public function down()
     {
-        Schema::dropIfExists('videos');
+        Schema::table('ses', function (Blueprint $table) {
+            //
+        });
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateVideosTable extends Migration
+class AddForeignKeyToSesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CreateVideosTable extends Migration
      */
     public function up()
     {
-if (!Schema::hasTable('videos')) {
-        Schema::create('videos', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('url');
-            $table->timestamps();
+        Schema::table('ses', function (Blueprint $table) {
+            $table->foreign('video_id')->references('id')->on('videos')->onDelete('cascade');
         });
-}
     }
 
     /**
@@ -29,6 +25,8 @@ if (!Schema::hasTable('videos')) {
      */
     public function down()
     {
-        Schema::dropIfExists('videos');
+        Schema::table('ses', function (Blueprint $table) {
+            //
+        });
     }
 }
