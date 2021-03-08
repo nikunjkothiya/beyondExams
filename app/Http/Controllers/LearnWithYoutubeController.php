@@ -447,6 +447,7 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
+
             $category = Category::find($request->category_id);
             if (is_null($category)) {
                 DB::commit();
@@ -454,6 +455,7 @@ class LearnWithYoutubeController extends Controller
             }else {
                 if ($category->user_id == Auth::user()->id) {
                     $success = $this->deleteAllCategory($category->id);
+                    $learning_paths = LearningPath::whereIn('category_id',$success)->delete();
                     Category::whereIn('id', $success)->delete();
 
                     DB::commit();
