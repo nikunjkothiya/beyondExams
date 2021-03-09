@@ -509,6 +509,7 @@ class LearnWithYoutubeController extends Controller
         array_walk_recursive($array, function ($a) use (&$return) {
             $return[] = $a;
         });
+       
         return $return;
     }
 

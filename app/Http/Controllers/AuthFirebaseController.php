@@ -123,7 +123,7 @@ class AuthFirebaseController extends Controller
             $data["phoenix_user_id"] = $new_user->id;
             $data["email"] = $new_user->email;
             $data["name"] = $new_user->name;
-            $data["role_id"] = $new_user->role;
+            $data["role_id"] = $new_user->role_id;
 
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 

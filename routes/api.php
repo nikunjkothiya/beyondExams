@@ -135,6 +135,11 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_time_table', ['uses' => 'ChatController@add_time_table']);
         Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
         Route::get('get_time_tables', ['uses' => 'ChatController@get_time_tables']);
+        Route::post('delete_time_table', ['uses' => 'ChatController@delete_time_table']);
+        Route::post('update_timetable', ['uses' => 'ChatController@update_timetable']);
+
+        Route::post('start_class', ['uses' => 'ChatController@start_class']);
+        Route::post('end_class', ['uses' => 'ChatController@end_class']);
 
         Route::post('submit_chat_review', ['uses' => 'ChatController@submit_chat_review']);
         Route::post('submit_student_homework', ['uses' => 'ChatController@submit_student_homework']);
