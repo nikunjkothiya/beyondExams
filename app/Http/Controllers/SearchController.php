@@ -45,7 +45,7 @@ class SearchController extends Controller
             }
         } catch (\Exception $e) {
             DB::rollback();
-            throw new HttpException(500, $e->getMessage());
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
@@ -109,7 +109,7 @@ class SearchController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
             } catch (\Exception $e) {
                 DB::rollback();
-                throw new HttpException(500, $e->getMessage());
+                return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
             }
     }
 

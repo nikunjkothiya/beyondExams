@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddIdToSesTable extends Migration
+class RemoveTimetableIdToStudentHomeworksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class AddIdToSesTable extends Migration
      */
     public function up()
     {
-        Schema::table('ses', function (Blueprint $table) {
-          // $table->dropPrimary();
-	       $table->unsignedBigInteger('video_id')->change();
+        Schema::table('student_homeworks', function (Blueprint $table) {
+            $table->dropForeign(['timetable_id']);
+            $table->dropColumn('timetable_id');
         });
     }
 
@@ -26,8 +26,8 @@ class AddIdToSesTable extends Migration
      */
     public function down()
     {
-        Schema::table('ses', function (Blueprint $table) {
-            //
+        Schema::table('student_homeworks', function (Blueprint $table) {
+            
         });
     }
 }
