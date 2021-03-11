@@ -25,4 +25,7 @@ class Chat extends Model
     public function messages(){
         return $this->hasMany('App\ChatMessage');
     }
+    public function reviews(){
+        return $this->hasMany('App\ChatReview','chat_id','id');
+    }
 }

@@ -40,6 +40,7 @@ class LearnWithYoutubeController extends Controller
     //
     public function submit_feedback(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'name' => 'string',
             'email' => 'string',
@@ -60,12 +61,13 @@ class LearnWithYoutubeController extends Controller
 
 
         DB::table('feedbacks')->insert(['name' => $name, 'email' => $email, 'message' => $request->message]);
-
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Feedback saved successfully', null);
     }
 
     public function submit_user_profile(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -135,18 +137,20 @@ class LearnWithYoutubeController extends Controller
                         $user_certidicate->save();
                     }
                 }
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function add_user_certificate(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -168,22 +172,24 @@ class LearnWithYoutubeController extends Controller
                     $user_certidicate->image = $imgpath;
                     $user_certidicate->save();
                 }
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function get_user_profile()
     {
+        DB::beginTransaction();
         if (Auth::check()) {
             //$user = Auth::user();
             $user = User::with('certificates')->where('id', Auth::user()->id)->get();
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
@@ -192,6 +198,7 @@ class LearnWithYoutubeController extends Controller
 
     public function add_user_facebook_link(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -204,18 +211,20 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->facebook_link = $request->facebook_link;
                 $user_link->save();
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function add_user_instagram_link(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -228,18 +237,20 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->instagram_link = $request->instagram_link;
                 $user_link->save();
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function add_user_github_link(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -252,18 +263,20 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->github_link = $request->github_link;
                 $user_link->save();
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function add_user_twitter_url(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -276,18 +289,20 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->twitter_url = $request->twitter_url;
                 $user_link->save();
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function add_user_linkedin_url(Request $request)
     {
+        DB::beginTransaction();
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
@@ -300,12 +315,13 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->linkedin_url = $request->linkedin_url;
                 $user_link->save();
-
+                DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', null);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -337,6 +353,7 @@ class LearnWithYoutubeController extends Controller
 
     public function getNextLevel(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'level' => 'required|integer',
             'parent_id' => 'integer',
@@ -360,7 +377,7 @@ class LearnWithYoutubeController extends Controller
             $request->request->add(['category_id' => $parent_id]);
             return $this->get_learning_path($request);
         }
-
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
     }
 
@@ -379,15 +396,16 @@ class LearnWithYoutubeController extends Controller
 
     public function getAllCategories(Request $request)
     {
-	if ($request->role_id && $request->role_id == 3)
-	    return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
+        if ($request->role_id && $request->role_id == 3)
+            return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::get());
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories = Category::where('visibility', 1)->get());
     }
 
-    public function getAllCategoriesHierarchically(Request $request){
+    public function getAllCategoriesHierarchically(Request $request)
+    {
         if ($request->role_id && $request->role_id == 3)
-	    $categories = Category::get();
-	else
+            $categories = Category::get();
+        else
             $categories = Category::where('visibility', 1)->get();
         $tree = function ($elements, $parentId = 0) use (&$tree) {
             $branch = array();
@@ -415,6 +433,7 @@ class LearnWithYoutubeController extends Controller
 
     public function getCategories(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'level' => 'required|integer',
             'parent_id' => 'integer',
@@ -434,14 +453,13 @@ class LearnWithYoutubeController extends Controller
         }
 
         $categories = Category::where('level', $request->level)->where('parent_id', $parent_id)->get();
-
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Categories fetched successfully', $categories);
     }
 
     ///// Start removeCategory Function /////
     public function removeCategory(Request $request)
     {
-        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
         ]);
@@ -454,22 +472,20 @@ class LearnWithYoutubeController extends Controller
 
             $category = Category::find($request->category_id);
             if (is_null($category)) {
-                DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Category Not Found', null);
-            }else {
+
+                return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
+            } else {
                 if ($category->user_id == Auth::user()->id) {
                     $success = $this->deleteAllCategory($category->id);
-                    $learning_paths = LearningPath::whereIn('category_id',$success)->delete();
+                    $learning_paths = LearningPath::whereIn('category_id', $success)->delete();
                     Category::whereIn('id', $success)->delete();
 
-                    DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Category deleted successfully', null);
                 } else {
                     return $this->apiResponse->sendResponse(401, 'Unauthorized user can not delete category', null);
                 }
             }
         } catch (\Exception $e) {
-            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -509,7 +525,7 @@ class LearnWithYoutubeController extends Controller
         array_walk_recursive($array, function ($a) use (&$return) {
             $return[] = $a;
         });
-       
+
         return $return;
     }
 
@@ -538,6 +554,7 @@ class LearnWithYoutubeController extends Controller
 
     public function get_resource_likes(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
         ]);
@@ -548,11 +565,13 @@ class LearnWithYoutubeController extends Controller
 
         $num_likes = Video::where('url', $request->video_url)->first()->num_likes();
         // Send notification via Notification controller function or guzzle
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Success', $num_likes);
     }
 
     public function add_resource_comment(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'message' => 'required|string',
             'video_url' => 'required|string',
@@ -575,12 +594,14 @@ class LearnWithYoutubeController extends Controller
         $comment->video_id = $video->id;
         $comment->save();
 
+        DB::commit();
         // Send notification via Notification controller function or guzzle
         return $this->apiResponse->sendResponse(200, 'Comment added successfully', $comment);
     }
 
     public function switch_video_like(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'video_url' => 'required|string',
         ]);
@@ -596,7 +617,7 @@ class LearnWithYoutubeController extends Controller
         }
 
         Auth::user()->videos()->toggle([array('video_id' => $video->id, 'type' => 'liked')]);
-
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }
 
@@ -641,19 +662,18 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            $user_id = 1;
-            //$user_id = Auth::user()->id;
+            $user_id = Auth::user()->id;
             $getHistory = Video::select('*')
                 ->with('duration_history:video_id,start_time,end_time')
                 ->whereHas('duration_history', function ($query) use ($user_id) {
                     $query->where('user_id', $user_id);
                 })->paginate();
             DB::commit();
-//            if (count($getHistory) > 0) {
-                return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
-//            } else {
-//                return $this->apiResponse->sendResponse(404, 'User watch history not found', null);
-//            }
+            //            if (count($getHistory) > 0) {
+            return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
+            //            } else {
+            //                return $this->apiResponse->sendResponse(404, 'User watch history not found', null);
+            //            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -670,6 +690,7 @@ class LearnWithYoutubeController extends Controller
 
     public function add_video_to_learning_path(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|int',
             'video_url' => 'string',
@@ -698,7 +719,7 @@ class LearnWithYoutubeController extends Controller
 
 
         $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering]);
-
+        DB::commit();
         return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
     }
 
@@ -713,7 +734,6 @@ class LearnWithYoutubeController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        // $user = User::find(1);
         try {
             if (Auth::user()) {
                 $where_video = ['url' => $request->video_url];
@@ -820,7 +840,7 @@ class LearnWithYoutubeController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Category image added successfully', $category);
             } else {
-                return $this->apiResponse->sendResponse(201, 'Category Not Exits', null);
+                return $this->apiResponse->sendResponse(404, 'Category Not Exits', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -901,7 +921,7 @@ class LearnWithYoutubeController extends Controller
         $category = Category::find($request->category_id);
 
         $category->toggle_visibility();
-	$category->save();
+        $category->save();
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
     }

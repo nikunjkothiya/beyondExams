@@ -41,7 +41,7 @@ class SearchController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Successfully fetched search term.', $getsearches);
             } else {
-                return $this->apiResponse->sendResponse(200, 'No data found.', null);
+                return $this->apiResponse->sendResponse(404, 'No data found.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();

@@ -43,17 +43,20 @@ class ChatController extends Controller
 
     public function get_all_chats(request $request)
     {
+        DB::beginTransaction();
         try {
             $chats = Auth::user()->chats()->orderByDesc('updated_at')->paginate($this->num_entries_per_page);
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Success', $chats);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function get_chat_messages(request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
         ]);
@@ -69,55 +72,50 @@ class ChatController extends Controller
                         $query->select('id', 'name', 'avatar');
                     }])->where('chat_id', $request->chat_id)->orderByDesc('created_at')->paginate($this->num_entries_per_page);
 
+                    DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Successfully Get Chat Messages', $messages);
                 } else {
-                    return $this->apiResponse->sendResponse(201, 'Chat Not Found', null);
+                    return $this->apiResponse->sendResponse(404, 'Chat Not Found', null);
                 }
             }
             return $this->apiResponse->sendResponse(403, 'Access to the chat is forbidden', null);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function create_chat(request $request)
     {
-        if($request->exists('period_name')){
-            $validator = Validator::make($request->all(), [
-                'period_name' => 'required|string',
-            ]);
-        }else{
-            $validator = Validator::make($request->all(), [
-                'user_id' => 'integer',
-                'title' => 'required|string',
-            ]);
-        }
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'integer',
+            'title' => 'required|string',
+        ]);
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
         try {
             if($request->exists('user_id')){
-                $request->user_id = $request->user_id;
+                $user_id = $request->user_id;
             }else{
-                $request->user_id = 1;
-            }
-            if($request->exists('period_name')){
-                $request->title = $request->period_name;
+                $user_id = 1;
             }
 
-            $chat = Auth::user()->chats()->where(['receiver_id'=>$request->user_id,'title'=>$request->title])->first();
+            $chat = Auth::user()->chats()->where(['receiver_id'=>$user_id,'title'=>$request->title])->first();
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->creator_id = Auth::user()->id;
                 $chat->title = $request->title;
-                $chat->receiver_id = $request->user_id;
+                $chat->receiver_id = $user_id;
                 $chat->save();
 
                 $this->add_admin_message("Hey! How may I help you?", $chat->id, 3);
 
-                $chat->users()->attach([Auth::user()->id, $request->user_id]);
+                $chat->users()->attach([Auth::user()->id, $user_id]);
                 /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
+                DB::commit();
                 if($request->exists('period_name')){
                     return $chat;
                 }
@@ -128,6 +126,7 @@ class ChatController extends Controller
             }
             return $this->apiResponse->sendResponse(200, 'Already Created Chat', $chat);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -145,7 +144,7 @@ class ChatController extends Controller
 
     public function create_support_chat()
     {
-
+        DB::beginTransaction();
         try {
             $chat = Auth::user()->chats()->where('is_support', true)->first();
 
@@ -159,37 +158,43 @@ class ChatController extends Controller
 
                 $chat->users()->attach([Auth::user()->id]);
             }
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Success', $chat);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function is_supprot_to_chat_type_id()
     {
+        DB::beginTransaction();
         try {
             $chat = Chat::where('is_support', true)->update(['chat_type_id' => 2]);
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Support Type Update Successfully', null);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function get_all_whatsapp_chats()
     {
+        DB::beginTransaction();
         try {
             $chat = Chat::where('chat_type_id', 3)->get();
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chats', $chat);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function get_whattsapp_chat_messages(Request $request)
     {
+        DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
                 'chat_id' => 'required|int',
@@ -199,9 +204,10 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
             $messages = ChatMessage::with('user')->where('chat_id', $request->chat_id)->orderBy('created_at', 'desc')->paginate(15);
-
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chat Messages', $messages);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -381,9 +387,7 @@ class ChatController extends Controller
         }
 
         try {
-            $chat = Chat::where('id', $request->chat_id)->first();
-
-            if (is_null($chat)) {
+            if (!Chat::find($request->chat_id)) {
                 return $this->apiResponse->sendResponse(404, 'Chat does not exist.', null);
             }
 
@@ -447,7 +451,7 @@ class ChatController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
-            
+            $request->request->add(['title'=>$request->period_name]);
             $response = $this->create_chat($request);
 
             if (!is_null(Chat::where('id', $response->id)->first())) {
@@ -468,7 +472,7 @@ class ChatController extends Controller
                     $timetable->save();
                 }
             } else {
-                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+                return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
             }
           
             return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', $timetable);
@@ -498,7 +502,7 @@ class ChatController extends Controller
             if (Auth::user()->role_id == 2) {
                 $get_timetable = TimeTable::where(['id' => $request->timetable_id, 'teacher_id' => Auth::user()->id])->get();
                 if (!$get_timetable) {
-                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                    return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
                 } else {
                     $get_timetable = TimeTable::find($request->timetable_id);
                     $get_timetable->fill($request->all())->save();
@@ -507,7 +511,7 @@ class ChatController extends Controller
                     }
                 }
             } else {
-                return $this->apiResponse->sendResponse(201, 'Only Teacher Can Update Timetable.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teacher Can Update Timetable.', null);
             }
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Timetable Updated Successfully.', $get_timetable);
@@ -528,9 +532,9 @@ class ChatController extends Controller
                 if ($timetable) {
                     return $this->apiResponse->sendResponse(200, 'Timetable Get Successfully.', $timetable);
                 }
-                return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
             } else {
-                return $this->apiResponse->sendResponse(201, 'Only Teacher Can Get Timetable.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teacher Can Get Timetable.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -557,10 +561,10 @@ class ChatController extends Controller
                     DB::commit();
                     return $this->apiResponse->sendResponse(200, 'Timetable Deleted Successfully.', null);
                 } else {
-                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                    return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
                 }
             } else {
-                return $this->apiResponse->sendResponse(201, 'Only Teacher Can Delete Timetable.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teacher Can Delete Timetable.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -582,10 +586,8 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $entryFound = Chat::where('id', $request->chat_id)->count();
-
-            if ($entryFound == 0) {
-                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+            if (!Chat::find($request->chat_id)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
             } else {
                 if (Auth::user()->role_id == 2) {
                     $attachment = $request->file('document');
@@ -602,7 +604,7 @@ class ChatController extends Controller
                     $teacherDocument->save();
                 } else {
                     DB::commit();
-                    return $this->apiResponse->sendResponse(201, 'Only Teacher Can Upload The Documents.', null);
+                    return $this->apiResponse->sendResponse(401, 'Only Teacher Can Upload The Documents.', null);
                 }
             }
 
@@ -628,11 +630,8 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $chatFound = Chat::where('id', $request->chat_id)->first();
-            $chatReviewFound = ChatReview::where(['chat_id' => $request->chat_id, 'student_id' => Auth::user()->id])->first();
-            if (is_null($chatFound)) {
-                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
-            } elseif (!is_null($chatReviewFound)) {
+            $chatReviewFound = Chat::find($request->chat_id)->reviews()->where('student_id', Auth::user()->id)->first();
+            if(!is_null($chatReviewFound)) {
                 return $this->apiResponse->sendResponse(201, 'Already Found Chat Review For This Chat.', $chatReviewFound);
             } else {
                 $addReview = new ChatReview();
@@ -664,10 +663,8 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $entryFound = Chat::where('id', $request->chat_id)->count();
-
-            if ($entryFound == 0) {
-                return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+            if (!Chat::find($request->chat_id)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
             } else {
                 $attachment = $request->file('document_name');
                 $original_name = $request->file('document_name')->getClientOriginalName();
@@ -692,6 +689,7 @@ class ChatController extends Controller
 
     public function search_filter_messages(request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
             'user_id' => 'required|integer',
@@ -702,22 +700,24 @@ class ChatController extends Controller
         }
 
         try {
-            $chat = Chat::where('id', $request->chat_id)->first();
-            if (is_null($chat)) {
-                return $this->apiResponse->sendResponse(201, 'Chat Not Found', null);
+            if (!Chat::find($request->chat_id)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Not Found', null);
             } else {
                 $messages = ChatMessage::with(['sender' => function ($query) {
                     $query->select('id', 'name');
                 }])->where(['chat_id' => $request->chat_id, 'sender_id' => $request->user_id])->orderByDesc('created_at')->paginate($this->num_entries_per_page);
             }
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Filtered Messages get Successfully', $messages);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function save_chat_message(request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'chat_message_id' => 'required|integer',
         ]);
@@ -727,9 +727,8 @@ class ChatController extends Controller
         }
 
         try {
-            $chat = ChatMessage::where('id', $request->chat_message_id)->first();
             $data = SaveMessage::where(['chat_message_id' => $request->chat_message_id, 'student_id' => Auth::user()->id])->first();
-            if (is_null($chat)) {
+            if (!ChatMessage::find($request->chat_message_id)) {
                 return $this->apiResponse->sendResponse(404, 'Chat Message does not exist.', null);
             } elseif (!is_null($data)) {
                 return $this->apiResponse->sendResponse(201, 'Already Saved Chat Message Found.', $data);
@@ -739,14 +738,17 @@ class ChatController extends Controller
                 $save_chat_message->chat_message_id = $request->chat_message_id;
                 $save_chat_message->save();
             }
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
+            DB::rollback();   
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
     public function classroom_chat_message(request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'chat_message_id' => 'required|integer',
             'timetable_id' => 'required|integer',
@@ -757,11 +759,9 @@ class ChatController extends Controller
         }
 
         try {
-            $timetable = TimeTable::where('id', $request->timetable_id)->first();
-            $data = ChatMessage::where(['id' => $request->chat_message_id])->first();
-            if (is_null($timetable)) {
+            if (!TimeTable::find($request->timetable_id)) {
                 return $this->apiResponse->sendResponse(404, 'Time Table does not exist.', null);
-            } elseif (is_null($data)) {
+            } elseif (!ChatMessage::find($request->chat_message_id)) {
                 return $this->apiResponse->sendResponse(404, 'Chat Message Not Found.', null);
             } else {
                 $save_chat_message = new ClassroomChatMessage();
@@ -769,8 +769,10 @@ class ChatController extends Controller
                 $save_chat_message->chat_message_id = $request->chat_message_id;
                 $save_chat_message->save();
             }
+            DB::commit();
             return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -788,9 +790,8 @@ class ChatController extends Controller
             }
 
             if (Auth::user()->role_id == 2) {
-                $entryFound = Chat::where('id', $request->chat_id)->count();
-                if ($entryFound == 0) {
-                    return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+                if (!Chat::find($request->chat_id)) {
+                    return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
                 } else {
                     $teacherAttendance = new TeacherAttendance();
                     $teacherAttendance->chat_id = $request->chat_id;
@@ -801,7 +802,7 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(200, 'Attendance Created Successfully.', $teacherAttendance);
             } else {
                 DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Only Teachers Take Attendance.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teachers Take Attendance.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -823,14 +824,12 @@ class ChatController extends Controller
             }
 
             if (Auth::user()->role_id == 1) {
-                $entryFound = Chat::where('id', $request->chat_id)->count();
-                if ($entryFound == 0) {
-                    return $this->apiResponse->sendResponse(201, 'Chat Not Found.', null);
+                if (!Chat::find($request->chat_id)) {
+                    return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
                 } else {
-                    $findAttendance = TeacherAttendance::where('id', $request->teacher_attendance_id)->count();
-                    if ($findAttendance == 0) {
+                    if (!TeacherAttendance::find($request->teacher_attendance_id)) {
                         DB::commit();
-                        return $this->apiResponse->sendResponse(201, 'Attendance Not Initialed By Teacher.', null);
+                        return $this->apiResponse->sendResponse(404, 'Attendance Not Initialed By Teacher.', null);
                     } else {
                         $studentAttendance = new StudentAttendance();
                         $studentAttendance->chat_id = $request->chat_id;
@@ -844,7 +843,7 @@ class ChatController extends Controller
                 }
             } else {
                 DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Only Students Put Their Attendance.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Students Put Their Attendance.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -865,9 +864,8 @@ class ChatController extends Controller
             }
 
             if (Auth::user()->role_id == 2) {
-                $entryFound = TimeTable::where('id', $request->timetable_id)->count();
-                if ($entryFound == 0) {
-                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                if (!TimeTable::find($request->timetable_id)) {
+                    return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
                 } else {
                     $dt = Carbon::now();
                     $teacherStartTime = new TimetableHistory();
@@ -879,8 +877,7 @@ class ChatController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Start Class Time Saved Successfully.', null);
             } else {
-                DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Only Teachers Can Start Class.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teachers Can Start Class.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -901,9 +898,8 @@ class ChatController extends Controller
             }
 
             if (Auth::user()->role_id == 2) {
-                $entryFound = TimeTable::where('id', $request->timetable_id)->count();
-                if ($entryFound == 0) {
-                    return $this->apiResponse->sendResponse(201, 'Timetable Not Found.', null);
+                if (!TimeTable::find($request->timetable_id)) {
+                    return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
                 } else {
                     $dt = Carbon::now();
                     $teacherStartTime = new TimetableHistory();
@@ -915,8 +911,7 @@ class ChatController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'End Class Time Saved Successfully.', null);
             } else {
-                DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Only Teachers Can End Class.', null);
+                return $this->apiResponse->sendResponse(401, 'Only Teachers Can End Class.', null);
             }
         } catch (\Exception $e) {
             DB::rollback();
