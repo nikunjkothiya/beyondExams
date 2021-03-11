@@ -34,7 +34,7 @@ class Video extends Model
     {
         return $this->belongsToMany('App\User', 'bookmark_video')->withTimestamps();
     }
-    
+
     public function duration_history()
     {
         return $this->hasMany('App\HistoryUserVidoes', 'video_id', 'id');
@@ -44,4 +44,5 @@ class Video extends Model
     {
         return $this->belongsToMany('App\Keyword')->withTimestamps();
     }
+    
 }
