@@ -22,7 +22,7 @@ class Video extends Model
 
     public function ses()
     {
-        return $this->hasOne('App\Ses');
+	return $this->hasOne('App\Ses');
     }
 
     public function users()
@@ -34,6 +34,7 @@ class Video extends Model
     {
         return $this->belongsToMany('App\User', 'bookmark_video')->withTimestamps();
     }
+    
     public function duration_history()
     {
         return $this->hasMany('App\HistoryUserVidoes', 'video_id', 'id');
