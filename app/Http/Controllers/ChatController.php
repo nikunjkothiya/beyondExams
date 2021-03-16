@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Chat;
 use App\ChatMessage;
 use App\ChatReview;
+use App\ChatUser;
 use App\ClassroomChatMessage;
 use App\MessageType;
 use Auth;
@@ -246,8 +247,6 @@ class ChatController extends Controller
                 foreach ($data as $key => $value) {
                     if ($key != 0) {
                         if (!empty($value)) {
-                            //  dd(date('Y-m-d H:i:s', strtotime($value[0])));
-                            //foreach ($value as $v) {
                             $name = $value[1];
                             $findUser = User::where('name', '=', $name)->first();
                             if (is_null($findUser)) {
@@ -269,34 +268,40 @@ class ChatController extends Controller
 
                             $chat_message = new ChatMessage();
                             $chat_message->chat_id = $chat->id;
-                            $chat_message->message = $value[2];
 
                             if ($value[3] == 'Text') {
                                 $chat_message->type_id = 1;
+                                $chat_message->message = $value[2];
                             } elseif ($value[3] == 'Photo') {
                                 $chat_message->type_id = 2;
+                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'Video') {
                                 $chat_message->type_id = 3;
+                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'Audio') {
                                 $chat_message->type_id = 4;
+                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'File') {
                                 $chat_message->type_id = 5;
+                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } else {
                                 $chat_message->type_id = 1;
+                                $chat_message->message = $value[2];
                             }
 
                             if (is_null($findUser)) {
                                 $chat_message->sender_id = $newUser->id;
-                                $chat->users()->attach([$newUser->id]);
+                                if(!ChatUser::where(['chat_id'=> $chat->id, 'user_id' => $newUser->id])->first())
+                                    $chat->users()->attach([$newUser->id]);
                             } else {
                                 $chat_message->sender_id = $findUser->id;
-                                $chat->users()->attach([$findUser->id]);
+                                if(!ChatUser::where(['chat_id'=> $chat->id, 'user_id' => $findUser->id])->first())
+                                    $chat->users()->attach([$findUser->id]);
                             }
 
                             $chat_message->created_at = date('Y-m-d H:i:s', strtotime($value[0]));
                             $chat_message->updated_at = date('Y-m-d H:i:s', strtotime($value[0]));
                             $chat_message->save();
-                            //  }
                         }
                     }
                 }
