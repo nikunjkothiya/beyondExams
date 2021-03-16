@@ -122,6 +122,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
         Route::get('get_all_whatsapp_chats', ['uses' => 'ChatController@get_all_whatsapp_chats']);
         Route::get('get_whattsapp_chat_messages', ['uses' => 'ChatController@get_whattsapp_chat_messages']);
+        Route::post('update_file_path_for_whattsapp', ['uses' => 'ChatController@update_file_path_for_whattsapp']);
 
         Route::get('get_all_chats', ['uses' => 'ChatController@get_all_chats']);
         Route::get('get_chat_messages', ['uses' => 'ChatController@get_chat_messages']);

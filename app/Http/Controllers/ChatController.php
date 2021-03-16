@@ -213,6 +213,41 @@ class ChatController extends Controller
         }
     }
 
+    public function update_file_path_for_whattsapp(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'chat_id' => 'required|integer',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $chat = Chat::find($request->chat_id);
+            if (!is_null($chat)) {
+                $name = $chat->title;
+
+                $old_message = ChatMessage::where(['chat_id' => $chat->id])->where('type_id','!=',1)->get();
+                foreach($old_message as $message){
+                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
+                    $change_path->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message);
+                    $change_path->save();
+                }
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Successfully Changed Filepaths', null);
+            }else{
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'Chat Not Found', null);
+            }
+            
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function load_whatsapp_chat_into_db(Request $request)
     {
         try {
