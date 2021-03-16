@@ -79,6 +79,11 @@ class LearnWithYoutubeController extends Controller
                     'profile_link' => 'string',
                     'short_bio' => 'sometimes|string',
                     'phone' => 'integer',
+                    'facebook_link' => 'sometimes|string',
+                    'instagram_link' => 'sometimes|string',
+                    'github_link' => 'sometimes|string',
+                    'twitter_url' => 'sometimes|string',
+                    'linkedin_url' => 'sometimes|string',
                 ]);
 
                 if ($validator->fails()) {
