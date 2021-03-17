@@ -10,30 +10,39 @@ class Video extends Model
         'url'
     ];
 
-    public function num_likes(){
+    public function num_likes()
+    {
         return $this->likes()->count();
     }
 
-    public function likes(){
+    public function likes()
+    {
         return $this->belongsToMany('App\User', 'user_video')->where('type', 'liked');
     }
 
-    public function ses(){
+    public function ses()
+    {
 	return $this->hasOne('App\Ses');
     }
 
-    public function users(){
+    public function users()
+    {
         return $this->belongsToMany('App\User')->wherePivot('type', 'history')->withTimestamps();
     }
 
-    public function bookmarkByUser(){
-        return $this->belongsToMany('App\User','bookmark_video')->withTimestamps();
-    }
-    public function duration_history(){
-        return $this->hasMany('App\HistoryUserVidoes','video_id','id');
+    public function bookmarkByUser()
+    {
+        return $this->belongsToMany('App\User', 'bookmark_video')->withTimestamps();
     }
 
-    public function keywords() {
+    public function duration_history()
+    {
+        return $this->hasMany('App\HistoryUserVidoes', 'video_id', 'id');
+    }
+
+    public function keywords()
+    {
         return $this->belongsToMany('App\Keyword')->withTimestamps();
     }
+    
 }

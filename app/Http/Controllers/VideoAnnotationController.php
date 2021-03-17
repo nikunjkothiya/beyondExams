@@ -76,7 +76,7 @@ class VideoAnnotationController extends Controller
             $video = Video::where('url', $request->video_url)->first();
 
             if (!$video) {
-                return $this->apiResponse->sendResponse(200, 'No Video Found', null);
+                return $this->apiResponse->sendResponse(404, 'No Video Found', null);
             } else {
                 $video_annotation = VideoAnnotation::where('video_id', '=', $video->id)->get();
                 DB::commit();

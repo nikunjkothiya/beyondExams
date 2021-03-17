@@ -138,7 +138,7 @@ class LWYResourceController extends Controller
 
         $user = Auth::user();
         if ($user->role()->value('is_mentor') != 1) {
-            return $this->apiResponse->sendResponse(403, 'User is not authorized', null);
+            return $this->apiResponse->sendResponse(404, 'User is not authorized', null);
         } else {
             $test = Test::find($request->test_id);
             return $this->apiResponse->sendResponse(200, 'Test scores fetched successfully', $test->scores()->with('user')->get());
