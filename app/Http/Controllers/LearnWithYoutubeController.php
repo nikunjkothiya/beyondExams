@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Search;
 use App\VideoRating;
 use App\AttemptTest;
+use App\Domain;
 use App\Keyword;
 use App\KeywordUser;
 use App\KeywordVideo;
@@ -73,10 +74,11 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
-                    'college' => 'string|max:1024',
+                    // 'college' => 'string|max:1024',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
+                    'domain' => 'sometimes|array',
                     'short_bio' => 'sometimes|string',
                     'phone' => 'integer',
                     'facebook_link' => 'sometimes|string',
@@ -84,16 +86,27 @@ class LearnWithYoutubeController extends Controller
                     'github_link' => 'sometimes|string',
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
+                    'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
+                    'image' => 'sometimes',
+                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $user = Auth::user();
+                $user = new User();
                 // Save data to users table
                 $user->name = $request->name;
                 $user->email = $request->email;
+                $user->unique_id = uniqid();
+
+                if ($request->file('avatar')) {
+                    $attachment = $request->file('avatar');
+                    $storage_path = '/user/profile/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $user->avatar = $imgpath;
+                }
 
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
@@ -121,12 +134,14 @@ class LearnWithYoutubeController extends Controller
                 if (isset($request->phone))
                     $user->phone = $request->phone;
 
+                if (isset($request->short_bio))
+                    $user->short_bio = $request->short_bio;
+
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
                 $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
-                $user->phone = $request->phone;
                 $user->flag = 1;
                 $user->save();
 
@@ -142,8 +157,128 @@ class LearnWithYoutubeController extends Controller
                         $user_certidicate->save();
                     }
                 }
+
+                if (isset($request->domain)) {
+                    foreach ($request->domain as $key=>$domain) {
+                        $domainCheck = Domain::where('name', strtolower($domain))->first();
+                        if ($domainCheck) {
+                            $user->domains()->attach($domainCheck->id);
+                        }else{
+                            $domainNew = new Domain();
+                            $domainNew->name = strtolower($domain);
+                            $domainNew->save();
+                            $user->domains()->attach($domainNew->id);
+                        }
+                    }
+                }
+
+                $user = User::with('certificates','domains')->where('id', $user->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_user_profile(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::check()) {
+                $validator = Validator::make($request->all(), [
+                    'name' => 'sometimes|string|max:255',
+                    'age' => 'sometimes|int',
+                    'country' => 'sometimes|integer|min:1|max:' . Country::count(),
+                    'profile_link' => 'string',
+                    'short_bio' => 'sometimes|string',
+                    'phone' => 'integer',
+                    'facebook_link' => 'sometimes|string',
+                    'instagram_link' => 'sometimes|string',
+                    'github_link' => 'sometimes|string',
+                    'twitter_url' => 'sometimes|string',
+                    'linkedin_url' => 'sometimes|string',
+                    'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
+                    'image' => 'sometimes',
+                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                $user = User::find(Auth::user()->id);
+                $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
+
+                if (isset($request->name)) {
+                    $user->name = $request->name;
+                    $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
+                    $user->slug = $slug;
+                }
+
+                if ($request->file('avatar')) {
+                    $attachment = $request->file('avatar');
+                    $storage_path = '/user/profile/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $user->avatar = $imgpath;
+                }
+
+                if (isset($request->profile_link))
+                    $user->profile_link = $request->profile_link;
+
+                if (isset($request->facebook_link)) {
+                    $user->facebook_link = $request->facebook_link;
+                }
+
+                if (isset($request->instagram_link)) {
+                    $user->instagram_link = $request->instagram_link;
+                }
+
+                if (isset($request->github_link)) {
+                    $user->github_link = $request->github_link;
+                }
+
+                if (isset($request->twitter_url)) {
+                    $user->twitter_url = $request->twitter_url;
+                }
+
+                if (isset($request->linkedin_url)) {
+                    $user->linkedin_url = $request->linkedin_url;
+                }
+
+                if (isset($request->phone))
+                    $user->phone = $request->phone;
+
+                if (isset($request->age))
+                    $user->age = $request->age;
+
+                if (isset($request->country))
+                    $user->country_id = $request->country;
+
+                if (isset($request->short_bio))
+                    $user->short_bio = $request->short_bio;
+
+                $user->save();
+
+                if ($request->file('image')) {
+                    foreach ($request->file('image') as $image) {
+                        $attachment = $image;
+                        $storage_path = '/user/certificates/';
+                        $imgpath = commonUploadImage($storage_path, $attachment);
+
+                        $user_certidicate = new UserCertificate();
+                        $user_certidicate->user_id = $user->id;
+                        $user_certidicate->image = $imgpath;
+                        $user_certidicate->save();
+                    }
+                }
+                $user = User::with('certificates')->where('id', Auth::user()->id)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User details Updated', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -172,13 +307,15 @@ class LearnWithYoutubeController extends Controller
                     $storage_path = '/user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
 
-                    $user_certidicate = new UserCertificate();
-                    $user_certidicate->user_id = Auth::user()->id;
-                    $user_certidicate->image = $imgpath;
-                    $user_certidicate->save();
+                    $user_certificate = new UserCertificate();
+                    $user_certificate->user_id = Auth::user()->id;
+                    $user_certificate->image = $imgpath;
+                    $user_certificate->save();
+
+                    $user = User::with('certificates')->where('id', Auth::user()->id)->get();
                 }
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -193,7 +330,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         if (Auth::check()) {
             //$user = Auth::user();
-            $user = User::with('certificates')->where('id', Auth::user()->id)->get();
+            $user = User::with('certificates','domains')->where('id', Auth::user()->id)->get();
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
@@ -217,7 +354,7 @@ class LearnWithYoutubeController extends Controller
                 $user_link->facebook_link = $request->facebook_link;
                 $user_link->save();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', $user_link);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -243,7 +380,7 @@ class LearnWithYoutubeController extends Controller
                 $user_link->instagram_link = $request->instagram_link;
                 $user_link->save();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', $user_link);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -269,7 +406,7 @@ class LearnWithYoutubeController extends Controller
                 $user_link->github_link = $request->github_link;
                 $user_link->save();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', $user_link);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -295,7 +432,7 @@ class LearnWithYoutubeController extends Controller
                 $user_link->twitter_url = $request->twitter_url;
                 $user_link->save();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', $user_link);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -321,7 +458,7 @@ class LearnWithYoutubeController extends Controller
                 $user_link->linkedin_url = $request->linkedin_url;
                 $user_link->save();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', null);
+                return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', $user_link);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
