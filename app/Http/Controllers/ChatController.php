@@ -219,6 +219,7 @@ class ChatController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'chat_id' => 'required|integer',
+		'folder_name' => 'required|string'
             ]);
 
             if ($validator->fails()) {
@@ -227,11 +228,14 @@ class ChatController extends Controller
 
             $chat = Chat::find($request->chat_id);
             if (!is_null($chat)) {
-                $name = $chat->title;
+                $name = $request->folder_name;
 
                 $old_message = ChatMessage::where(['chat_id' => $chat->id])->where('type_id','!=',1)->get();
                 foreach($old_message as $message){
-                    ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->update(['message'=>str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message)]);  
+//                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
+                    $message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message);
+		    $message->message = "https://api.learnwithyoutube.org/" . $message->message;
+                    $message->save();
                 }
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Successfully Changed Filepaths', null);
@@ -305,13 +309,14 @@ class ChatController extends Controller
                             {
                                 $chat_message->message = $value[2];   
                             }else{
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
+				$chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
+                                $chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
                             }
 
                             if ($value[3] == 'Text') {
                                 $chat_message->type_id = 1;
                             } elseif ($value[3] == 'Photo') {
-                                $chat_message->type_id = 2;
+				$chat_message->type_id = 2;
                             } elseif ($value[3] == 'Video') {
                                 $chat_message->type_id = 3;
                             } elseif ($value[3] == 'Audio') {
