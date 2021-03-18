@@ -231,9 +231,7 @@ class ChatController extends Controller
 
                 $old_message = ChatMessage::where(['chat_id' => $chat->id])->where('type_id','!=',1)->get();
                 foreach($old_message as $message){
-                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
-                    $change_path->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message);
-                    $change_path->save();
+                    ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->update(['message'=>str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message)]);  
                 }
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Successfully Changed Filepaths', null);
@@ -303,25 +301,25 @@ class ChatController extends Controller
 
                             $chat_message = new ChatMessage();
                             $chat_message->chat_id = $chat->id;
+                            if($value[3] == 'Text')
+                            {
+                                $chat_message->message = $value[2];   
+                            }else{
+                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
+                            }
 
                             if ($value[3] == 'Text') {
                                 $chat_message->type_id = 1;
-                                $chat_message->message = $value[2];
                             } elseif ($value[3] == 'Photo') {
                                 $chat_message->type_id = 2;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'Video') {
                                 $chat_message->type_id = 3;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'Audio') {
                                 $chat_message->type_id = 4;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } elseif ($value[3] == 'File') {
                                 $chat_message->type_id = 5;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
                             } else {
                                 $chat_message->type_id = 1;
-                                $chat_message->message = $value[2];
                             }
 
                             if (is_null($findUser)) {
