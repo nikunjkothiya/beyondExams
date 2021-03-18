@@ -305,29 +305,26 @@ class ChatController extends Controller
 
                             $chat_message = new ChatMessage();
                             $chat_message->chat_id = $chat->id;
+                            if($value[3] == 'Text')
+                            {
+                                $chat_message->message = $value[2];   
+                            }else{
+				$chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
+                                $chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
+                            }
 
                             if ($value[3] == 'Text') {
                                 $chat_message->type_id = 1;
-                                $chat_message->message = $value[2];
                             } elseif ($value[3] == 'Photo') {
-                                $chat_message->type_id = 2;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
-				$chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
+				$chat_message->type_id = 2;
                             } elseif ($value[3] == 'Video') {
                                 $chat_message->type_id = 3;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
-				$chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
                             } elseif ($value[3] == 'Audio') {
                                 $chat_message->type_id = 4;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
-				$chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
                             } elseif ($value[3] == 'File') {
                                 $chat_message->type_id = 5;
-                                $chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
-				$chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
                             } else {
                                 $chat_message->type_id = 1;
-                                $chat_message->message = $value[2];
                             }
 
                             if (is_null($findUser)) {
