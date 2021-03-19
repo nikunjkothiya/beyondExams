@@ -58,9 +58,9 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Tag');
     }
 
-    public function domains(){/////
+   /*  public function domains(){/////
         return $this->belongsToMany('App\DomainUser');
-    }
+    } */
 
     public function saved_opportunities(){/////
         return $this->belongsToMany('App\Opportunity');
@@ -204,6 +204,10 @@ class User extends Authenticatable
 
     public function time_tables(){
         return $this->hasMany('App\TimeTable','teacher_id','id');
+    }
+
+    public function domains() {
+        return $this->belongsToMany('App\Domain','domain_user')->withTimestamps();
     }
 
 }

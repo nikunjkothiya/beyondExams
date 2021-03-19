@@ -73,6 +73,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
 
         Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
+        Route::post('update_user_profile', ['uses' => 'LearnWithYoutubeController@update_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
         Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);
 
