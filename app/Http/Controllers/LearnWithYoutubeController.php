@@ -27,18 +27,19 @@ use App\Keyword;
 use App\KeywordUser;
 use App\KeywordVideo;
 use App\UserCertificate;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnWithYoutubeController extends Controller
 {
     private $apiResponse;
-
+   // private $aws_base_url = "https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com";
+ 
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
     }
 
-    //
     public function submit_feedback(Request $request)
     {
         DB::beginTransaction();
@@ -87,7 +88,7 @@ class LearnWithYoutubeController extends Controller
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
                     'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
-                    'image' => 'sometimes',
+                    'image' => 'sometimes|array',
                     'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
                 ]);
 
@@ -103,9 +104,9 @@ class LearnWithYoutubeController extends Controller
 
                 if ($request->file('avatar')) {
                     $attachment = $request->file('avatar');
-                    $storage_path = '/user/profile/';
+                    $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = $imgpath;
+                    $user->avatar = "https://api.learnwithyoutube.org/" . $imgpath;
                 }
 
                 if (isset($request->profile_link))
@@ -148,22 +149,22 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('image')) {
                     foreach ($request->file('image') as $image) {
                         $attachment = $image;
-                        $storage_path = '/user/certificates/';
+                        $storage_path = 'user/certificates/';
                         $imgpath = commonUploadImage($storage_path, $attachment);
 
                         $user_certidicate = new UserCertificate();
                         $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = $imgpath;
+                        $user_certidicate->image = "https://api.learnwithyoutube.org/" . $imgpath;
                         $user_certidicate->save();
                     }
                 }
 
                 if (isset($request->domain)) {
-                    foreach ($request->domain as $key=>$domain) {
+                    foreach ($request->domain as $key => $domain) {
                         $domainCheck = Domain::where('name', strtolower($domain))->first();
                         if ($domainCheck) {
                             $user->domains()->attach($domainCheck->id);
-                        }else{
+                        } else {
                             $domainNew = new Domain();
                             $domainNew->name = strtolower($domain);
                             $domainNew->save();
@@ -172,7 +173,7 @@ class LearnWithYoutubeController extends Controller
                     }
                 }
 
-                $user = User::with('certificates','domains')->where('id', $user->id)->get();
+                $user = User::with('certificates', 'domains')->where('id', $user->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
             } else {
@@ -196,6 +197,7 @@ class LearnWithYoutubeController extends Controller
                     'profile_link' => 'string',
                     'short_bio' => 'sometimes|string',
                     'phone' => 'integer',
+                    'domain' => 'sometimes|array',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
                     'github_link' => 'sometimes|string',
@@ -221,9 +223,9 @@ class LearnWithYoutubeController extends Controller
 
                 if ($request->file('avatar')) {
                     $attachment = $request->file('avatar');
-                    $storage_path = '/user/profile/';
+                    $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = $imgpath;
+                    $user->avatar = "https://api.learnwithyoutube.org/" . $imgpath;
                 }
 
                 if (isset($request->profile_link))
@@ -266,16 +268,30 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('image')) {
                     foreach ($request->file('image') as $image) {
                         $attachment = $image;
-                        $storage_path = '/user/certificates/';
+                        $storage_path = 'user/certificates/';
                         $imgpath = commonUploadImage($storage_path, $attachment);
 
                         $user_certidicate = new UserCertificate();
                         $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = $imgpath;
+                        $user_certidicate->image = "https://api.learnwithyoutube.org/" . $imgpath;
                         $user_certidicate->save();
                     }
                 }
-                $user = User::with('certificates')->where('id', Auth::user()->id)->get();
+
+                if (isset($request->domain)) {
+                    foreach ($request->domain as $key => $domain) {
+                        $domainCheck = Domain::where('name', strtolower($domain))->first();
+                        if ($domainCheck) {
+                            $user->domains()->attach($domainCheck->id);
+                        } else {
+                            $domainNew = new Domain();
+                            $domainNew->name = strtolower($domain);
+                            $domainNew->save();
+                            $user->domains()->attach($domainNew->id);
+                        }
+                    }
+                }
+                $user = User::with('certificates', 'domains')->where('id', $user->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details Updated', $user);
@@ -304,15 +320,15 @@ class LearnWithYoutubeController extends Controller
 
                 foreach ($request->file('image') as $image) {
                     $attachment = $image;
-                    $storage_path = '/user/certificates/';
+                    $storage_path = 'user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = Auth::user()->id;
-                    $user_certificate->image = $imgpath;
+                    $user_certificate->image = "https://api.learnwithyoutube.org/" . $imgpath;
                     $user_certificate->save();
 
-                    $user = User::with('certificates')->where('id', Auth::user()->id)->get();
+                    $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 }
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', $user);
@@ -330,7 +346,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         if (Auth::check()) {
             //$user = Auth::user();
-            $user = User::with('certificates','domains')->where('id', Auth::user()->id)->get();
+            $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
@@ -353,8 +369,10 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->facebook_link = $request->facebook_link;
                 $user_link->save();
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', $user_link);
+
+                return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -379,8 +397,9 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->instagram_link = $request->instagram_link;
                 $user_link->save();
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', $user_link);
+                return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -405,8 +424,9 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->github_link = $request->github_link;
                 $user_link->save();
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', $user_link);
+                return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -431,8 +451,9 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->twitter_url = $request->twitter_url;
                 $user_link->save();
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', $user_link);
+                return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -457,8 +478,9 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->linkedin_url = $request->linkedin_url;
                 $user_link->save();
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', $user_link);
+                return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', $user);
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
@@ -811,11 +833,52 @@ class LearnWithYoutubeController extends Controller
                     $query->where('user_id', $user_id);
                 })->paginate();
             DB::commit();
-            //            if (count($getHistory) > 0) {
+           
             return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
-            //            } else {
-            //                return $this->apiResponse->sendResponse(404, 'User watch history not found', null);
-            //            }
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function getPublicHistory()
+    {
+        DB::beginTransaction();
+        try {
+
+            $getPublicHistory = DB::table('history_user_videos')
+                ->join('users', 'history_user_videos.user_id', '=', 'users.id')
+                ->join('videos', 'history_user_videos.video_id', '=', 'videos.id')
+                ->where('users.is_history_public',1)
+                ->select('history_user_videos.*','users.name as user_name','videos.url as video_url')
+                ->paginate();
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getPublicHistory);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function change_history_public(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'is_public' => 'required|numeric|between:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+                $change_history_privacy = User::where('id',Auth::user()->id)->update(['is_history_public'=>$request->is_public]);
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'History Privacy Chnaged Successfully', null);
+     
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -972,11 +1035,11 @@ class LearnWithYoutubeController extends Controller
             if ($searchCategory && $request->file('image')) {
 
                 $attachment = $request->file('image');
-                $storage_path = '/category/images/';
+                $storage_path = 'category/images/';
                 $imgpath = commonUploadImage($storage_path, $attachment);
 
                 $category = Category::find($request->category_id);
-                $category->image_url = $imgpath;
+                $category->image_url = "https://api.learnwithyoutube.org/" . $imgpath;
                 $category->save();
 
                 DB::commit();

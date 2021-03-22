@@ -42,6 +42,8 @@ Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_t
 
 Route::post('update_file_path_for_whattsapp', ['uses' => 'ChatController@update_file_path_for_whattsapp']);
 
+Route::get('getPublicHistory', ['uses' => 'LearnWithYoutubeController@getPublicHistory']);
+
 
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
@@ -55,7 +57,13 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_ses_video',['uses' => 'ChemistryUniverseController@add_ses_video']);
 
 //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
+        
+        // --------  Video Notes/Annotations ---------- //
         Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
+        Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+        Route::post('edit_video_note',['uses' => 'VideoAnnotationController@edit_video_note']);
+        Route::post('delete_video_note',['uses' => 'VideoAnnotationController@delete_video_note']);
+        Route::post('change_note_privacy',['uses' => 'VideoAnnotationController@change_note_privacy']);
 
         // ----------Browse videos----------
 
@@ -75,7 +83,10 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
         Route::post('update_user_profile', ['uses' => 'LearnWithYoutubeController@update_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
-        Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);
+        Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);        
+        // ------- User Histroy Privacy Change -------- //
+        Route::post('change_history_public',['uses' => 'LearnWithYoutubeController@change_history_public']);
+
 
         // User Social Links add
         Route::post('add_user_facebook_link', ['uses' => 'LearnWithYoutubeController@add_user_facebook_link']);
