@@ -6,6 +6,7 @@ use App\Note;
 use App\Test;
 use App\Video;
 use App\TestScore;
+use App\VideoNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -80,7 +81,7 @@ class LWYResourceController extends Controller
             'title' => 'required|string',
             'mcqs' => 'required|json',
             'video_id' => 'required|string',
-           // 'resource_url' => 'required|string'
+            // 'resource_url' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -92,22 +93,23 @@ class LWYResourceController extends Controller
         if ($request->title)
             $title = $request->title;
 
-	$video = Video::where('url', $request->video_id)->first();
+        $video = Video::where('url', $request->video_id)->first();
 
         if (!$video) {
             $video = new Video(['url' => $request->video_id]);
             $video->save();
         }
 
-       // $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
-       $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->video_id]);
+        // $test = Test::create(['title'=>$title, 'mcqs'=>$request->mcqs, 'resource_url'=>$request->resource_url]);
+        $test = Test::create(['title' => $title, 'mcqs' => $request->mcqs, 'resource_url' => $request->video_id]);
 
         $test->save();
 
         return $this->apiResponse->sendResponse(200, 'Test added successfully', $test);
     }
 
-    public function get_tests(Request $request){
+    public function get_tests(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'video_id' => 'required|string'
         ]);
@@ -116,7 +118,7 @@ class LWYResourceController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
 
-	$video = Video::where('url', $request->video_id)->first();
+        $video = Video::where('url', $request->video_id)->first();
 
         if (!$video) {
             $video = new Video(['url' => $request->video_id]);

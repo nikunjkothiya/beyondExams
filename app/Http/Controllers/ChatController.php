@@ -98,13 +98,13 @@ class ChatController extends Controller
         }
 
         try {
-            if($request->exists('user_id')){
+            if ($request->exists('user_id')) {
                 $user_id = $request->user_id;
-            }else{
+            } else {
                 $user_id = 1;
             }
 
-            $chat = Auth::user()->chats()->where(['receiver_id'=>$user_id,'title'=>$request->title])->first();
+            $chat = Auth::user()->chats()->where(['receiver_id' => $user_id, 'title' => $request->title])->first();
             if (is_null($chat)) {
                 $chat = new Chat();
                 $chat->creator_id = Auth::user()->id;
@@ -117,12 +117,12 @@ class ChatController extends Controller
                 $chat->users()->attach([Auth::user()->id, $user_id]);
                 /////Two way system binding message to 1 and 2 from chat_id (2 entries=>1 for sender,2 for receiver)
                 DB::commit();
-                if($request->exists('period_name')){
+                if ($request->exists('period_name')) {
                     return $chat;
                 }
                 return $this->apiResponse->sendResponse(200, 'Successfully Create Chat', $chat);
             }
-            if($request->exists('period_name')){
+            if ($request->exists('period_name')) {
                 return $chat;
             }
             return $this->apiResponse->sendResponse(200, 'Already Created Chat', $chat);
@@ -219,7 +219,7 @@ class ChatController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'chat_id' => 'required|integer',
-		'folder_name' => 'required|string'
+                'folder_name' => 'required|string'
             ]);
 
             if ($validator->fails()) {
@@ -230,20 +230,19 @@ class ChatController extends Controller
             if (!is_null($chat)) {
                 $name = $request->folder_name;
 
-                $old_message = ChatMessage::where(['chat_id' => $chat->id])->where('type_id','!=',1)->get();
-                foreach($old_message as $message){
-//                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
-                    $message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$name."/", $message->message);
-		    $message->message = "https://api.learnwithyoutube.org/" . $message->message;
+                $old_message = ChatMessage::where(['chat_id' => $chat->id])->where('type_id', '!=', 1)->get();
+                foreach ($old_message as $message) {
+                    //                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
+                    $message->message = str_replace("WhatsApp-Scraping/", "classroom_assets/" . $name . "/", $message->message);
+                    $message->message = "https://api.learnwithyoutube.org/" . $message->message;
                     $message->save();
                 }
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Successfully Changed Filepaths', null);
-            }else{
+            } else {
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'Chat Not Found', null);
             }
-            
         } catch (Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -305,18 +304,17 @@ class ChatController extends Controller
 
                             $chat_message = new ChatMessage();
                             $chat_message->chat_id = $chat->id;
-                            if($value[3] == 'Text')
-                            {
-                                $chat_message->message = $value[2];   
-                            }else{
-				$chat_message->message = str_replace("WhatsApp-Scraping/","classroom_assets/".$request->chat_name."/", $value[2]);
+                            if ($value[3] == 'Text') {
+                                $chat_message->message = $value[2];
+                            } else {
+                                $chat_message->message = str_replace("WhatsApp-Scraping/", "classroom_assets/" . $request->chat_name . "/", $value[2]);
                                 $chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
                             }
 
                             if ($value[3] == 'Text') {
                                 $chat_message->type_id = 1;
                             } elseif ($value[3] == 'Photo') {
-				$chat_message->type_id = 2;
+                                $chat_message->type_id = 2;
                             } elseif ($value[3] == 'Video') {
                                 $chat_message->type_id = 3;
                             } elseif ($value[3] == 'Audio') {
@@ -329,11 +327,11 @@ class ChatController extends Controller
 
                             if (is_null($findUser)) {
                                 $chat_message->sender_id = $newUser->id;
-                                if(!ChatUser::where(['chat_id'=> $chat->id, 'user_id' => $newUser->id])->first())
+                                if (!ChatUser::where(['chat_id' => $chat->id, 'user_id' => $newUser->id])->first())
                                     $chat->users()->attach([$newUser->id]);
                             } else {
                                 $chat_message->sender_id = $findUser->id;
-                                if(!ChatUser::where(['chat_id'=> $chat->id, 'user_id' => $findUser->id])->first())
+                                if (!ChatUser::where(['chat_id' => $chat->id, 'user_id' => $findUser->id])->first())
                                     $chat->users()->attach([$findUser->id]);
                             }
 
@@ -483,7 +481,7 @@ class ChatController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-               // 'chat_id' => 'sometimes|int',
+                // 'chat_id' => 'sometimes|int',
                 'start_time' => 'required|string|date_format:H:i',
                 'end_time' => 'required|string|date_format:H:i|after:start_time',
                 'period_name' => 'required|string',
@@ -494,13 +492,13 @@ class ChatController extends Controller
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
             }
-            $request->request->add(['title'=>$request->period_name]);
+            $request->request->add(['title' => $request->period_name]);
             $response = $this->create_chat($request);
 
             if (!is_null(Chat::where('id', $response->id)->first())) {
 
                 $old_timetable = TimeTable::where(['chat_id' => $response->id, 'start_time' => $request->start_time, 'end_time' => $request->end_time, 'period_name' => $request->period_name, 'date' => $request->date])->get();
-            
+
                 if (count($old_timetable) > 0) {
                     return $this->apiResponse->sendResponse(201, 'Already Exits.', $old_timetable);
                 } else {
@@ -517,10 +515,10 @@ class ChatController extends Controller
             } else {
                 return $this->apiResponse->sendResponse(404, 'Chat Not Found.', null);
             }
-          
+
             return $this->apiResponse->sendResponse(200, 'Timetable Created Successfully.', $timetable);
         } catch (\Exception $e) {
-        
+
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
@@ -549,8 +547,8 @@ class ChatController extends Controller
                 } else {
                     $get_timetable = TimeTable::find($request->timetable_id);
                     $get_timetable->fill($request->all())->save();
-                    if($request->exists('period_name')){
-                        $update_chat_name = Chat::where(['id' => $get_timetable->chat_id])->update(['title'=>$request->period_name]);
+                    if ($request->exists('period_name')) {
+                        $update_chat_name = Chat::where(['id' => $get_timetable->chat_id])->update(['title' => $request->period_name]);
                     }
                 }
             } else {
@@ -674,7 +672,7 @@ class ChatController extends Controller
             }
 
             $chatReviewFound = Chat::find($request->chat_id)->reviews()->where('student_id', Auth::user()->id)->first();
-            if(!is_null($chatReviewFound)) {
+            if (!is_null($chatReviewFound)) {
                 return $this->apiResponse->sendResponse(201, 'Already Found Chat Review For This Chat.', $chatReviewFound);
             } else {
                 $addReview = new ChatReview();
@@ -784,7 +782,7 @@ class ChatController extends Controller
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Message Saved Successfully', $save_chat_message);
         } catch (Exception $e) {
-            DB::rollback();   
+            DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }

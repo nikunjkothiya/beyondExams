@@ -44,5 +44,9 @@ class Video extends Model
     {
         return $this->belongsToMany('App\Keyword')->withTimestamps();
     }
+
+    public function notes(){
+        return $this->hasMany('App\VideoNote','video_id','id');
+    }
     
 }
