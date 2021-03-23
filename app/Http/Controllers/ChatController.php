@@ -24,6 +24,7 @@ use App\TeacherDocument;
 use App\StudentAttendance;
 use App\TeacherAttendance;
 use App\TimetableHistory;
+use Illuminate\Support\Facades\Config;
 
 // Models
 
@@ -234,7 +235,7 @@ class ChatController extends Controller
                 foreach ($old_message as $message) {
                     //                    $change_path = ChatMessage::where(['chat_id' => $chat->id,'id'=>$message->id])->where('type_id','!=',1)->first();
                     $message->message = str_replace("WhatsApp-Scraping/", "classroom_assets/" . $name . "/", $message->message);
-                    $message->message = "https://api.learnwithyoutube.org/" . $message->message;
+                    $message->message = env('BASE_URL') . $message->message;
                     $message->save();
                 }
                 DB::commit();
@@ -308,7 +309,7 @@ class ChatController extends Controller
                                 $chat_message->message = $value[2];
                             } else {
                                 $chat_message->message = str_replace("WhatsApp-Scraping/", "classroom_assets/" . $request->chat_name . "/", $value[2]);
-                                $chat_message->message = "https://api.learnwithyoutube.org/" . $chat_message->message;
+                                $chat_message->message = env('BASE_URL') . $chat_message->message;
                             }
 
                             if ($value[3] == 'Text') {

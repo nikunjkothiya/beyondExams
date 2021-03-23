@@ -14,7 +14,6 @@ use App\Video;
 use App\BookmarkVideo;
 use App\HistoryUserVidoes;
 use Auth;
-use Config;
 use DB;
 use Exception;
 use Illuminate\Http\Request;
@@ -29,6 +28,7 @@ use App\KeywordVideo;
 use App\UserCertificate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Support\Facades\Config;
 
 class LearnWithYoutubeController extends Controller
 {
@@ -75,7 +75,7 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'required|string|max:255',
                     'email' => 'required|email',
-                    // 'college' => 'string|max:1024',
+                    'institute' => 'string|max:1024',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
@@ -106,8 +106,11 @@ class LearnWithYoutubeController extends Controller
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = "https://api.learnwithyoutube.org/" . $imgpath;
+                    $user->avatar = env('BASE_URL'). $imgpath;
                 }
+
+                if (isset($request->institute))
+                    $user->institute = $request->institute;
 
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
@@ -154,7 +157,7 @@ class LearnWithYoutubeController extends Controller
 
                         $user_certidicate = new UserCertificate();
                         $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = "https://api.learnwithyoutube.org/" . $imgpath;
+                        $user_certidicate->image = env('BASE_URL'). $imgpath;
                         $user_certidicate->save();
                     }
                 }
@@ -193,6 +196,7 @@ class LearnWithYoutubeController extends Controller
                 $validator = Validator::make($request->all(), [
                     'name' => 'sometimes|string|max:255',
                     'age' => 'sometimes|int',
+                    'institute' => 'string|max:1024',
                     'country' => 'sometimes|integer|min:1|max:' . Country::count(),
                     'profile_link' => 'string',
                     'short_bio' => 'sometimes|string',
@@ -225,8 +229,11 @@ class LearnWithYoutubeController extends Controller
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = "https://api.learnwithyoutube.org/" . $imgpath;
+                    $user->avatar = env('BASE_URL'). $imgpath;
                 }
+
+                if (isset($request->institute))
+                    $user->institute = $request->institute;
 
                 if (isset($request->profile_link))
                     $user->profile_link = $request->profile_link;
@@ -273,7 +280,7 @@ class LearnWithYoutubeController extends Controller
 
                         $user_certidicate = new UserCertificate();
                         $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = "https://api.learnwithyoutube.org/" . $imgpath;
+                        $user_certidicate->image = env('BASE_URL'). $imgpath;
                         $user_certidicate->save();
                     }
                 }
@@ -325,7 +332,7 @@ class LearnWithYoutubeController extends Controller
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = Auth::user()->id;
-                    $user_certificate->image = "https://api.learnwithyoutube.org/" . $imgpath;
+                    $user_certificate->image = env('BASE_URL'). $imgpath;
                     $user_certificate->save();
 
                     $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
@@ -842,20 +849,32 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
-    public function getPublicHistory()
+    public function getPublicHistory(Request $request)
     {
         DB::beginTransaction();
-        try {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+        ]);
 
-            $getPublicHistory = DB::table('history_user_videos')
-                ->join('users', 'history_user_videos.user_id', '=', 'users.id')
-                ->join('videos', 'history_user_videos.video_id', '=', 'videos.id')
-                ->where('users.is_history_public',1)
-                ->select('history_user_videos.*','users.name as user_name','videos.url as video_url')
-                ->paginate();
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $user_id = $request->user_id;
+            $check_privacy = User::where(['id' => $user_id,'is_history_public'=>1])->first();
+            if($check_privacy){
+               $publicHistory = Video::select('*')
+                ->with('duration_history:video_id,start_time,end_time')
+                ->whereHas('duration_history', function ($query) use ($user_id) {
+                    $query->where('user_id', $user_id);
+                })->paginate();
+            }else{
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
 
             DB::commit();
-            return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getPublicHistory);
+            return $this->apiResponse->sendResponse(200, 'User public watch history get successfully', $publicHistory);
             
         } catch (\Exception $e) {
             DB::rollback();
@@ -1039,7 +1058,7 @@ class LearnWithYoutubeController extends Controller
                 $imgpath = commonUploadImage($storage_path, $attachment);
 
                 $category = Category::find($request->category_id);
-                $category->image_url = "https://api.learnwithyoutube.org/" . $imgpath;
+                $category->image_url = env('BASE_URL') . $imgpath;
                 $category->save();
 
                 DB::commit();

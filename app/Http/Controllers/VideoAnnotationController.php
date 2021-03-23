@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use DateTime;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Support\Facades\Config;
 
 class VideoAnnotationController extends Controller
 {
