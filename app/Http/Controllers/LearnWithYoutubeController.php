@@ -33,8 +33,8 @@ use Illuminate\Support\Facades\Config;
 class LearnWithYoutubeController extends Controller
 {
     private $apiResponse;
-   // private $aws_base_url = "https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com";
- 
+    // private $aws_base_url = "https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com";
+
     public function __construct(ApiResponse $apiResponse)
     {
         $this->apiResponse = $apiResponse;
@@ -88,8 +88,10 @@ class LearnWithYoutubeController extends Controller
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
                     'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
-                    'image' => 'sometimes|array',
-                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                    'image' => 'sometimes',
+                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'description' => 'string|max:500',
+                    'organization' => 'string',
                 ]);
 
                 if ($validator->fails()) {
@@ -106,7 +108,7 @@ class LearnWithYoutubeController extends Controller
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = env('BASE_URL'). $imgpath;
+                    $user->avatar = env('BASE_URL') . $imgpath;
                 }
 
                 if (isset($request->institute))
@@ -149,17 +151,23 @@ class LearnWithYoutubeController extends Controller
                 $user->flag = 1;
                 $user->save();
 
-                if ($request->file('image')) {
-                    foreach ($request->file('image') as $image) {
-                        $attachment = $image;
-                        $storage_path = 'user/certificates/';
-                        $imgpath = commonUploadImage($storage_path, $attachment);
 
-                        $user_certidicate = new UserCertificate();
-                        $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = env('BASE_URL'). $imgpath;
-                        $user_certidicate->save();
+                if($request->file('image')) {
+                    $image = $request->file('image');
+                    $attachment = $image;
+                    $storage_path = 'user/certificates/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+
+                    $user_certificate = new UserCertificate();
+                    $user_certificate->user_id = $user->id;
+                    $user_certificate->image = env('BASE_URL') . $imgpath;
+                    if (isset($request->description)) {
+                        $user_certificate->description = $request->description;
                     }
+                    if (isset($request->organization)) {
+                        $user_certificate->organization = $request->organization;
+                    }
+                    $user_certificate->save();
                 }
 
                 if (isset($request->domain)) {
@@ -208,8 +216,9 @@ class LearnWithYoutubeController extends Controller
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
                     'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
-                    'image' => 'sometimes',
-                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                    'image' => 'sometimes|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'description' => 'string|max:500',
+                    'organization' => 'string',
                 ]);
 
                 if ($validator->fails()) {
@@ -229,7 +238,7 @@ class LearnWithYoutubeController extends Controller
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
-                    $user->avatar = env('BASE_URL'). $imgpath;
+                    $user->avatar = env('BASE_URL') . $imgpath;
                 }
 
                 if (isset($request->institute))
@@ -272,17 +281,22 @@ class LearnWithYoutubeController extends Controller
 
                 $user->save();
 
-                if ($request->file('image')) {
-                    foreach ($request->file('image') as $image) {
-                        $attachment = $image;
-                        $storage_path = 'user/certificates/';
-                        $imgpath = commonUploadImage($storage_path, $attachment);
+                if($request->file('image')) {
+                    $image = $request->file('image');
+                    $attachment = $image;
+                    $storage_path = 'user/certificates/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
 
-                        $user_certidicate = new UserCertificate();
-                        $user_certidicate->user_id = $user->id;
-                        $user_certidicate->image = env('BASE_URL'). $imgpath;
-                        $user_certidicate->save();
+                    $user_certificate = new UserCertificate();
+                    $user_certificate->user_id = $user->id;
+                    $user_certificate->image = env('BASE_URL') . $imgpath;
+                    if (isset($request->description)) {
+                        $user_certificate->description = $request->description;
                     }
+                    if (isset($request->organization)) {
+                        $user_certificate->organization = $request->organization;
+                    }
+                    $user_certificate->save();
                 }
 
                 if (isset($request->domain)) {
@@ -317,26 +331,33 @@ class LearnWithYoutubeController extends Controller
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
-                    'image' => 'required',
-                    'image.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                    'image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'description' => 'string|max:500',
+                    'organization' => 'string',
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                foreach ($request->file('image') as $image) {
+                if($request->file('image')) {
+                    $image = $request->file('image');
                     $attachment = $image;
                     $storage_path = 'user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = Auth::user()->id;
-                    $user_certificate->image = env('BASE_URL'). $imgpath;
+                    $user_certificate->image = env('BASE_URL') . $imgpath;
+                    if (isset($request->description)) {
+                        $user_certificate->description = $request->description;
+                    }
+                    if (isset($request->organization)) {
+                        $user_certificate->organization = $request->organization;
+                    }
                     $user_certificate->save();
-
-                    $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 }
+                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', $user);
             } else {
@@ -840,9 +861,8 @@ class LearnWithYoutubeController extends Controller
                     $query->where('user_id', $user_id);
                 })->paginate();
             DB::commit();
-           
+
             return $this->apiResponse->sendResponse(200, 'User watch history get successfully', $getHistory);
-            
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -862,20 +882,19 @@ class LearnWithYoutubeController extends Controller
 
         try {
             $user_id = $request->user_id;
-            $check_privacy = User::where(['id' => $user_id,'is_history_public'=>1])->first();
-            if($check_privacy){
-               $publicHistory = Video::select('*')
-                ->with('duration_history:video_id,start_time,end_time')
-                ->whereHas('duration_history', function ($query) use ($user_id) {
-                    $query->where('user_id', $user_id);
-                })->paginate();
-            }else{
+            $check_privacy = User::where(['id' => $user_id, 'is_history_public' => 1])->first();
+            if ($check_privacy) {
+                $publicHistory = Video::select('*')
+                    ->with('duration_history:video_id,start_time,end_time')
+                    ->whereHas('duration_history', function ($query) use ($user_id) {
+                        $query->where('user_id', $user_id);
+                    })->paginate();
+            } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
             }
 
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'User public watch history get successfully', $publicHistory);
-            
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -894,10 +913,9 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-                $change_history_privacy = User::where('id',Auth::user()->id)->update(['is_history_public'=>$request->is_public]);
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'History Privacy Chnaged Successfully', null);
-     
+            $change_history_privacy = User::where('id', Auth::user()->id)->update(['is_history_public' => $request->is_public]);
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'History Privacy Chnaged Successfully', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
