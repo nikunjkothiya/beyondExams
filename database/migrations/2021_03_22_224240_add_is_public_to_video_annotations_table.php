@@ -14,13 +14,10 @@ class AddIsPublicToVideoAnnotationsTable extends Migration
     public function up()
     {
         Schema::table('video_annotations', function (Blueprint $table) {
-            $table->unsignedBigInteger('user_id')->after('id');
+            $table->unsignedBigInteger('user_id')->after('id')->default(1);
             $table->tinyInteger('is_public')->after('annotation')->default(1)->comment('0=private,1=public');
         });
 
-        Schema::table('video_annotations',function($table){
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
     }
 
     /**
