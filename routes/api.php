@@ -147,11 +147,23 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('send_multimedia_message', ['uses' => 'ChatController@send_multimedia_message']);
         Route::post('change_chat_title', ['uses' => 'ChatController@change_chat_title']);
 
+        // Chat Label Api's
+        Route::post('add_label_to_chat_message', ['uses' => 'ChatController@add_label_to_chat_message']);
+        Route::get('get_label_messages', ['uses' => 'ChatController@get_label_messages']);
+        Route::get('get_user_labels', ['uses' => 'ChatController@get_user_labels']);
+
         Route::post('add_time_table', ['uses' => 'ChatController@add_time_table']);
         Route::post('add_teacher_document', ['uses' => 'ChatController@add_teacher_document']);
-        Route::get('get_time_tables', ['uses' => 'ChatController@get_time_tables']);
+        Route::get('get_time_tables', ['uses' => 'ChatController@get_time_table']);
         Route::post('delete_time_table', ['uses' => 'ChatController@delete_time_table']);
         Route::post('update_timetable', ['uses' => 'ChatController@update_timetable']);
+
+        // Set and Get Period Info 
+        Route::post('set_period_info', ['uses' => 'ChatController@set_period_info']);
+        Route::get('get_period_info', ['uses' => 'ChatController@get_period_info']);
+
+        //Get Chat Message between one hour 
+        Route::get('get_chat_messages_in_one_hour', ['uses' => 'ChatController@get_chat_messages_in_one_hour']);
 
         Route::post('start_class', ['uses' => 'ChatController@start_class']);
         Route::post('end_class', ['uses' => 'ChatController@end_class']);
@@ -161,6 +173,12 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::get('search_filter_messages', ['uses' => 'ChatController@search_filter_messages']);
         Route::post('save_chat_message', ['uses' => 'ChatController@save_chat_message']);
         Route::post('classroom_chat_message', ['uses' => 'ChatController@classroom_chat_message']);
+
+        // Save Chat Avatar
+        Route::post('save_chat_image', ['uses' => 'ChatController@save_chat_image']);
+
+        //Filter Chat Messages
+        Route::get('filter_chat_messages', ['uses' => 'ChatController@filter_chat_messages']);
 
         //Attendance of classroom
         Route::post('add_teacher_attendance', ['uses' => 'ChatController@add_teacher_attendance']);
