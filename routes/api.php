@@ -44,6 +44,9 @@ Route::post('update_file_path_for_whattsapp', ['uses' => 'ChatController@update_
 
 Route::get('getPublicHistory', ['uses' => 'LearnWithYoutubeController@getPublicHistory']);
 
+// For Youtube Search Data 
+Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_data']);
+
 
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
