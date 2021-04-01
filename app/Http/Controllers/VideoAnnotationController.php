@@ -84,7 +84,10 @@ class VideoAnnotationController extends Controller
             if (!$video) {
                 return $this->apiResponse->sendResponse(404, 'No Video Found', null);
             } else {
-                $video_annotation = VideoAnnotation::with('user')->where(['video_id' => $video->id,'is_public'=>1])->orWhere([['video_id',$video->id],['is_public',0], ['user_id',Auth::id()]])->get();
+		if (Auth::check())
+                    $video_annotation = VideoAnnotation::with('user')->where(['video_id' => $video->id,'is_public'=>1])->orWhere([['video_id',$video->id],['is_public',0], ['user_id',Auth::id()]])->get();
+		else
+		    $video_annotation = VideoAnnotation::with('user')->where(['video_id' => $video->id,'is_public'=>1])->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Annotations Found successfully', $video_annotation);
             }
