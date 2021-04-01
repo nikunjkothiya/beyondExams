@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Chat;
 use App\ChatMessage;
+use App\ChatMessageLabel;
 use App\ChatReview;
 use App\ChatUser;
 use App\ClassroomChatMessage;
@@ -16,6 +17,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Events\NewMessage;
+use App\PeriodInfo;
 use App\SaveMessage;
 use App\StudentHomework;
 use App\TimeTable;
@@ -25,6 +27,7 @@ use App\StudentAttendance;
 use App\TeacherAttendance;
 use App\TimetableHistory;
 use Illuminate\Support\Facades\Config;
+use App\Label;
 
 // Models
 
@@ -188,6 +191,39 @@ class ChatController extends Controller
             $chat = Chat::where('chat_type_id', 3)->get();
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully Get Whatssapp Chats', $chat);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function save_chat_image(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+                $validator = Validator::make($request->all(), [
+                    'image' => 'required|mimes:jpeg,png,jpg|max:512',
+                    'chat_id'=>'required|int'
+                ]);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+                
+                $avatar = $request->file('image');
+                $storage_path = 'chat/avatar/';
+                $imgpath = commonUploadImage($storage_path, $avatar);
+
+                $chat_avatar = Chat::find($request->chat_id);
+                if(!$chat_avatar){
+                    return $this->apiResponse->sendResponse(404, 'Chat Not Found', null);
+                }
+                $chat_avatar->avatar = env('BASE_URL') . $imgpath;
+                $chat_avatar->save();
+                
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Chat Avatar Set Successfully', null);
+            
         } catch (Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -488,6 +524,7 @@ class ChatController extends Controller
                 'period_name' => 'required|string',
                 'date' => 'required|string|date_format:d/m/Y',
                 'recursive' => 'required|int|min:1|max:4',
+                //// subject column add and update api also
             ]);
 
             if ($validator->fails()) {
@@ -563,21 +600,23 @@ class ChatController extends Controller
         }
     }
 
-    public function get_time_tables(Request $request)
+    public function get_time_table(Request $request)
     {
         DB::beginTransaction();
         try {
-            if (Auth::user()->role_id == 2) {
-                $timetable = TimeTable::with(['teacher', 'classroom'])->where('teacher_id', Auth::user()->id)->orderByRaw("date ASC, day ASC,  start_time ASC")->get();
-                DB::commit();
+            // if (Auth::user()->role_id == 2) {
+            $chats = ChatUser::where('user_id', Auth::user()->id)->distinct()->pluck('chat_id');
 
-                if ($timetable) {
-                    return $this->apiResponse->sendResponse(200, 'Timetable Get Successfully.', $timetable);
-                }
-                return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'Only Teacher Can Get Timetable.', null);
+            $timetable = TimeTable::with(['teacher', 'classroom'])->whereIn('chat_id', $chats)->orderByRaw("date ASC, start_time ASC")->get();
+            DB::commit();
+
+            if (count($timetable) > 0) {
+                return $this->apiResponse->sendResponse(200, 'Timetable Get Successfully.', $timetable);
             }
+            return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
+            /* } else {
+                return $this->apiResponse->sendResponse(401, 'Only Teacher Can Get Timetable.', null);
+            } */
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -956,6 +995,216 @@ class ChatController extends Controller
                 return $this->apiResponse->sendResponse(401, 'Only Teachers Can End Class.', null);
             }
         } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_chat_messages_in_one_hour(request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'chat_id'  => 'required|integer',
+            'datetime' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $end_time = date("Y-m-d H:i:s", strtotime($request->datetime . "+60 minutes"));
+
+            $chat = ChatMessage::where('chat_id', $request->chat_id)->whereBetween('updated_at', [$request->datetime, $end_time])->get();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Chat Get Successfully', $chat);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function set_period_info(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'timetable_id'      => 'required|int',
+                'topic'             => 'required|string',
+                'topic_description' => 'sometimes',
+                'start_datetime'    => 'required|date'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            if (!TimeTable::find($request->timetable_id)) {
+                return $this->apiResponse->sendResponse(404, 'Timetable Not Found.', null);
+            } else {
+                $set_period = new PeriodInfo();
+                $set_period->timetable_id = $request->timetable_id;
+                $set_period->topic = $request->topic;
+                if (isset($request->topic_description))
+                    $set_period->topic_description = $request->topic_description;
+                $set_period->start_datetime = $request->start_datetime;
+                $set_period->save();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Period Info Set Successfully.', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_period_info(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'start_datetime' => 'required|date',
+                'timetable_id' => 'required|int'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $period = PeriodInfo::where(['start_datetime' => $request->start_datetime, 'timetable_id' => $request->timetable_id])->get();
+            if (count($period) == 0) {
+                return $this->apiResponse->sendResponse(404, 'Period Info Not Found.', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Period Info Get Successfully.', $period);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_label_to_chat_message(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'label_name'        => 'required|string',
+                'chat_message_id'   => 'required|int',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(200, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $label = Label::where('name', $request->label_name)->first();
+            if (!$label) {
+                $label = new Label();
+                $label->name = $request->label_name;
+                $label->save();
+            }
+            if (!ChatMessage::find($request->chat_message_id)) {
+                return $this->apiResponse->sendResponse(404, 'Chat Message Not Found.', null);
+            }
+
+            $add_label_to_message = new ChatMessageLabel();
+            $add_label_to_message->user_id = Auth::user()->id;
+            $add_label_to_message->chat_message_id = $request->chat_message_id;
+            $add_label_to_message->label_id =  $label->id;
+            $add_label_to_message->save();
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Label Add Successfully.', $add_label_to_message);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_label_messages(request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'label_name'  => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $label = Label::where('name', $request->label_name)->first();
+            if ($label) {
+                $chat_message_ids = ChatMessageLabel::where(['user_id' => Auth::user()->id, 'label_id' => $label->id])->pluck('chat_message_id');
+                $label_messages = ChatMessage::whereIn('id', $chat_message_ids)->get();
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Chat Label Messages Get Successfully', $label_messages);
+            }
+
+            return $this->apiResponse->sendResponse(404, 'Chat Label Not Found', null);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_user_labels(request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $label_ids = ChatMessageLabel::where('user_id', Auth::user()->id)->distinct()->pluck('label_id');
+            $labels = Label::whereIn('id', $label_ids)->get();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Labels Get Successfully', $labels);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function filter_chat_messages(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'chat_id'     => 'required|int',
+            'role_id'     => 'sometimes|array', // integer
+            'labels'      => 'sometimes|array', // string
+            'file_type'   => 'sometimes|array', // string
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            $chat_messages = ChatMessage::where('chat_id', $request->chat_id);
+
+            if (!empty($request->role_id)) {
+                $filter_by_role = DB::table('chat_messages')
+                    ->join('users', 'chat_messages.sender_id', '=', 'users.id')
+                    ->where('chat_messages.chat_id', $request->chat_id)
+                    ->whereIn('users.role_id', $request->role_id)
+                    ->select('chat_messages.id as id', 'chat_messages.chat_id as chat_id', 'chat_messages.message as message', 'chat_messages.type_id as type_id', 'chat_messages.sender_id as sender_id', 'chat_messages.created_at as created_at', 'chat_messages.updated_at as updated_at', 'chat_messages.is_child as is_child');
+                $chat_messages = $chat_messages->union($filter_by_role);
+            }
+
+            if (!empty($request->labels)) {
+                $labels = Label::whereIn('name', $request->labels)->distinct()->pluck('id');
+                $chat_message_ids = ChatMessageLabel::whereIn('label_id', $request->labels)->pluck('chat_message_id');
+                $filter_by_label = ChatMessage::where('chat_id', $request->chat_id)->whereIn('id', $chat_message_ids);
+                $chat_messages = $chat_messages->union($filter_by_label);
+            }
+
+            if (!empty($request->file_type)) {
+                $file_type = MessageType::whereIn('type', $request->file_type)->distinct()->pluck('id');
+                $filter_by_type = ChatMessage::whereIn('type_id', $file_type)
+                    ->where('chat_messages.chat_id', $request->chat_id);
+                $chat_messages = $chat_messages->union($filter_by_type);
+            }
+
+            return $this->apiResponse->sendResponse(200, 'Messages Get Successfully', $chat_messages->paginate(10));
+        } catch (Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }

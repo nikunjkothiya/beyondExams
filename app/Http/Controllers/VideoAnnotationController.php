@@ -29,7 +29,7 @@ class VideoAnnotationController extends Controller
                 'video_url' => 'required|string',
                 'annotation' => 'required|string',
                 'video_timestamp' => 'required|integer',
-		'is_public' => 'sometimes|numeric|between:0,1'
+                'is_public' => 'sometimes|numeric|between:0,1'
             ]);
 
             if ($validator->fails()) {
@@ -44,17 +44,17 @@ class VideoAnnotationController extends Controller
                     $video->save();
                 }
 
-		if (isset($request->is_public))
-		    $is_public = $request->is_public;
-		else
-		    $is_public = 1;
+                if (isset($request->is_public))
+                    $is_public = $request->is_public;
+                else
+                    $is_public = 1;
 
                 $videoAnnotation = new VideoAnnotation();
                 $videoAnnotation->user_id = Auth::user()->id;
                 $videoAnnotation->video_id = $video->id;
                 $videoAnnotation->annotation = $request->annotation;
                 $videoAnnotation->video_timestamp = $request->video_timestamp;
-		$videoAnnotation->is_public = $is_public;
+                $videoAnnotation->is_public = $is_public;
                 $videoAnnotation->save();
 
                 DB::commit();
@@ -66,7 +66,7 @@ class VideoAnnotationController extends Controller
         } else {
             return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
         }
-  }
+    }
 
     public function get_video_annotations(Request $request)
     {
@@ -91,7 +91,6 @@ class VideoAnnotationController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Annotations Found successfully', $video_annotation);
             }
-
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -141,7 +140,7 @@ class VideoAnnotationController extends Controller
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-        
+
         try {
             $note = VideoAnnotation::find($request->note_id);
             if (!is_null($note)) {
@@ -165,7 +164,7 @@ class VideoAnnotationController extends Controller
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'is_public' => 'required|numeric|between:0,1',
-	    'note_id' => 'required|integer'
+            'note_id' => 'required|integer'
         ]);
 
         if ($validator->fails()) {
@@ -173,10 +172,9 @@ class VideoAnnotationController extends Controller
         }
 
         try {
-            $change_privacy = VideoAnnotation::find($request->note_id)->update(['is_public'=>$request->is_public]);
+            $change_privacy = VideoAnnotation::find($request->note_id)->update(['is_public' => $request->is_public]);
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Note privacy changed successfully', null);
-
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
