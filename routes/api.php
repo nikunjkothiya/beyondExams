@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         
         // --------  Video Notes/Annotations ---------- //
         Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-      //  Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+//        Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
         Route::post('edit_video_note',['uses' => 'VideoAnnotationController@edit_video_note']);
         Route::post('delete_video_note',['uses' => 'VideoAnnotationController@delete_video_note']);
         Route::post('change_note_privacy',['uses' => 'VideoAnnotationController@change_note_privacy']);
