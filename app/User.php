@@ -207,7 +207,15 @@ class User extends Authenticatable
     }
 
     public function domains() {
-        return $this->belongsToMany('App\Domain','domain_user')->withTimestamps();
+        return $this->belongsToMany('App\Domain','domain_user')->withPivot('experience')->withTimestamps();
+    }
+
+    // public function education_standard() {
+    //     return $this->belongsTo('App\EducationUser','user_id','id');
+    // }
+    
+    public function education_standard() {
+        return $this->hasMany('App\EducationUser','user_id','id');
     }
 
 }

@@ -33,7 +33,7 @@ Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learn
 Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
 
 Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
-//Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
 Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
 Route::get('get_ses_videos',['uses' => 'ChemistryUniverseController@get_ses_videos']);
@@ -63,7 +63,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         
         // --------  Video Notes/Annotations ---------- //
         Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-        Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
+      //  Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
         Route::post('edit_video_note',['uses' => 'VideoAnnotationController@edit_video_note']);
         Route::post('delete_video_note',['uses' => 'VideoAnnotationController@delete_video_note']);
         Route::post('change_note_privacy',['uses' => 'VideoAnnotationController@change_note_privacy']);
@@ -89,6 +89,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);        
         // ------- User Histroy Privacy Change -------- //
         Route::post('change_history_public',['uses' => 'LearnWithYoutubeController@change_history_public']);
+        // ------- User Education Add -------- //
+        Route::post('add_user_education',['uses' => 'LearnWithYoutubeController@add_user_education']);
 
 
         // User Social Links add

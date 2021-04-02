@@ -6,6 +6,7 @@ use App;
 use App\Country;
 use App\Language;
 use App\Tag;
+use App\Video;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -72,72 +73,132 @@ class UtilController extends Controller
         Mail::to("pankajbaranwal.1996@gmail.com")->send(new App\Mail\GuidanceMail($objMail));
     }
 
+  //  public function generate_all_sitemap()
+  //  {
+  //      $apiResponse = new ApiResponse;
+  //      try {
+  //          // Get sitemap index
+  //          $lastOpp = Opportunity::latest('id')->first();
+  //          $index = floor($lastOpp->id / 1000);
+//
+  //          $sitemapIndex = SitemapIndex::create();
+  //          for ($i = 0; $i <= $index; $i++) {
+  //              // Get Last 1000 Opportunity
+  //              $opportunities = Opportunity::where('id', '>', ($i * 1000))->limit(1000)->get();
+  //              // Start making sitemap
+  //              $sitemap = Sitemap::create();
+  //              // Loop through all opp
+  //              foreach ($opportunities as $opportunity) {
+  //                  resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
+  //                  $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
+  //              }
+  //              // Write to disk
+  //              $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
+  //              $sitemap->writeToDisk('public', $sitemap_path);
+  //              resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
+  //              $sitemapIndex->add($sitemap_path);
+  //          }
+  //          $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
+  //          resolve('url')->forceRootUrl(env('APP_URL'));
+  //          return $apiResponse->sendResponse(200, "Success", $index);
+  //      } catch (\Exception $e) {
+  //          return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+  //      }
+  //  }
+
+  // public function generate_latest_sitemap()
+  // {
+  //     $apiResponse = new ApiResponse;
+  //     try {
+  //         // Get sitemap index
+  //         $lastOpp = Opportunity::latest('id')->first(); //5000
+  //         $index = floor($lastOpp->id / 1000);   // 5
+  //         // Get Last 1000 Opportunity
+  //         $opportunities = Opportunity::where('id', '>', ($index * 1000))->limit(1000)->get(); // >5000
+  //         // Start making sitemap
+  //         resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
+  //         $sitemap = Sitemap::create();
+  //         // Loop through all opp
+  //         foreach ($opportunities as $opportunity) {
+  //             $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
+  //         }
+  //         // Write to disk
+  //         $path = 'sitemaps/sitemap_' . ($index + 1) . '.xml';
+  //         $sitemap->writeToDisk('public', $path);
+
+  //         // Generate Sitemap Index
+  //         resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
+  //         $sitemapIndex = SitemapIndex::create();
+  //         for ($i = 0; $i <= $index; $i++) {
+  //             $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
+  //             $sitemapIndex->add($sitemap_path);
+  //         }
+  //         $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
+
+  //         resolve('url')->forceRootUrl(env('APP_URL'));
+  //         return $apiResponse->sendResponse(200, "Success", $index);
+  //     } catch (\Exception $e) {
+  //         return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+  //     }
+  // }
+
     public function generate_all_sitemap()
     {
         $apiResponse = new ApiResponse;
         try {
             // Get sitemap index
-            $lastOpp = Opportunity::latest('id')->first();
-            $index = floor($lastOpp->id / 1000);
+            $lastVideo = Video::latest('id')->first();
+            $index = floor($lastVideo->id / 1000);
 
             $sitemapIndex = SitemapIndex::create();
             for ($i = 0; $i <= $index; $i++) {
-                // Get Last 1000 Opportunity
-                $opportunities = Opportunity::where('id', '>', ($i * 1000))->limit(1000)->get();
+                // Get Last 1000 Videos
+                $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->get();
+                
                 // Start making sitemap
                 $sitemap = Sitemap::create();
-                // Loop through all opp
-                foreach ($opportunities as $opportunity) {
-                    resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
-                    $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
+                // Loop through all videos
+                foreach ($videos as $video) {
+                    $base_video_url = env('YOUTUBE_DATA_BASE_VIDEO_URL');
+                    $key = env('YOUTUBE_DATA_API');
+                    
+                    $curl = curl_init();
+                    $url =  $base_video_url.'?part=snippet&id='.$video->url.'&fields=items(id,snippet.title)&key='.$key;
+                    curl_setopt_array($curl, array(
+                      CURLOPT_URL => $url,
+                      CURLOPT_RETURNTRANSFER => true,
+                      CURLOPT_ENCODING => '',
+                      CURLOPT_MAXREDIRS => 10,
+                      CURLOPT_TIMEOUT => 0,
+                      CURLOPT_FOLLOWLOCATION => true,
+                      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                      CURLOPT_CUSTOMREQUEST => 'GET',
+                    ));
+                    
+                    $response = curl_exec($curl);
+                    curl_close($curl);
+                    
+                    //return $response;
+                    $data = json_decode($response);
+                    $title = $data->items[0]->snippet->title;
+                    $title = str_replace(" ", "+", $title);
+
+                    resolve('url')->forceRootUrl('https://beyondexams.org/dashboard/videos');
+                        
+                    $sitemap->add(Url::create('search?id='.$video->url.'&q='.$title)->setPriority(0.5)); 
                 }
                 // Write to disk
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
                 $sitemap->writeToDisk('public', $sitemap_path);
-                resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
+                resolve('url')->forceRootUrl('https://api.learnwithyoutube.org/storage/');
                 $sitemapIndex->add($sitemap_path);
             }
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
             resolve('url')->forceRootUrl(env('APP_URL'));
-            return $apiResponse->sendResponse(200, "Success", $index);
+            return $apiResponse->sendResponse(200, "Successfully Sitemap Generated", $index);
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
-    public function generate_latest_sitemap()
-    {
-        $apiResponse = new ApiResponse;
-        try {
-            // Get sitemap index
-            $lastOpp = Opportunity::latest('id')->first();
-            $index = floor($lastOpp->id / 1000);
-            // Get Last 1000 Opportunity
-            $opportunities = Opportunity::where('id', '>', ($index * 1000))->limit(1000)->get();
-            // Start making sitemap
-            resolve('url')->forceRootUrl('https://app.precisely.co.in/opportunity');
-            $sitemap = Sitemap::create();
-            // Loop through all opp
-            foreach ($opportunities as $opportunity) {
-                $sitemap->add(Url::create($opportunity->slug)->setPriority(0.5));
-            }
-            // Write to disk
-            $path = 'sitemaps/sitemap_' . ($index + 1) . '.xml';
-            $sitemap->writeToDisk('public', $path);
-
-            // Generate Sitemap Index
-            resolve('url')->forceRootUrl('https://api.precisely.co.in/storage/');
-            $sitemapIndex = SitemapIndex::create();
-            for ($i = 0; $i <= $index; $i++) {
-                $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
-                $sitemapIndex->add($sitemap_path);
-            }
-            $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
-
-            resolve('url')->forceRootUrl(env('APP_URL'));
-            return $apiResponse->sendResponse(200, "Success", $index);
-        } catch (\Exception $e) {
-            return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
 }
