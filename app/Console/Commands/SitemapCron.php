@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Spatie\Sitemap\SitemapGenerator;
 
 class SitemapCron extends Command
 {
@@ -37,9 +38,11 @@ class SitemapCron extends Command
      */
     public function handle()
     {
-        $controller = app()->make('App\Http\Controllers\UtilController');
-        app()->call([$controller, 'generate_latest_sitemap']);
+        //$controller = app()->make('App\Http\Controllers\UtilController');
+        //app()->call([$controller, 'generate_latest_sitemap']);
 
-        $this->info('Sitemap:Cron Cummand Run successfully!');
+        //$this->info('Sitemap:Cron Cummand Run successfully!');
+        SitemapGenerator::create(config('app.url'))
+            ->writeToFile(public_path('sitemap.xml'));
     }
 }

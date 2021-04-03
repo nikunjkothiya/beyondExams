@@ -89,6 +89,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);        
         // ------- User Histroy Privacy Change -------- //
         Route::post('change_history_public',['uses' => 'LearnWithYoutubeController@change_history_public']);
+        // ------- User Education Add -------- //
+        Route::post('add_user_education',['uses' => 'LearnWithYoutubeController@add_user_education']);
 
 
         // User Social Links add

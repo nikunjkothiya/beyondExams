@@ -52,65 +52,64 @@ class SearchController extends Controller
     public function add_search_term(Request $request)
     {
         DB::beginTransaction();
-            $validator = Validator::make($request->all(), [
-                'search_term' => 'required|string',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'search_term' => 'required|string',
+        ]);
 
-            if ($validator->fails()) {
-                return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-            }
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
 
-            try {
-                $found = Search::where('search_term', $request->search_term)->first();    
-		$authorization = $request->header('Authorization');
-                
-                if ($found) {
-                    $updateSearch = Search::find($found->id);
-                    $updateSearch->total_count = $found->total_count + 1;
-                    $updateSearch->daily_count = $found->daily_count + 1;
-                    $updateSearch->save();
-                    
-                    
-		    if ($authorization) {
-	            $auth_user = User::where('api_token',$authorization)->first();
-		    $exiting = $updateSearch->users()->where('user_id', $auth_user->id)->exists();
-                    if(!$exiting){
+        try {
+            $found = Search::where('search_term', $request->search_term)->first();
+            $authorization = $request->header('Authorization');
+
+            if ($found) {
+                $updateSearch = Search::find($found->id);
+                $updateSearch->total_count = $found->total_count + 1;
+                $updateSearch->daily_count = $found->daily_count + 1;
+                $updateSearch->save();
+
+                if ($authorization) {
+                    $auth_user = User::where('api_token', $authorization)->first();
+                    $exiting = $updateSearch->users()->where('user_id', $auth_user->id)->exists();
+                    if (!$exiting) {
                         $updateSearch->users()->attach(Auth::id());
                     }
-}
-                } else {  
-                    $newSearch = new Search();
-                    $newSearch->search_term = $request->search_term;
-                    $newSearch->total_count = 1;
-                    $newSearch->daily_count = 1;
-                    $newSearch->save();
-		    if ($authorization)
-                        $newSearch->users()->attach(Auth::id());
-                    // Auth::user()->id->searches()->attach($newSearch->id)
-                    // $updateSearch->users()->toggle(1, ['user_id' => 1]);
                 }
-                $search_term = Search::where('search_term', $request->search_term)->first();
-
-                if ($search_term) {
-                    $search_term->total_count += 1;
-                    $search_term->daily_count += 1;
-                    $search_term->save();
-                } else {
-                    $search_term = new Search();
-                    $search_term->search_term = $request->search_term;
-                    $search_term->total_count = 1;
-                    $search_term->daily_count = 1;
-                    $search_term->save();
-                }
-
-//                Auth::user()->searches()->attach([$search_term->id]);
-
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
-            } catch (\Exception $e) {
-                DB::rollback();
-                return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+            } else {
+                $newSearch = new Search();
+                $newSearch->search_term = $request->search_term;
+                $newSearch->total_count = 1;
+                $newSearch->daily_count = 1;
+                $newSearch->save();
+                if ($authorization)
+                    $newSearch->users()->attach(Auth::id());
+                // Auth::user()->id->searches()->attach($newSearch->id)
+                // $updateSearch->users()->toggle(1, ['user_id' => 1]);
             }
+            $search_term = Search::where('search_term', $request->search_term)->first();
+
+            if ($search_term) {
+                $search_term->total_count += 1;
+                $search_term->daily_count += 1;
+                $search_term->save();
+            } else {
+                $search_term = new Search();
+                $search_term->search_term = $request->search_term;
+                $search_term->total_count = 1;
+                $search_term->daily_count = 1;
+                $search_term->save();
+            }
+
+            //                Auth::user()->searches()->attach([$search_term->id]);
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Search Term saved successfully.', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 
 
