@@ -210,12 +210,11 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Domain','domain_user')->withPivot('experience')->withTimestamps();
     }
 
-    // public function education_standard() {
-    //     return $this->belongsTo('App\EducationUser','user_id','id');
-    // }
+   // public function educations() {
+   //     return $this->belongsTo('App\EducationStandard','education_user','user_id','education_standard_id')->withPivot('institutes_id')->withTimestamps();
+   // }
     
     public function education_standard() {
         return $this->hasMany('App\EducationUser','user_id','id');
     }
-
 }
