@@ -15,7 +15,7 @@ class AddStateIdToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('state_id')->after('country_id')->nullable();
-            $table->string('dob')->after('state_id')->nullable()->comment('date of birth');
+            $table->date('dob')->after('state_id')->nullable()->comment('date of birth');
         });
 
         Schema::table('users',function($table){
@@ -24,14 +24,22 @@ class AddStateIdToUsersTable extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverse the migrations
      *
      * @return void
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('users', 'dob')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('dob');
+            });
+        }
+        if (Schema::hasColumn('users', 'state_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropForeign('users_state_id_foreign');
+                $table->dropColumn('state_id');
+            });
+        }
     }
 }

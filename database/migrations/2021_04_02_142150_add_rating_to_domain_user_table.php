@@ -14,7 +14,7 @@ class AddRatingToDomainUserTable extends Migration
     public function up()
     {
         Schema::table('domain_user', function (Blueprint $table) {
-            $table->enum('experience', ['1','2','3','4','5'])->default(1)->after('domain_id')->comment('Rating: 1 to 5');
+            $table->enum('experience', ['1', '2', '3', '4', '5'])->default(1)->after('domain_id')->comment('Rating: 1 to 5');
         });
     }
 
@@ -25,8 +25,10 @@ class AddRatingToDomainUserTable extends Migration
      */
     public function down()
     {
-        Schema::table('domain_user', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('domain_user', 'experience')) {
+            Schema::table('domain_user', function (Blueprint $table) {
+                $table->dropColumn('experience');
+            });
+        }
     }
 }

@@ -3,12 +3,109 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App;
+use App\Country;
+use App\Language;
+use App\Tag;
+use Auth;
+use Carbon\Carbon;
+use DateTime;
+use DOMDocument;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App as FacadesApp;
+use Illuminate\Support\Facades\Mail;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\SitemapGenerator;
+use Spatie\Sitemap\SitemapIndex;
+use Spatie\Sitemap\Tags\Url;
+use stdClass;
+
 
 class Video extends Model
 {
     protected $fillable = [
         'url'
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        self::creating(function ($model) {
+            // ... code here
+        });
+
+        self::created(function ($model) {
+        
+            $base_video_url = env('YOUTUBE_DATA_BASE_VIDEO_URL');
+            $key = env('YOUTUBE_DATA_API');
+
+            $curl = curl_init();
+            $url =  $base_video_url . '?part=snippet&id=' . $model->url . '&fields=items(id,snippet.title)&key=' . $key;
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+            ));
+
+            $response = curl_exec($curl);
+            curl_close($curl);
+
+            //return $response;
+            $data = json_decode($response);
+            $title = $data->items[0]->snippet->title;
+            $title = str_replace(" ", "+", $title);
+
+            $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $title;
+            $date = date('c', strtotime($model->updated_at));
+
+            $lastVideo = Video::latest('id')->first();
+            $index = floor($lastVideo->id / 1000);
+            $path = storage_path('app/public/sitemaps/sitemap_' . ($index + 1) . '.xml');
+
+            $objDOM = new DOMDocument();
+            $objDOM->preserveWhiteSpace = false;
+            $objDOM->formatOutput = true;
+            $objDOM->load($path);
+            $urlset = $objDOM->getElementsByTagName("urlset")->item(0);
+
+            $newAdd = $objDOM->createElement("url");
+                $locAdd = $objDOM->createElement("loc", htmlentities($url));
+                $lastmodAdd = $objDOM->createElement("lastmod", $date);
+                $changefreqAdd = $objDOM->createElement("changefreq", "monthly");
+                $priorityAdd = $objDOM->createElement("priority", "0.5");
+
+                $newAdd->appendChild($locAdd);
+                $newAdd->appendChild($lastmodAdd);
+                $newAdd->appendChild($changefreqAdd);
+                $newAdd->appendChild($priorityAdd);
+
+            $urlset->appendChild($newAdd);
+            $objDOM->save($path);
+        });
+
+        self::updating(function ($model) {
+            // ... code here
+        });
+
+        self::updated(function ($model) {
+            // ... code here
+        });
+
+        self::deleting(function ($model) {
+            // ... code here
+        });
+
+        self::deleted(function ($model) {
+            // ... code here
+        });
+    }
+
 
     public function num_likes()
     {
@@ -22,7 +119,7 @@ class Video extends Model
 
     public function ses()
     {
-	return $this->hasOne('App\Ses');
+        return $this->hasOne('App\Ses');
     }
 
     public function users()
@@ -45,8 +142,8 @@ class Video extends Model
         return $this->belongsToMany('App\Keyword')->withTimestamps();
     }
 
-    public function notes(){
-        return $this->hasMany('App\VideoNote','video_id','id');
+    public function notes()
+    {
+        return $this->hasMany('App\VideoNote', 'video_id', 'id');
     }
-    
 }

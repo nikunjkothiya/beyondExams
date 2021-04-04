@@ -99,17 +99,17 @@ class LearnWithYoutubeController extends Controller
                 );
 
                 if ($request->domain) {
-                    $check_validation['experience'] = 'required|array|min:'.count($request->domain).'|max:'.count($request->domain);
+                    $check_validation['experience'] = 'required|array|min:' . count($request->domain) . '|max:' . count($request->domain);
                     $check_validation['experience.*'] = 'integer|between:1,5';
                 }
                 if ($request->file('image')) {
                     $check_validation['issuing_date'] = 'required|date_format:d-m-Y';
                     $check_validation['image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
-                } 
-                if ($request->institute) {
-                    $check_validation['education_standard'] = 'required|array|min:'.count($request->institute).'|max:'.count($request->institute);
                 }
- 
+                if ($request->institute) {
+                    $check_validation['education_standard'] = 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute);
+                }
+
                 $validator = Validator::make($request->all(), $check_validation);
 
                 if ($validator->fails()) {
@@ -161,9 +161,8 @@ class LearnWithYoutubeController extends Controller
                 if (isset($request->short_bio)) {
                     $user->short_bio = $request->short_bio;
                 }
-                
+
                 $state = State::firstOrNew(array('name' =>  strtolower($request->state)));
-                $state->name =  strtolower($request->state);
                 $state->save();
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
@@ -199,46 +198,18 @@ class LearnWithYoutubeController extends Controller
                     foreach ($request->domain as $key => $domain) {
                         $domainCheck = Domain::where('name', strtolower($domain))->first();
                         if ($domainCheck) {
-                            $user->domains()->attach($domainCheck->id, array('experience' =>$request->experience[$key]));
+                            $user->domains()->attach($domainCheck->id, array('experience' => $request->experience[$key]));
                         } else {
                             $domainNew = new Domain();
                             $domainNew->name = strtolower($domain);
                             $domainNew->save();
-                            $user->domains()->attach($domainNew->id, array('experience' =>$request->experience[$key]));
+                            $user->domains()->attach($domainNew->id, array('experience' => $request->experience[$key]));
                         }
                     }
                 }
 
                 if (isset($request->institute) && isset($request->education_standard)) {
-                    $institutes = array();
-                    foreach ($request->institute as $key => $insti) {
-                        $institute = Institute::where('name', strtolower($insti))->first();
-                        if (!$institute) {
-                            $institute = new Institute();
-                            $institute->name = strtolower($insti);
-                            $institute->save();
-                        }
-                        array_push($institutes, $institute->id);
-                    }
-
-                    $education_standards = array();
-                    foreach ($request->education_standard as $key => $education) {
-                        $education_standard = EducationStandard::where('name', strtolower($education))->first();
-                        if (!$education_standard) {
-                            $education_standard = new EducationStandard();
-                            $education_standard->name = strtolower($education);
-                            $education_standard->save();
-                        }
-                        array_push($education_standards, $education_standard->id);
-                    }
-
-                    for ($i = 0; $i < count($institutes); $i++) {
-                        $add_education_institute = new EducationUser();
-                        $add_education_institute->institutes_id = $institutes[$i];
-                        $add_education_institute->education_standard_id = $education_standards[$i];
-                        $add_education_institute->user_id = $user->id;
-                        $add_education_institute->save();
-                    }
+                    $this->common_education_standard($request, $user->id);
                 }
 
                 $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
@@ -259,7 +230,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         try {
             if (Auth::check()) {
-                $validator = Validator::make($request->all(), [
+                $check_validation = array(
                     'name' => 'sometimes|string|max:255',
                     'age' => 'sometimes|int',
                     'country' => 'sometimes|integer|min:1|max:' . Country::count(),
@@ -278,20 +249,20 @@ class LearnWithYoutubeController extends Controller
                     'description' => 'string|max:500',
                     'organization' => 'string',
                     'institute' => 'sometimes|array',
-                ]);
+                );
 
                 if ($request->domain) {
-                    $check_validation['experience'] = 'required|array|min:'.count($request->domain).'|max:'.count($request->domain);
+                    $check_validation['experience'] = 'required|array|min:' . count($request->domain) . '|max:' . count($request->domain);
                     $check_validation['experience.*'] = 'integer|between:1,5';
                 }
                 if ($request->file('image')) {
                     $check_validation['issuing_date'] = 'required|date_format:d-m-Y';
                     $check_validation['image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
-                } 
-                if ($request->institute) {
-                    $check_validation['education_standard'] = 'required|array|min:'.count($request->institute).'|max:'.count($request->institute);
                 }
- 
+                if ($request->institute) {
+                    $check_validation['education_standard'] = 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute);
+                }
+
                 $validator = Validator::make($request->all(), $check_validation);
 
                 if ($validator->fails()) {
@@ -348,15 +319,14 @@ class LearnWithYoutubeController extends Controller
 
                 if (isset($request->short_bio))
                     $user->short_bio = $request->short_bio;
-                
-                if(isset($request->state)){
+
+                if (isset($request->state)) {
                     $state = State::firstOrNew(array('name' =>  strtolower($request->state)));
-                    $state->name =  strtolower($request->state);
                     $state->save();
                     $user->state_id = $state->id;
                 }
 
-                if(isset($request->date_of_birth)){
+                if (isset($request->date_of_birth)) {
                     $user->dob = $request->date_of_birth;
                 }
 
@@ -385,49 +355,18 @@ class LearnWithYoutubeController extends Controller
                     foreach ($request->domain as $key => $domain) {
                         $domainCheck = Domain::where('name', strtolower($domain))->first();
                         if ($domainCheck) {
-                            $user->domains()->attach($domainCheck->id, array('experience' =>$request->experience[$key]));
+                            $user->domains()->attach($domainCheck->id, array('experience' => $request->experience[$key]));
                         } else {
                             $domainNew = new Domain();
                             $domainNew->name = strtolower($domain);
                             $domainNew->save();
-                            $user->domains()->attach($domainNew->id, array('experience' =>$request->experience[$key]));
+                            $user->domains()->attach($domainNew->id, array('experience' => $request->experience[$key]));
                         }
                     }
                 }
 
                 if (isset($request->institute) && isset($request->education_standard)) {
-                    $institutes = array();
-                    foreach ($request->institute as $key => $insti) {
-                        $institute = Institute::where('name', strtolower($insti))->first();
-                        if (!$institute) {
-                            $institute = new Institute();
-                            $institute->name = strtolower($insti);
-                            $institute->save();
-                        }
-                        array_push($institutes, $institute->id);
-                    }
-
-                    $education_standards = array();
-                    foreach ($request->education_standard as $key => $education) {
-                        $education_standard = EducationStandard::where('name', strtolower($education))->first();
-                        if (!$education_standard) {
-                            $education_standard = new EducationStandard();
-                            $education_standard->name = strtolower($education);
-                            $education_standard->save();
-                        }
-                        array_push($education_standards, $education_standard->id);
-                    }
-
-                    for ($i = 0; $i < count($institutes); $i++) {
-                        $alreadyExists = EducationUser::where(['user_id' => Auth::user()->id, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
-                        if (!$alreadyExists) {
-                            $add_education_institute = new EducationUser();
-                            $add_education_institute->institutes_id = $institutes[$i];
-                            $add_education_institute->education_standard_id = $education_standards[$i];
-                            $add_education_institute->user_id = $user->id;
-                            $add_education_institute->save();
-                        }
-                    }
+                    $this->common_education_standard($request, $user->id);
                 }
 
                 $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
@@ -443,6 +382,45 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
+    private function common_education_standard(Request $request, $user)
+    {
+        if (isset($request->institute) && isset($request->education_standard)) {
+            $institutes = array();
+            foreach ($request->institute as $key => $insti) {
+                $institute = Institute::where('name', strtolower($insti))->first();
+                if (!$institute) {
+                    $institute = new Institute();
+                    $institute->name = strtolower($insti);
+                    $institute->save();
+                }
+                array_push($institutes, $institute->id);
+            }
+
+            $education_standards = array();
+            foreach ($request->education_standard as $key => $education) {
+                $education_standard = EducationStandard::where('name', strtolower($education))->first();
+                if (!$education_standard) {
+                    $education_standard = new EducationStandard();
+                    $education_standard->name = strtolower($education);
+                    $education_standard->save();
+                }
+                array_push($education_standards, $education_standard->id);
+            }
+
+            for ($i = 0; $i < count($institutes); $i++) {
+                    $alreadyExists = EducationUser::where(['user_id' => $user, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
+                    if(!$alreadyExists){
+                        $add_education_institute = new EducationUser();
+                        $add_education_institute->institutes_id = $institutes[$i];
+                        $add_education_institute->education_standard_id = $education_standards[$i];
+                        $add_education_institute->user_id = $user;
+                        $add_education_institute->save();
+                    }
+                }
+            }
+            return true;
+    }
+
     public function add_user_education(Request $request)
     {
         DB::beginTransaction();
@@ -450,47 +428,15 @@ class LearnWithYoutubeController extends Controller
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
                     'institute' => 'required|array',
-                    'education_standard' => 'required|array|min:'.count($request->institute).'|max:'.count($request->institute),
+                    'education_standard' => 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute),
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                if (isset($request->institute) && isset($request->education_standard)) {
-                    $institutes = array();
-                    foreach ($request->institute as $key => $insti) {
-                        $institute = Institute::where('name', strtolower($insti))->first();
-                        if (!$institute) {
-                            $institute = new Institute();
-                            $institute->name = strtolower($insti);
-                            $institute->save();
-                        }
-                        array_push($institutes, $institute->id);
-                    }
 
-                    $education_standards = array();
-                    foreach ($request->education_standard as $key => $education) {
-                        $education_standard = EducationStandard::where('name', strtolower($education))->first();
-                        if (!$education_standard) {
-                            $education_standard = new EducationStandard();
-                            $education_standard->name = strtolower($education);
-                            $education_standard->save();
-                        }
-                        array_push($education_standards, $education_standard->id);
-                    }
-
-                    for ($i = 0; $i < count($institutes); $i++) {
-                        $alreadyExists = EducationUser::where(['user_id' => Auth::user()->id, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
-                        if (!$alreadyExists) {
-                            $add_education_institute = new EducationUser();
-                            $add_education_institute->institutes_id = $institutes[$i];
-                            $add_education_institute->education_standard_id = $education_standards[$i];
-                            $add_education_institute->user_id = Auth::user()->id;
-                            $add_education_institute->save();
-                        }
-                    }
-                }
+                $this->common_education_standard($request);
 
                 $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
 

@@ -25,8 +25,10 @@ class AddDateToUserCerticates extends Migration
      */
     public function down()
     {
-        Schema::table('user_certicates', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasColumn('user_certicates', 'issuing_date')) {
+            Schema::table('user_certicates', function (Blueprint $table) {
+                $table->dropColumn('issuing_date');
+            });
+        }
     }
 }

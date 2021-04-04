@@ -42,7 +42,7 @@ class SitemapCron extends Command
         //app()->call([$controller, 'generate_latest_sitemap']);
 
         //$this->info('Sitemap:Cron Cummand Run successfully!');
-        SitemapGenerator::create(config('app.url'))
-            ->writeToFile(public_path('sitemap.xml'));
+       // SitemapGenerator::create(config('app.url'))
+       //     ->writeToFile(public_path('sitemap.xml'));
     }
 }
