@@ -382,7 +382,7 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
-    private function common_education_standard(Request $request, $user)
+    private function common_education_standard(Request $request, $user_id)
     {
         if (isset($request->institute) && isset($request->education_standard)) {
             $institutes = array();
@@ -408,12 +408,12 @@ class LearnWithYoutubeController extends Controller
             }
 
             for ($i = 0; $i < count($institutes); $i++) {
-                    $alreadyExists = EducationUser::where(['user_id' => $user, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
+                    $alreadyExists = EducationUser::where(['user_id' => $user_id, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
                     if(!$alreadyExists){
                         $add_education_institute = new EducationUser();
                         $add_education_institute->institutes_id = $institutes[$i];
                         $add_education_institute->education_standard_id = $education_standards[$i];
-                        $add_education_institute->user_id = $user;
+                        $add_education_institute->user_id = $user_id;
                         $add_education_institute->save();
                     }
                 }
