@@ -77,14 +77,14 @@ class LearnWithYoutubeController extends Controller
             if (Auth::check()) {
                 $check_validation = array(
                     'name' => 'required|string|max:255',
-                    'email' => 'required|email',
+                    'email' => 'required|email|unique:users',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'state'   => 'required|string',
                     'profile_link' => 'string',
                     'domain' => 'sometimes|array',
                     'short_bio' => 'sometimes|string',
-                    'phone' => 'integer',
+                    'phone' => 'integer|unique:users',
                     'date_of_birth' => 'required|date_format:d-m-Y',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
@@ -95,7 +95,6 @@ class LearnWithYoutubeController extends Controller
                     'description' => 'string|max:500',
                     'organization' => 'string',
                     'institute' => 'sometimes|array',
-
                 );
 
                 if ($request->domain) {
@@ -171,7 +170,7 @@ class LearnWithYoutubeController extends Controller
                 $user->age = $request->age;
                 $user->country_id = $request->country;
                 $user->state_id = $state->id;
-                $user->dob = $request->date_of_birth;
+                $user->dob = date('Y-m-d', strtotime($request->date_of_birth));
                 $user->flag = 1;
                 $user->save();
 
@@ -238,7 +237,7 @@ class LearnWithYoutubeController extends Controller
                     'profile_link' => 'string',
                     'short_bio' => 'sometimes|string',
                     'date_of_birth' => 'sometimes|date_format:d-m-Y',
-                    'phone' => 'integer',
+                    'phone' => 'integer|unique:users',
                     'domain' => 'sometimes|array',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
@@ -327,7 +326,7 @@ class LearnWithYoutubeController extends Controller
                 }
 
                 if (isset($request->date_of_birth)) {
-                    $user->dob = $request->date_of_birth;
+                    $user->dob = date('Y-m-d', strtotime($request->date_of_birth));
                 }
 
                 $user->save();
