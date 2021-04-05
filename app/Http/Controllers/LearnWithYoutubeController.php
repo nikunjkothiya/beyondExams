@@ -30,6 +30,7 @@ use App\KeywordUser;
 use App\KeywordVideo;
 use App\State;
 use App\UserCertificate;
+use App\VideoAnnotation;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Config;
@@ -84,7 +85,7 @@ class LearnWithYoutubeController extends Controller
                     'profile_link' => 'string',
                     'domain' => 'sometimes|array',
                     'short_bio' => 'sometimes|string',
-                    'phone' => 'integer|unique:users',
+                    'phone' => 'integer',
                     'date_of_birth' => 'required|date_format:d-m-Y',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
@@ -237,7 +238,7 @@ class LearnWithYoutubeController extends Controller
                     'profile_link' => 'string',
                     'short_bio' => 'sometimes|string',
                     'date_of_birth' => 'sometimes|date_format:d-m-Y',
-                    'phone' => 'integer|unique:users',
+                    'phone' => 'integer',
                     'domain' => 'sometimes|array',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
@@ -1293,5 +1294,44 @@ class LearnWithYoutubeController extends Controller
         $category->save();
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
+    }
+
+    public function category_user_id_change_to_admin(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            if (Auth::user()->role_id == 3) 
+            {
+                $change_user_id = Category::where('user_id',0)->orWhere('user_id',null)->update(['user_id'=>1]);
+              
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function video_annotataion_user_id_change_to_admin(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::user()->role_id == 3)
+            {  
+                $change_user_id = VideoAnnotation::where('user_id',0)->update(['user_id'=> 1]);
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 }
