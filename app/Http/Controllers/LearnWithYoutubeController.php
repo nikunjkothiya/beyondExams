@@ -30,6 +30,7 @@ use App\KeywordUser;
 use App\KeywordVideo;
 use App\State;
 use App\UserCertificate;
+use App\VideoAnnotation;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Config;
@@ -77,7 +78,7 @@ class LearnWithYoutubeController extends Controller
             if (Auth::check()) {
                 $check_validation = array(
                     'name' => 'required|string|max:255',
-                    'email' => 'required|email',
+                    'email' => 'required|email|unique:users',
                     'age' => 'required|int',
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'state'   => 'required|string',
@@ -95,7 +96,6 @@ class LearnWithYoutubeController extends Controller
                     'description' => 'string|max:500',
                     'organization' => 'string',
                     'institute' => 'sometimes|array',
-
                 );
 
                 if ($request->domain) {
@@ -171,7 +171,7 @@ class LearnWithYoutubeController extends Controller
                 $user->age = $request->age;
                 $user->country_id = $request->country;
                 $user->state_id = $state->id;
-                $user->dob = $request->date_of_birth;
+                $user->dob = date('Y-m-d', strtotime($request->date_of_birth));
                 $user->flag = 1;
                 $user->save();
 
@@ -327,7 +327,7 @@ class LearnWithYoutubeController extends Controller
                 }
 
                 if (isset($request->date_of_birth)) {
-                    $user->dob = $request->date_of_birth;
+                    $user->dob = date('Y-m-d', strtotime($request->date_of_birth));
                 }
 
                 $user->save();
@@ -1294,5 +1294,44 @@ class LearnWithYoutubeController extends Controller
         $category->save();
 
         return $this->apiResponse->sendResponse(200, 'Like Updated successfully', null);
+    }
+
+    public function category_user_id_change_to_admin(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            if (Auth::user()->role_id == 3) 
+            {
+                $change_user_id = Category::where('user_id',0)->orWhere('user_id',null)->update(['user_id'=>1]);
+              
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function video_annotataion_user_id_change_to_admin(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::user()->role_id == 3)
+            {  
+                $change_user_id = VideoAnnotation::where('user_id',0)->update(['user_id'=> 1]);
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 }

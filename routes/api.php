@@ -56,6 +56,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 //      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
     Route::group(['middleware' => ['login_status']], function () {
+
+        //--- Change user_id to admin from 0 or null from category and video_annotation table ---//  Only For Admin
+        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
+        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
+        //--- End for Only Admin --- //
+
         Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
         Route::post('add_ses_video',['uses' => 'ChemistryUniverseController@add_ses_video']);
 
