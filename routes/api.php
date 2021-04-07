@@ -74,11 +74,23 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('delete_video_note',['uses' => 'VideoAnnotationController@delete_video_note']);
         Route::post('change_note_privacy',['uses' => 'VideoAnnotationController@change_note_privacy']);
 
+        // -------  Add Category and Video Annotation Report ------- //
+        Route::post('add_category_report',['uses' => 'VideoAnnotationController@add_category_report']);
+        Route::post('add_video_annotation_report',['uses' => 'VideoAnnotationController@add_video_annotation_report']);
+
         // ----------Browse videos----------
 
         // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
         Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);
+        
+        //-- Rating to Category --// 
+        Route::post('add_category_rating', ['uses' => 'LearnWithYoutubeController@add_category_rating']);
+        Route::get('get_category_rating', ['uses' => 'LearnWithYoutubeController@get_category_rating']);
+
+        //-- Enrollment in Category --//
+        Route::post('add_category_enrollment', ['uses' => 'LearnWithYoutubeController@add_category_enrollment']);
+        Route::get('get_category_enrollment', ['uses' => 'LearnWithYoutubeController@get_category_enrollment']);
 
         // Add Image of category in category tabel
         Route::post('add_image_to_category', ['uses' => 'LearnWithYoutubeController@add_image_to_category']);
@@ -200,6 +212,12 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Chemistry Universe
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
+
+        //-- Update APi in For User Profiles --//
+        Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
+        Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);
+        Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);
+        Route::post('update_user_education_standard', ['uses' => 'LearnWithYoutubeController@update_user_education_standard']);
 
     });
 });

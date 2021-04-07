@@ -217,4 +217,20 @@ class User extends Authenticatable
     public function education_standard() {
         return $this->hasMany('App\EducationUser','user_id','id');
     }
+
+    public function categoryReports(){
+        return $this->belongsToMany('App\Category','category_user_report')->withTimestamps();
+    }
+
+    public function videoAnnotationReports(){
+        return $this->belongsToMany('App\VideoAnnotation','annotation_user_report')->withTimestamps();
+    }
+
+    public function categoryRating() {
+        return $this->belongsToMany('App\Category','category_user_rating','user_id','category_id')->withTimestamps();
+    }
+
+    public function categoryEnrollment() {
+        return $this->belongsToMany('App\Category','category_user_enrollment','user_id','category_id')->withTimestamps();
+    }
 }
