@@ -21,7 +21,10 @@ use Illuminate\Support\Facades\Validator;
 use App\Search;
 use App\VideoRating;
 use App\AttemptTest;
+use App\CategoryUserEnrollment;
+use App\CategoryUserRating;
 use App\Domain;
+use App\DomainUser;
 use App\EducationStandard;
 use App\EducationUser;
 use App\Institute;
@@ -87,7 +90,7 @@ class LearnWithYoutubeController extends Controller
                     'country' => 'required|integer|min:1|max:' . Country::count(),
                     'state'   => 'required|string',
                     'profile_link' => 'string',
-                    'domain' => 'sometimes|array',
+                    'skill_name' => 'sometimes|array',
                     'short_bio' => 'sometimes|string',
                     'phone' => 'integer',
                     'date_of_birth' => 'required|date_format:d-m-Y',
@@ -97,21 +100,21 @@ class LearnWithYoutubeController extends Controller
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
                     'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
-                    'description' => 'string|max:500',
-                    'organization' => 'string',
-                    'institute' => 'sometimes|array',
+                    'certificate_description' => 'string|max:500',
+                    'certificate_organization' => 'string',
+                    'education_institute' => 'sometimes|array',
                 );
 
-                if ($request->domain) {
-                    $check_validation['experience'] = 'required|array|min:' . count($request->domain) . '|max:' . count($request->domain);
-                    $check_validation['experience.*'] = 'integer|between:1,5';
+                if ($request->skill_name) {
+                    $check_validation['skill_experience'] = 'required|array|min:' . count($request->skill_name) . '|max:' . count($request->skill_name);
+                    $check_validation['skill_experience.*'] = 'integer|between:1,5';
                 }
-                if ($request->file('image')) {
-                    $check_validation['issuing_date'] = 'required|date_format:d-m-Y';
-                    $check_validation['image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+                if ($request->file('certificate_image')) {
+                    $check_validation['certificate_issuing_date'] = 'required|date_format:d-m-Y';
+                    $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
                 }
-                if ($request->institute) {
-                    $check_validation['education_standard'] = 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute);
+                if ($request->education_institute) {
+                    $check_validation['education_standard'] = 'required|array|min:' . count($request->education_institute) . '|max:' . count($request->education_institute);
                 }
 
                 $validator = Validator::make($request->all(), $check_validation);
@@ -179,40 +182,39 @@ class LearnWithYoutubeController extends Controller
                 $user->flag = 1;
                 $user->save();
 
-                if ($request->file('image')) {
-                    $image = $request->file('image');
-                    $attachment = $image;
+                if ($request->file('certificate_image')) {
+                    $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = $user->id;
                     $user_certificate->image = env('BASE_URL') . $imgpath;
-                    if (isset($request->description)) {
-                        $user_certificate->description = $request->description;
+                    if (isset($request->certificate_description)) {
+                        $user_certificate->description = $request->certificate_description;
                     }
-                    if (isset($request->organization)) {
-                        $user_certificate->organization = $request->organization;
+                    if (isset($request->certificate_organization)) {
+                        $user_certificate->organization = $request->certificate_organization;
                     }
-                    $user_certificate->issuing_date = $request->issuing_date;
+                    $user_certificate->issuing_date = $request->certificate_issuing_date;
                     $user_certificate->save();
                 }
 
-                if (isset($request->domain) && isset($request->experience)) {
-                    foreach ($request->domain as $key => $domain) {
+                if (isset($request->skill_name) && isset($request->skill_experience)) {
+                    foreach ($request->skill_name as $key => $domain) {
                         $domainCheck = Domain::where('name', strtolower($domain))->first();
                         if ($domainCheck) {
-                            $user->domains()->attach($domainCheck->id, array('experience' => $request->experience[$key]));
+                            $user->domains()->attach($domainCheck->id, array('experience' => $request->skill_experience[$key]));
                         } else {
                             $domainNew = new Domain();
                             $domainNew->name = strtolower($domain);
                             $domainNew->save();
-                            $user->domains()->attach($domainNew->id, array('experience' => $request->experience[$key]));
+                            $user->domains()->attach($domainNew->id, array('experience' => $request->skill_experience[$key]));
                         }
                     }
                 }
 
-                if (isset($request->institute) && isset($request->education_standard)) {
+                if (isset($request->education_institute) && isset($request->education_standard)) {
                     $this->common_education_standard($request, $user->id);
                 }
 
@@ -244,28 +246,28 @@ class LearnWithYoutubeController extends Controller
                     'short_bio' => 'sometimes|string',
                     'date_of_birth' => 'sometimes|date_format:d-m-Y',
                     'phone' => 'integer',
-                    'domain' => 'sometimes|array',
+                    'skill_name' => 'sometimes|array',
                     'facebook_link' => 'sometimes|string',
                     'instagram_link' => 'sometimes|string',
                     'github_link' => 'sometimes|string',
                     'twitter_url' => 'sometimes|string',
                     'linkedin_url' => 'sometimes|string',
                     'avatar' => 'sometimes|mimes:jpeg,png,jpg|max:1024',
-                    'description' => 'string|max:500',
-                    'organization' => 'string',
-                    'institute' => 'sometimes|array',
+                    'certificate_description' => 'string|max:500',
+                    'certificate_organization' => 'string',
+                    'education_institute' => 'sometimes|array',
                 );
 
-                if ($request->domain) {
-                    $check_validation['experience'] = 'required|array|min:' . count($request->domain) . '|max:' . count($request->domain);
-                    $check_validation['experience.*'] = 'integer|between:1,5';
+                if ($request->skill_name) {
+                    $check_validation['skill_experience'] = 'required|array|min:' . count($request->skill_name) . '|max:' . count($request->skill_name);
+                    $check_validation['skill_experience.*'] = 'integer|between:1,5';
                 }
-                if ($request->file('image')) {
-                    $check_validation['issuing_date'] = 'required|date_format:d-m-Y';
-                    $check_validation['image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+                if ($request->file('certificate_image')) {
+                    $check_validation['certificate_issuing_date'] = 'required|date_format:d-m-Y';
+                    $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
                 }
-                if ($request->institute) {
-                    $check_validation['education_standard'] = 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute);
+                if ($request->education_institute) {
+                    $check_validation['education_standard'] = 'required|array|min:' . count($request->education_institute) . '|max:' . count($request->education_institute);
                 }
 
                 $validator = Validator::make($request->all(), $check_validation);
@@ -337,40 +339,39 @@ class LearnWithYoutubeController extends Controller
 
                 $user->save();
 
-                if ($request->file('image')) {
-                    $image = $request->file('image');
-                    $attachment = $image;
+                if ($request->file('certificate_image')) {
+                    $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = $user->id;
                     $user_certificate->image = env('BASE_URL') . $imgpath;
-                    if (isset($request->description)) {
-                        $user_certificate->description = $request->description;
+                    if (isset($request->certificate_description)) {
+                        $user_certificate->description = $request->certificate_description;
                     }
-                    if (isset($request->organization)) {
-                        $user_certificate->organization = $request->organization;
+                    if (isset($request->certificate_organization)) {
+                        $user_certificate->organization = $request->certificate_organization;
                     }
-                    $user_certificate->issuing_date = $request->issuing_date;
+                    $user_certificate->issuing_date = $request->certificate_issuing_date;
                     $user_certificate->save();
                 }
 
-                if (isset($request->domain) && isset($request->experience)) {
-                    foreach ($request->domain as $key => $domain) {
+                if (isset($request->skill_name) && isset($request->skill_experience)) {
+                    foreach ($request->skill_name as $key => $domain) {
                         $domainCheck = Domain::where('name', strtolower($domain))->first();
                         if ($domainCheck) {
-                            $user->domains()->attach($domainCheck->id, array('experience' => $request->experience[$key]));
+                            $user->domains()->attach($domainCheck->id, array('experience' => $request->skill_experience[$key]));
                         } else {
                             $domainNew = new Domain();
                             $domainNew->name = strtolower($domain);
                             $domainNew->save();
-                            $user->domains()->attach($domainNew->id, array('experience' => $request->experience[$key]));
+                            $user->domains()->attach($domainNew->id, array('experience' => $request->skill_experience[$key]));
                         }
                     }
                 }
 
-                if (isset($request->institute) && isset($request->education_standard)) {
+                if (isset($request->education_institute) && isset($request->education_standard)) {
                     $this->common_education_standard($request, $user->id);
                 }
 
@@ -390,9 +391,9 @@ class LearnWithYoutubeController extends Controller
 
     private function common_education_standard(Request $request, $user_id)
     {
-        if (isset($request->institute) && isset($request->education_standard)) {
+        if (isset($request->education_institute) && isset($request->education_standard)) {
             $institutes = array();
-            foreach ($request->institute as $key => $insti) {
+            foreach ($request->education_institute as $key => $insti) {
                 $institute = Institute::where('name', strtolower($insti))->first();
                 if (!$institute) {
                     $institute = new Institute();
@@ -414,17 +415,17 @@ class LearnWithYoutubeController extends Controller
             }
 
             for ($i = 0; $i < count($institutes); $i++) {
-                    $alreadyExists = EducationUser::where(['user_id' => $user_id, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
-                    if(!$alreadyExists){
-                        $add_education_institute = new EducationUser();
-                        $add_education_institute->institutes_id = $institutes[$i];
-                        $add_education_institute->education_standard_id = $education_standards[$i];
-                        $add_education_institute->user_id = $user_id;
-                        $add_education_institute->save();
-                    }
+                $alreadyExists = EducationUser::where(['user_id' => $user_id, 'institutes_id' => $institutes[$i], 'education_standard_id' => $education_standards[$i]])->first();
+                if (!$alreadyExists) {
+                    $add_education_institute = new EducationUser();
+                    $add_education_institute->institutes_id = $institutes[$i];
+                    $add_education_institute->education_standard_id = $education_standards[$i];
+                    $add_education_institute->user_id = $user_id;
+                    $add_education_institute->save();
                 }
             }
-            return true;
+        }
+        return true;
     }
 
     public function add_user_education(Request $request)
@@ -433,18 +434,19 @@ class LearnWithYoutubeController extends Controller
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
-                    'institute' => 'required|array',
-                    'education_standard' => 'required|array|min:' . count($request->institute) . '|max:' . count($request->institute),
+                    'education_institute' => 'required|array',
+                    'education_standard' => 'required|array|min:' . count($request->education_institute) . '|max:' . count($request->education_institute),
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-
                 $this->common_education_standard($request);
 		$user = $this->get_current_user_details($user->id);
 //                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+//                $this->common_education_standard($request, Auth::user()->id);
+
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Education Saved', $user);
@@ -463,18 +465,18 @@ class LearnWithYoutubeController extends Controller
         try {
             if (Auth::check()) {
                 $validator = Validator::make($request->all(), [
-                    'image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048',
-                    'description' => 'string|max:500',
-                    'organization' => 'string',
-                    'issuing_date' => 'required|date_format:d-m-Y',
+                    'certificate_image' => 'required|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                    'certificate_description' => 'string|max:500',
+                    'certificate_organization' => 'string',
+                    'certificate_issuing_date' => 'required|date_format:d-m-Y',
                 ]);
 
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                if ($request->file('image')) {
-                    $image = $request->file('image');
+                if ($request->file('certificate_image')) {
+                    $image = $request->file('certificate_image');
                     $attachment = $image;
                     $storage_path = 'user/certificates/';
                     $imgpath = commonUploadImage($storage_path, $attachment);
@@ -482,13 +484,13 @@ class LearnWithYoutubeController extends Controller
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = Auth::user()->id;
                     $user_certificate->image = env('BASE_URL') . $imgpath;
-                    if (isset($request->description)) {
-                        $user_certificate->description = $request->description;
+                    if (isset($request->certificate_description)) {
+                        $user_certificate->description = $request->certificate_description;
                     }
-                    if (isset($request->organization)) {
-                        $user_certificate->organization = $request->organization;
+                    if (isset($request->certificate_organization)) {
+                        $user_certificate->organization = $request->certificate_organization;
                     }
-                    $user_certificate->issuing_date = $request->issuing_date;
+                    $user_certificate->issuing_date = $request->certificate_issuing_date;
                     $user_certificate->save();
                 }
 		$user = $this->get_current_user_details(Auth::user()->id);
@@ -503,6 +505,303 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
+
+    public function update_user_certificate(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $check_validation = array(
+                'certificate_id'           => 'required|integer',
+                'certificate_image'        => 'sometimes|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'certificate_description'  => 'string|max:500',
+                'certificate_organization' => 'string',
+            );
+
+            if ($request->file('certificate_image')) {
+                $check_validation['certificate_issuing_date'] = 'required|date_format:d-m-Y';
+                $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+            }
+
+            $validator = Validator::make($request->all(), $check_validation);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $find_certificate = UserCertificate::where(['id' => $request->certificate_id, 'user_id' => Auth::user()->id])->first();
+            if ($find_certificate) {
+
+                if ($request->file('certificate_image')) {
+                    $attachment = $request->file('certificate_image');
+                    $storage_path = 'user/certificates/';
+                    $imgpath = commonUploadImage($storage_path, $attachment);
+
+                    $find_certificate->image = env('BASE_URL') . $imgpath;
+                }
+                if (isset($request->certificate_description)) {
+                    $find_certificate->description = $request->certificate_description;
+                }
+                if (isset($request->certificate_organization)) {
+                    $find_certificate->organization = $request->certificate_organization;
+                }
+                if (isset($request->certificate_issuing_date)) {
+                    $find_certificate->issuing_date = $request->certificate_issuing_date;
+                }
+                $find_certificate->save();
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Certificates Updated Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(404, 'User Certificate Not Found or Unauthorized User', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_user_skill(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'skill_id'           => 'required|integer',
+                'skill_name'         => 'sometimes|string',
+                'skill_experience'   => 'sometimes|integer|between:1,5',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+            }
+
+            $domain_find = Domain::find($request->skill_id);
+            if ($domain_find) {
+                $old_domain = DomainUser::where(['user_id' => Auth::user()->id, 'domain_id' => $request->skill_id])->first();
+                $domain_id = Domain::where('name', strtolower($request->skill_name))->first();
+                if (!$domain_id) {
+                    $domain_id = new Domain();
+                    $domain_id->name = strtolower($request->skill_name);
+                    $domain_id->save();
+                }
+
+                if (isset($request->skill_experience)) {
+                    $experience = $request->skill_experience;
+                } else {
+                    $experience = $old_domain->experience;
+                }
+                $old_domain->domain_id = $domain_id->id;
+                $old_domain->experience = $experience;
+                $old_domain->save();
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Skill Updated Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(404, 'User Skill Not Found or Unauthorized User', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_user_education_institute(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::check()) {
+                $check_validation = array(
+                    'education_institute_ids' => 'required|array',
+                );
+
+                if ($request->education_institute_ids) {
+                    $check_validation['education_institutes'] = 'required|array|min:' . count($request->education_institute_ids) . '|max:' . count($request->education_institute_ids);
+                }
+
+                $validator = Validator::make($request->all(), $check_validation);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                if (isset($request->education_institute_ids) && isset($request->education_institutes)) {
+                    foreach ($request->education_institute_ids as $key => $insti_id) {
+                        $domainCheck = EducationUser::where(['user_id' => Auth::user()->id, 'institutes_id' => $insti_id])->first();
+                        if ($domainCheck) {
+                            $institute = Institute::where('name', strtolower($request->education_institutes[$key]))->first();
+                            if ($institute) {
+                                $domainCheck->institutes_id = $institute->id;
+                            } else {
+                                $new_institute = new Institute();
+                                $new_institute->name = strtolower($request->education_institutes[$key]);
+                                $new_institute->save();
+                                $domainCheck->institutes_id = $new_institute->id;
+                            }
+                            $domainCheck->save();
+                        }
+                    }
+                }
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Institute Update Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_user_education_standard(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::check()) {
+                $check_validation = array(
+                    'education_standard_ids' => 'required|array',
+                );
+
+                if ($request->education_standard_ids) {
+                    $check_validation['education_standards'] = 'required|array|min:' . count($request->education_standard_ids) . '|max:' . count($request->education_standard_ids);
+                }
+
+                $validator = Validator::make($request->all(), $check_validation);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                if (isset($request->education_standard_ids) && isset($request->education_standards)) {
+                    foreach ($request->education_standard_ids as $key => $standard_id) {
+                        $standardCheck = EducationUser::where(['user_id' => Auth::user()->id, 'education_standard_id' => $standard_id])->first();
+                        if ($standardCheck) {
+                            $standard = EducationStandard::where('name', strtolower($request->education_standards[$key]))->first();
+                            if ($standard) {
+                                $standardCheck->education_standard_id = $standard->id;
+                            } else {
+                                $new_standard = new EducationStandard();
+                                $new_standard->name = strtolower($request->education_standards[$key]);
+                                $new_standard->save();
+                                $standardCheck->education_standard_id = $new_standard->id;
+                            }
+                            $standardCheck->save();
+                        }
+                    }
+                }
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Education Standard Update Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    /* public function update_user_certificate_image(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::check()) {
+                $check_validation = array(
+                    'certificate_image_ids' => 'required|array',
+                );
+
+                if ($request->certificate_image_ids) {
+                    $check_validation['certificate_image'] = 'required|array|min:' . count($request->certificate_image_ids) . '|max:' . count($request->certificate_image_ids);
+                    $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+                }
+
+                $validator = Validator::make($request->all(), $check_validation);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                if (isset($request->certificate_image_ids) && $request->file('certificate_image')) {
+                    foreach ($request->certificate_image_ids as $key => $img_id) {
+                        $certificateCheck = UserCertificate::where(['id' => $img_id, 'user_id' => Auth::user()->id])->first();
+                        if ($certificateCheck) {
+                            $attachment = $request->file('certificate_image')[$key];
+                            $storage_path = 'user/certificates/';
+                            $imgpath = commonUploadImage($storage_path, $attachment);
+
+                            $certificateCheck->image = env('BASE_URL') . $imgpath;
+                            $certificateCheck->save();
+                        }
+                    }
+                }
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Certificate Update Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function update_user_certificate_issuing_date(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::check()) {
+                $check_validation = array(
+                    'certificate_issuing_ids' => 'required|array',
+                );
+
+                if ($request->certificate_issuing_ids) {
+                    $check_validation['certificate_issuing_dates'] = 'required|array|date_format:d-m-Y|min:' . count($request->certificate_image_ids) . '|max:' . count($request->certificate_image_ids);
+                }
+
+                $validator = Validator::make($request->all(), $check_validation);
+
+                if ($validator->fails()) {
+                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+                }
+
+                if (isset($request->certificate_issuing_ids) && isset($request->certificate_issuing_dates)) {
+                    foreach ($request->certificate_issuing_ids as $key => $issuing_id) {
+                        $standardCheck = UserCertificate::where(['user_id' => Auth::user()->id, 'education_standard_id' => $issuing_id])->first();
+                        if ($standardCheck) {
+                            $standard = EducationStandard::where('name', strtolower($request->education_standards[$key]))->first();
+                            if ($standard) {
+                                $standardCheck->education_standard_id = $standard->id;
+                            } else {
+                                $new_standard = new EducationStandard();
+                                $new_standard->name = strtolower($request->education_standards[$key]);
+                                $new_standard->save();
+                                $standardCheck->institutes_id = $new_standard->id;
+                            }
+                            $standardCheck->save();
+                        }
+                    }
+                }
+
+                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'User Education Standard Update Successfully', $user);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }  */
 
     public function get_user_profile()
     {
@@ -678,6 +977,114 @@ class LearnWithYoutubeController extends Controller
             $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_category_rating(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+            'rating' => 'required|integer|between:1,5',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_category = Category::find($request->category_id);
+            if ($find_category) {
+                $already = CategoryUserRating::where(['user_id' => Auth::user()->id, 'category_id' => $request->category_id])->first();
+                if (!$already) {
+                    $find_category->rating_sum += $request->rating;
+                    $find_category->rated_user += 1;
+                    $find_category->save();
+
+                    Auth::user()->categoryRating()->attach($find_category->id, array('rating' => $request->rating));
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Category Rating Added Successfully', $find_category);
+                }
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Already Added Rating', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_category_rating(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_category = Category::find($request->category_id);
+            DB::commit();
+
+            if ($find_category) {
+                $total_rating['id'] = $find_category->id;
+                $total_rating['average_rating'] = round($find_category->rating_sum / $find_category->rated_user);
+                return $this->apiResponse->sendResponse(200, 'Get Category Rating Successfully', $total_rating);
+            }
+
+            return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_category_enrollment(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_category = Category::find($request->category_id);
+            if ($find_category) {
+                $already = CategoryUserEnrollment::where(['user_id' => Auth::user()->id, 'category_id' => $request->category_id])->first();
+                if (!$already) {
+                    Auth::user()->categoryEnrollment()->attach($request->category_id);
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Category Enrollment Successfully', null);
+                }
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Already Enrolled Category', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function get_category_enrollment(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $enrolled_categories = CategoryUserEnrollment::with('categories')->where('user_id', Auth::user()->id)->get();
+            return $this->apiResponse->sendResponse(200, 'Get Enrolled Category Successfully', $enrolled_categories);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -1076,7 +1483,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|int',
-            'video_url' => 'string',
+            'video_url' => 'required|string',
             'ordering' => 'required|int'
         ]);
 
@@ -1085,10 +1492,10 @@ class LearnWithYoutubeController extends Controller
         }
 
         $video = Video::where('url', $request->video_url)->first();
-        if (!$video)
+        if (!$video) {
             $video = new Video(['url' => $request->video_url]);
-
-        $video->save();
+            $video->save();
+        }
 
         if ($request->ordering == -1) {
             $lp = LearningPath::where('category_id', $request->category_id)->orderBy('ordering', 'desc')->first();
@@ -1314,10 +1721,9 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
 
         try {
-            if (Auth::user()->role_id == 3) 
-            {
-                $change_user_id = Category::where('user_id',0)->orWhere('user_id',null)->update(['user_id'=>1]);
-              
+            if (Auth::user()->role_id == 3) {
+                $change_user_id = Category::where('user_id', 0)->orWhere('user_id', null)->update(['user_id' => 1]);
+
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
             } else {
@@ -1333,9 +1739,8 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            if (Auth::user()->role_id == 3)
-            {  
-                $change_user_id = VideoAnnotation::where('user_id',0)->update(['user_id'=> 1]);
+            if (Auth::user()->role_id == 3) {
+                $change_user_id = VideoAnnotation::where('user_id', 0)->update(['user_id' => 1]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
