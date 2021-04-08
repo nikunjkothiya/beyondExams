@@ -74,6 +74,10 @@ class LearnWithYoutubeController extends Controller
         return $this->apiResponse->sendResponse(200, 'Feedback saved successfully', null);
     }
 
+    public function get_current_user_details($user_id){
+	return User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user_id)->get();
+    }
+
     public function submit_user_profile(Request $request)
     {
         DB::beginTransaction();
@@ -119,11 +123,11 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $user = new User();
+                $user = Auth::user();
                 // Save data to users table
                 $user->name = $request->name;
-                $user->email = $request->email;
-                $user->unique_id = uniqid();
+//                $user->email = $request->email;
+//                $user->unique_id = uniqid();
 
 
                 if ($request->file('avatar')) {
@@ -214,7 +218,8 @@ class LearnWithYoutubeController extends Controller
                     $this->common_education_standard($request, $user->id);
                 }
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
+		$user = $this->get_current_user_details($user->id);
+//$user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details saved', $user);
@@ -271,7 +276,7 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $user = User::find(Auth::user()->id);
+                $user = Auth::user();
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
 
                 if (isset($request->name)) {
@@ -370,7 +375,8 @@ class LearnWithYoutubeController extends Controller
                     $this->common_education_standard($request, $user->id);
                 }
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
+		$user = $this->get_current_user_details($user->id);                
+//$user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User details Updated', $user);
@@ -436,9 +442,11 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $this->common_education_standard($request, Auth::user()->id);
+                $this->common_education_standard($request);
+		$user = $this->get_current_user_details($user->id);
+//                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+//                $this->common_education_standard($request, Auth::user()->id);
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Education Saved', $user);
@@ -485,7 +493,8 @@ class LearnWithYoutubeController extends Controller
                     $user_certificate->issuing_date = $request->certificate_issuing_date;
                     $user_certificate->save();
                 }
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);
+                //$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Certificates Added Successfully', $user);
             } else {
@@ -804,7 +813,8 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         if (Auth::check()) {
             //$user = Auth::user();
-            $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+	    $user = $this->get_current_user_details(Auth::user()->id);
+            //$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
@@ -824,10 +834,11 @@ class LearnWithYoutubeController extends Controller
                 if ($validator->fails()) {
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
-                $user_link = User::find(Auth::user()->id);
+                $user_link = Auth::user();
                 $user_link->facebook_link = $request->facebook_link;
                 $user_link->save();
-                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);
+                //$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
 
                 return $this->apiResponse->sendResponse(200, 'User Facebook Link Added Successfully', $user);
@@ -855,7 +866,8 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->instagram_link = $request->instagram_link;
                 $user_link->save();
-                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);                
+		//$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Instagram Link Added Successfully', $user);
             } else {
@@ -882,7 +894,8 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->github_link = $request->github_link;
                 $user_link->save();
-                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);
+                //$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User GitHub Link Added Successfully', $user);
             } else {
@@ -909,7 +922,8 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->twitter_url = $request->twitter_url;
                 $user_link->save();
-                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);
+                //$user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Twitter Link Added Successfully', $user);
             } else {
@@ -936,7 +950,8 @@ class LearnWithYoutubeController extends Controller
                 $user_link = User::find(Auth::user()->id);
                 $user_link->linkedin_url = $request->linkedin_url;
                 $user_link->save();
-                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
+		$user = $this->get_current_user_details(Auth::user()->id);
+//                $user = User::with('certificates', 'domains')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User LinkedIn Link Added Successfully', $user);
             } else {
