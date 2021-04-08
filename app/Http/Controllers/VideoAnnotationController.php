@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\AnnotationUserReport;
+use App\Category;
+use App\CategoryUserReport;
 use App\Video;
 use App\VideoAnnotation;
 use DB;
@@ -176,6 +179,66 @@ class VideoAnnotationController extends Controller
             $change_privacy = VideoAnnotation::find($request->note_id)->update(['is_public' => $request->is_public]);
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Note privacy changed successfully', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_video_annotation_report(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'video_annotation_id' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (!VideoAnnotation::find($request->video_annotation_id)) {
+                return $this->apiResponse->sendResponse(404, 'Video Annotation Not Found', null);
+            }
+ 
+            if (!AnnotationUserReport::where(['video_annotation_id' => $request->video_annotation_id, 'user_id' => Auth::user()->id])->first()) {
+                Auth::user()->videoAnnotationReports()->attach($request->video_annotation_id);
+            } else {
+                return $this->apiResponse->sendResponse(200, 'Already Reported For this Video Annotation', null);
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Report For Video Annotation Added Succcessfully', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function add_category_report(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (!Category::find($request->category_id)) {
+                return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
+            }
+ 
+            if (!CategoryUserReport::where(['category_id' => $request->category_id, 'user_id' => Auth::user()->id])->first()) {
+                Auth::user()->categoryReports()->attach($request->category_id);
+            } else {
+                return $this->apiResponse->sendResponse(200, 'Already Reported For this Category', null);
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Report For Category Added Succcessfully', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
