@@ -75,6 +75,7 @@ class LearnWithYoutubeController extends Controller
     }
 
     public function get_current_user_details($user_id){
+
 	return User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user_id)->get();
     }
 
@@ -442,11 +443,11 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
                 }
 
-                $this->common_education_standard($request);
-		$user = $this->get_current_user_details($user->id);
+                $user_id = Auth::user()->id;
+                $this->common_education_standard($request, $user_id);
+		        $user = $this->get_current_user_details($user_id);
 //                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
 //                $this->common_education_standard($request, Auth::user()->id);
-
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Education Saved', $user);
@@ -548,7 +549,8 @@ class LearnWithYoutubeController extends Controller
                 }
                 $find_certificate->save();
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                $user = $this->get_current_user_details(Auth::user()->id);
+               // $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Certificates Updated Successfully', $user);
             } else {
@@ -593,7 +595,8 @@ class LearnWithYoutubeController extends Controller
                 $old_domain->experience = $experience;
                 $old_domain->save();
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                $user = $this->get_current_user_details(Auth::user()->id);
+               // $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Skill Updated Successfully', $user);
             } else {
@@ -645,7 +648,8 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Requested Parameter Values Missing', null);
                 }
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                $user = $this->get_current_user_details(Auth::user()->id);
+               // $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Institute Update Successfully', $user);
@@ -698,7 +702,8 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(400, 'Requested Parameter Values Missing', null);
                 }
 
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
+                $user = $this->get_current_user_details(Auth::user()->id);
+               // $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User Education Standard Update Successfully', $user);
@@ -710,103 +715,6 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
-
-    /* public function update_user_certificate_image(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            if (Auth::check()) {
-                $check_validation = array(
-                    'certificate_image_ids' => 'required|array',
-                );
-
-                if ($request->certificate_image_ids) {
-                    $check_validation['certificate_image'] = 'required|array|min:' . count($request->certificate_image_ids) . '|max:' . count($request->certificate_image_ids);
-                    $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
-                }
-
-                $validator = Validator::make($request->all(), $check_validation);
-
-                if ($validator->fails()) {
-                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-                }
-
-                if (isset($request->certificate_image_ids) && $request->file('certificate_image')) {
-                    foreach ($request->certificate_image_ids as $key => $img_id) {
-                        $certificateCheck = UserCertificate::where(['id' => $img_id, 'user_id' => Auth::user()->id])->first();
-                        if ($certificateCheck) {
-                            $attachment = $request->file('certificate_image')[$key];
-                            $storage_path = 'user/certificates/';
-                            $imgpath = commonUploadImage($storage_path, $attachment);
-
-                            $certificateCheck->image = env('BASE_URL') . $imgpath;
-                            $certificateCheck->save();
-                        }
-                    }
-                }
-
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
-
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Certificate Update Successfully', $user);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-            }
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function update_user_certificate_issuing_date(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-            if (Auth::check()) {
-                $check_validation = array(
-                    'certificate_issuing_ids' => 'required|array',
-                );
-
-                if ($request->certificate_issuing_ids) {
-                    $check_validation['certificate_issuing_dates'] = 'required|array|date_format:d-m-Y|min:' . count($request->certificate_image_ids) . '|max:' . count($request->certificate_image_ids);
-                }
-
-                $validator = Validator::make($request->all(), $check_validation);
-
-                if ($validator->fails()) {
-                    return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-                }
-
-                if (isset($request->certificate_issuing_ids) && isset($request->certificate_issuing_dates)) {
-                    foreach ($request->certificate_issuing_ids as $key => $issuing_id) {
-                        $standardCheck = UserCertificate::where(['user_id' => Auth::user()->id, 'education_standard_id' => $issuing_id])->first();
-                        if ($standardCheck) {
-                            $standard = EducationStandard::where('name', strtolower($request->education_standards[$key]))->first();
-                            if ($standard) {
-                                $standardCheck->education_standard_id = $standard->id;
-                            } else {
-                                $new_standard = new EducationStandard();
-                                $new_standard->name = strtolower($request->education_standards[$key]);
-                                $new_standard->save();
-                                $standardCheck->institutes_id = $new_standard->id;
-                            }
-                            $standardCheck->save();
-                        }
-                    }
-                }
-
-                $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
-
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User Education Standard Update Successfully', $user);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-            }
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }  */
 
     public function get_user_profile()
     {
