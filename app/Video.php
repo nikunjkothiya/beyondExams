@@ -38,7 +38,9 @@ class Video extends Model
         self::created(function ($model) {
             $title = youtube_data_api($model->url);
 
-            $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $title;
+            Video::where('id',$model->id)->update(['title'=>$title['title'] ,'description'=>$title['description']]);
+            
+            $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $title['title'];
             $date = date('c', strtotime($model->updated_at));
 
             $index = floor($model->id / 1000);

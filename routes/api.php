@@ -98,6 +98,10 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Keyword add to video
         Route::post('add_keyword_to_video', ['uses' => 'LearnWithYoutubeController@add_keyword_to_video']);
 
+        //-- Keyword add to and get of Category --//
+        Route::post('add_keyword_to_category', ['uses' => 'LearnWithYoutubeController@add_keyword_to_category']);
+        Route::get('get_keywords_of_category', ['uses' => 'LearnWithYoutubeController@get_keywords_of_category']);   
+      
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
 
@@ -212,7 +216,8 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Chemistry Universe
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
-
+        Route::post('remove_video_from_learning_path', ['uses' => 'LearnWithYoutubeController@remove_video_from_learning_path']);
+        
         //-- Update APi in For User Profiles --//
         Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
         Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);

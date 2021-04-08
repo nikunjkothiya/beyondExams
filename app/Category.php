@@ -20,4 +20,8 @@ class Category extends Model
     public function toggle_visibility(){
         $this->visibility = !$this->visibility;
     }
+
+    public function keywords() {
+        return $this->belongsToMany('App\Keyword')->withTimestamps();
+    }
 }
