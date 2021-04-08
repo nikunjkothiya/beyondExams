@@ -510,7 +510,7 @@ class LearnWithYoutubeController extends Controller
 
             if ($request->file('certificate_image')) {
                 $check_validation['certificate_issuing_date'] = 'required|date_format:d-m-Y';
-                $check_validation['certificate_image.*'] = 'image|mimes:jpeg,png,jpg,gif,svg|max:2048';
+                $check_validation['certificate_image.*'] = 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048';
             }
 
             $validator = Validator::make($request->all(), $check_validation);
@@ -521,7 +521,6 @@ class LearnWithYoutubeController extends Controller
 
             $find_certificate = UserCertificate::where(['id' => $request->certificate_id, 'user_id' => Auth::user()->id])->first();
             if ($find_certificate) {
-
                 if ($request->file('certificate_image')) {
                     $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
@@ -632,6 +631,9 @@ class LearnWithYoutubeController extends Controller
                             $domainCheck->save();
                         }
                     }
+                } else {
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(400, 'Requested Parameter Values Missing', null);
                 }
 
                 $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
@@ -682,6 +684,9 @@ class LearnWithYoutubeController extends Controller
                             $standardCheck->save();
                         }
                     }
+                } else {
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(400, 'Requested Parameter Values Missing', null);
                 }
 
                 $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
