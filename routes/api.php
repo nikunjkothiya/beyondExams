@@ -47,6 +47,9 @@ Route::get('getPublicHistory', ['uses' => 'LearnWithYoutubeController@getPublicH
 // For Youtube Search Data 
 Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_data']);
 
+//-- Get Total Video Annotation Votes --//
+Route::get('get_video_note_total_votes',['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
+
 
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
@@ -153,6 +156,9 @@ Route::group(['middleware' => 'auth:api'], function () {
 //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
 //        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
 
+        //-- Add Video Annotation Vote --//
+        Route::post('add_video_note_vote',['uses' => 'VideoAnnotationController@add_video_note_vote']);
+        
         // Social
         Route::get('get_followers', ['uses' => 'SocialController@get_followers']);
         Route::get('get_influencers', ['uses' => 'SocialController@get_influencers']);

@@ -1728,7 +1728,7 @@ class LearnWithYoutubeController extends Controller
 
             $keywords = $category->keywords()->get();
             DB::Commit();
-            return $this->apiResponse->sendResponse(200, 'Keyword get successfully', $keywords);
+            return $this->apiResponse->sendResponse(200, 'Keywords get successfully', $keywords);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
