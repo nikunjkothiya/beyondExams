@@ -23,7 +23,7 @@ Route::get('get_all_categories', ['uses' => 'LearnWithYoutubeController@getAllCa
 Route::get('get_all_categories_hierarchically', ['uses' => 'LearnWithYoutubeController@getAllCategoriesHierarchically']);
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
-Route::get('get_notes', ['uses' => 'LWYResourceController@get_notes']);
+Route::get('get_video_materials', ['uses' => 'LWYResourceController@get_video_materials']);
 Route::get('get_tests', ['uses' => 'LWYResourceController@get_tests']);
 
 Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
@@ -112,6 +112,10 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update_user_profile', ['uses' => 'LearnWithYoutubeController@update_user_profile']);
         Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
         Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);        
+        Route::get('delete_certificate', ['uses' => 'LearnWithYoutubeController@delete_certificate']);        
+        Route::get('delete_skill', ['uses' => 'LearnWithYoutubeController@delete_skill']); //Domain
+        Route::get('delete_education', ['uses' => 'LearnWithYoutubeController@delete_education']); //Education
+
         // ------- User Histroy Privacy Change -------- //
         Route::post('change_history_public',['uses' => 'LearnWithYoutubeController@change_history_public']);
         // ------- User Education Add -------- //
@@ -148,7 +152,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         //Attempt Test
         Route::post('attempt_test',['uses' => 'LearnWithYoutubeController@attempt_test']);
 
-        Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
+       // Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
 
 //        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
@@ -230,5 +234,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);
         Route::post('update_user_education_standard', ['uses' => 'LearnWithYoutubeController@update_user_education_standard']);
 
+        Route::post('upload_video_material', ['uses' => 'LWYResourceController@upload_video_material']);
+        
     });
 });

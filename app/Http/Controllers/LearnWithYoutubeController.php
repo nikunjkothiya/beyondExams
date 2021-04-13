@@ -34,6 +34,8 @@ use App\KeywordVideo;
 use App\State;
 use App\UserCertificate;
 use App\VideoAnnotation;
+use File;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Support\Facades\Config;
@@ -567,35 +569,51 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            $validator = Validator::make($request->all(), [
-                'skill_id'           => 'required|integer',
-                'skill_name'         => 'sometimes|string',
-                'skill_experience'   => 'sometimes|integer|between:1,5',
-            ]);
+            $check_validation = array(
+                'skill_ids' => 'required|array',
+            );
+
+            if ($request->skill_ids) {
+                $check_validation['skill_names'] = 'required|array|min:' . count($request->skill_ids) . '|max:' . count($request->skill_ids);
+                $check_validation['skill_names.*'] = 'string';
+                $check_validation['skill_experiences'] = 'required|array|min:' . count($request->skill_ids) . '|max:' . count($request->skill_ids);
+                $check_validation['skill_experiences.*'] = 'integer|between:1,5';
+            }
+
+            $validator = Validator::make($request->all(), $check_validation);
+
+            // $validator = Validator::make($request->all(), [
+            //     'skill_id'           => 'required|integer',
+            //     'skill_name'         => 'sometimes|string',
+            //     'skill_experience'   => 'sometimes|integer|between:1,5',
+            // ]);
 
             if ($validator->fails()) {
                 return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
             }
 
-            $domain_find = Domain::find($request->skill_id);
-            if ($domain_find) {
-                $old_domain = DomainUser::where(['user_id' => Auth::user()->id, 'domain_id' => $request->skill_id])->first();
-                $domain_id = Domain::where('name', strtolower($request->skill_name))->first();
-                if (!$domain_id) {
-                    $domain_id = new Domain();
-                    $domain_id->name = strtolower($request->skill_name);
-                    $domain_id->save();
-                }
+            if (isset($request->skill_ids) && isset($request->skill_names) && isset($request->skill_experiences)) {
+                foreach ($request->skill_ids as $key => $skill_id) {
+                    $domain_find = Domain::find($skill_id);
+                    if ($domain_find) {
+                        $old_domain = DomainUser::where(['user_id' => Auth::user()->id, 'domain_id' => $skill_id])->first();
+                        $domain_id = Domain::where('name', strtolower($request->skill_names[$key]))->first();
+                        if (!$domain_id) {
+                            $domain_id = new Domain();
+                            $domain_id->name = strtolower($request->skill_names[$key]);
+                            $domain_id->save();
+                        }
 
-                if (isset($request->skill_experience)) {
-                    $experience = $request->skill_experience;
-                } else {
-                    $experience = $old_domain->experience;
+                        if (isset($request->skill_experiences[$key])) {
+                            $experience = $request->skill_experiences[$key];
+                        } else {
+                            $experience = $old_domain->experience;
+                        }
+                        $old_domain->domain_id = $domain_id->id;
+                        $old_domain->experience = $experience;
+                        $old_domain->save();
+                    }
                 }
-                $old_domain->domain_id = $domain_id->id;
-                $old_domain->experience = $experience;
-                $old_domain->save();
-
                 $user = $this->get_current_user_details(Auth::user()->id);
                 // $user = User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', Auth::user()->id)->get();
                 DB::commit();
@@ -728,6 +746,93 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(200, 'Successfully fetched user profile.', $user);
         } else {
             return $this->apiResponse->sendResponse(500, 'User profile not complete', null);
+        }
+    }
+
+    public function delete_certificate(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'certificate_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_certificate = UserCertificate::where(['id' => $request->certificate_id, 'user_id' => Auth::user()->id])->first();
+            
+            if (!$find_certificate) {
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'Certificate Not Found or Unauthorized User', null);
+            }
+
+            $goodUrl = str_replace('https://api.learnwithyoutube.org/', '', $find_certificate->image);
+
+            File::delete($goodUrl);
+            $find_certificate->delete();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User Certificate Deleted Successfully', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function delete_skill(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'domain_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_domain = DomainUser::where(['domain_id' => $request->domain_id, 'user_id' => Auth::user()->id])->first();
+            
+            if (!$find_domain) {
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'Skill Not Found or Unauthorized User', null);
+            }
+
+            $find_domain->delete();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User Skill Deleted Successfully', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
+    public function delete_education(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'education_id' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
+
+        try {
+            $find_education = EducationUser::where(['id' => $request->education_id, 'user_id' => Auth::user()->id])->first();
+            
+            if (!$find_education) {
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'Education Not Found or Unauthorized User', null);
+            }
+
+            $find_education->delete();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User Education Deleted Successfully', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
         }
     }
 
