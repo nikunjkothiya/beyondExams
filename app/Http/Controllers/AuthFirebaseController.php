@@ -42,7 +42,7 @@ class AuthFirebaseController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'access_token' => 'required',
-                'role_id' => 'integer|exists:roles'
+                'role_id' => 'integer'
             ]);
 
             if ($validator->fails()) {
