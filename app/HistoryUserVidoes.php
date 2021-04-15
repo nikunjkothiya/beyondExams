@@ -15,4 +15,5 @@ class HistoryUserVidoes extends Pivot
     {
         return $this->belongsToMany('App\UserVideo');
     }
+    
 }

@@ -36,9 +36,11 @@ class Video extends Model
         });
 
         self::created(function ($model) {
-            $title = youtube_data_api($model->url);
+            $response = youtube_data_api($model->url);
 
-            $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $title;
+            Video::where('id',$model->id)->update(['slug'=>$response['slug'],'title'=>$response['title'] ,'description'=>$response['description']]);
+            
+            $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $response['slug'];
             $date = date('c', strtotime($model->updated_at));
 
             $index = floor($model->id / 1000);

@@ -8,9 +8,11 @@ use App\Video;
 use App\TestScore;
 use App\VideoNote;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 class LWYResourceController extends Controller
 {
@@ -23,57 +25,79 @@ class LWYResourceController extends Controller
     }
 
 
-    function upload_notes(Request $request)
+    function upload_video_material(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'title' => 'string',
             'pdf_file' => 'required|file|mimes:pdf',
-            'resource_url' => 'required|string'
+            'video_url' => 'required|string',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
+        try {
+            $find_video = Video::where('url', $request->video_url)->first();
 
+            if (!$find_video) {
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'Video Not Found', Note::where('resource_url', $request->resource_url)->get());
+            }
 
-        $file = $request->file('pdf_file');
+            $file = $request->file('pdf_file');
+            $bytes = filesize($file);
+            $file_size = $this->formatSizeUnits($bytes);
+            $file_name = $file->getClientOriginalName();
+            $result = str_replace('.pdf', '', $file_name);
 
-        $ext = "." . pathinfo($_FILES["pdf_file"]["name"])['extension'];
+            if ($request->title) {
+                $title = $request->title;
+            } else {
+                $title = $result;
+            }
 
+            $pdftext = file_get_contents($file);
+            $pages = preg_match_all("/\/Page\W/", $pdftext, $dummy);
 
-        $name = time() . uniqid() . $ext;
+            $storage_path = 'video_reading_material/';
+            $imgpath = commonUploadImage($storage_path, $file);
 
+            $note = new Note();
+            $note->user_id = Auth::user()->id;
+            $note->title = $title;
+            $note->url = env('BASE_URL') . $imgpath;
+            $note->resource_url = $request->video_url;
+            $note->size = $file_size;
+            $note->total_pages = $pages;
+            $note->save();
 
-        $contents = file_get_contents($file);
-
-        $filePath = "lwy_notes/" . $name;
-
-        Storage::disk('s3')->put($filePath, $contents);
-
-        $title = "video-notes-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
-
-        if ($request->title)
-            $title = $request->title;
-
-        $note = Note::create(['title' => $title, 'url' => $filePath, 'resource_url' => $request->resource_url]);
-
-        $note->save();
-
-
-        return $this->apiResponse->sendResponse(200, 'Note added successfully', $note);
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Reading Material added successfully', $note);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 
-    function get_notes(Request $request)
+    function get_video_materials(Request $request)
     {
+        DB::beginTransaction();
         $validator = Validator::make($request->all(), [
-            'resource_url' => 'required|string'
+            'video_url' => 'required|string'
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
-
-        return $this->apiResponse->sendResponse(200, 'Notes fetched successfully', Note::where('resource_url', $request->resource_url)->get());
+        try {
+            $notes = Note::with('user')->where('resource_url', $request->video_url)->get();
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'Reading Material fetched successfully', $notes);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 
     function upload_test(Request $request)
@@ -170,5 +194,24 @@ class LWYResourceController extends Controller
         $test_score->save();
 
         return $this->apiResponse->sendResponse(200, 'Test score added successfully', null);
+    }
+
+    private function formatSizeUnits($bytes)
+    {
+        if ($bytes >= 1073741824) {
+            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            $bytes = number_format($bytes / 1024, 2) . ' KB';
+        } elseif ($bytes > 1) {
+            $bytes = $bytes . ' bytes';
+        } elseif ($bytes == 1) {
+            $bytes = $bytes . ' byte';
+        } else {
+            $bytes = '0 bytes';
+        }
+
+        return $bytes;
     }
 }

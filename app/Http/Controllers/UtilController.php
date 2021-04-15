@@ -159,11 +159,11 @@ class UtilController extends Controller
                 $sitemap = Sitemap::create();
                 // Loop through all videos
                 foreach ($videos as $video) {
-                    $title = youtube_data_api($video->url);
+                    $response = youtube_data_api($video->url);
 
                     resolve('url')->forceRootUrl('https://beyondexams.org/dashboard/videos');
                         
-                    $sitemap->add(Url::create('search?id='.$video->url.'&q='.$title)->setChangeFrequency('monthly')->setPriority(0.5)); 
+                    $sitemap->add(Url::create('search?id='.$video->url.'&q='.$response['slug'])->setChangeFrequency('monthly')->setPriority(0.5)); 
                 }
                 // Write to disk
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';

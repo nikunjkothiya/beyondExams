@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Keyword extends Model
 {
     public $timestamps = false;
+    public $table = 'keywords';
 
     public function key(){
         return $this->belongsToMany('App\Opportunity');
@@ -18,5 +19,9 @@ class Keyword extends Model
 
     public function videos() {
         return $this->belongsToMany('App\Video')->withTimestamps();
+    }
+
+    public function categories() {
+        return $this->belongsToMany('App\Category')->withTimestamps();
     }
 }
