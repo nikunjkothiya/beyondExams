@@ -18,6 +18,7 @@ class LWYResourceController extends Controller
 {
     //
     private $apiResponse;
+    private $aws_base_url = "https://precisely-test1221001-dev.s3.ap-south-1.amazonaws.com/";
 
     public function __construct(ApiResponse $apiResponse)
     {
@@ -25,7 +26,7 @@ class LWYResourceController extends Controller
     }
 
 
-    function upload_video_material(Request $request)
+    public function upload_video_material(Request $request)
     {
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
@@ -42,31 +43,36 @@ class LWYResourceController extends Controller
 
             if (!$find_video) {
                 DB::commit();
-                return $this->apiResponse->sendResponse(404, 'Video Not Found', Note::where('resource_url', $request->resource_url)->get());
+                return $this->apiResponse->sendResponse(404, 'Video Not Found', null);
             }
 
             $file = $request->file('pdf_file');
             $bytes = filesize($file);
             $file_size = $this->formatSizeUnits($bytes);
-            $file_name = $file->getClientOriginalName();
-            $result = str_replace('.pdf', '', $file_name);
 
             if ($request->title) {
                 $title = $request->title;
             } else {
-                $title = $result;
+                $title = "video-notes-pdf" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
             }
 
             $pdftext = file_get_contents($file);
             $pages = preg_match_all("/\/Page\W/", $pdftext, $dummy);
 
+            /*
             $storage_path = 'video_reading_material/';
-            $imgpath = commonUploadImage($storage_path, $file);
+            $pdf_filepath = commonUploadFile($storage_path, $file); */
+
+            $ext = "." . pathinfo($_FILES["pdf_file"]["name"])['extension'];
+            $name = time() . uniqid() . $ext;
+            $contents = file_get_contents($file);
+            $filePath = "lwy_notes/" . $name;
+            Storage::disk('s3')->put($filePath, $contents);
 
             $note = new Note();
             $note->user_id = Auth::user()->id;
             $note->title = $title;
-            $note->url = env('BASE_URL') . $imgpath;
+            $note->url = $this->aws_base_url . $filePath;
             $note->resource_url = $request->video_url;
             $note->size = $file_size;
             $note->total_pages = $pages;
@@ -80,7 +86,7 @@ class LWYResourceController extends Controller
         }
     }
 
-    function get_video_materials(Request $request)
+    public function get_video_materials(Request $request)
     {
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
@@ -91,7 +97,7 @@ class LWYResourceController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
         }
         try {
-            $notes = Note::with('user')->where('resource_url', $request->video_url)->get();
+            $notes = Note::with('user:id,name,avatar')->where('resource_url', $request->video_url)->get();
             DB::commit();
             return $this->apiResponse->sendResponse(200, 'Reading Material fetched successfully', $notes);
         } catch (\Exception $e) {
@@ -100,7 +106,7 @@ class LWYResourceController extends Controller
         }
     }
 
-    function upload_test(Request $request)
+    public function upload_test(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
