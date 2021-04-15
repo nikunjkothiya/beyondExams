@@ -42,7 +42,7 @@ function youtube_data_api($video_url)
     $for_slug = str_replace(" ", "+", $title);
     $newArray['slug'] =  $for_slug .''. substr(hash('sha256', mt_rand() . microtime()), 0, 5);
     $newArray['title'] = $title;
-    $newArray['original_title'] = $for_slug;
+ //   $newArray['original_title'] = $for_slug;
     $newArray['description'] = $data->items[0]->snippet->description;
 
     return $newArray;
