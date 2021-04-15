@@ -3,11 +3,11 @@
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
-function commonUploadImage($storage_path, $file_path)
+function commonUploadFile($storage_path, $file_path)
 {
-    $imageName = time().'.'.$file_path->getClientOriginalExtension();
-    $file_path->move(public_path($storage_path), $imageName);
-    return $storage_path.''.$imageName;
+    $fileName = time().'.'.$file_path->getClientOriginalExtension();
+    $file_path->move(public_path($storage_path), $fileName);
+    return $storage_path.''.$fileName;
 }
 
 function youtube_data_api($video_url)
@@ -38,7 +38,11 @@ function youtube_data_api($video_url)
     } */
     $newArray = [];
     $title = $data->items[0]->snippet->title;
-    $newArray['title'] = str_replace(" ", "+", $title);
+    
+    $for_slug = str_replace(" ", "+", $title);
+    $newArray['slug'] =  $for_slug .''. substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+    $newArray['title'] = $title;
+    $newArray['original_title'] = $for_slug;
     $newArray['description'] = $data->items[0]->snippet->description;
 
     return $newArray;

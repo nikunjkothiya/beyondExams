@@ -82,6 +82,27 @@ class LearnWithYoutubeController extends Controller
         return User::with('certificates', 'domains', 'education_standard.institute_name', 'education_standard.standard_name')->where('id', $user_id)->get();
     }
 
+   /*  public function user_slug_update(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::user()) {
+                $user = User::find(Auth::user()->id);
+                $slug = str_replace(" ", "-", strtolower($user->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+                $user->slug = $slug;
+                $user->save();
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Slug update successfully', $user);
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(404, 'Unauthorize User', null);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    } */
+
     public function submit_user_profile(Request $request)
     {
         DB::beginTransaction();
@@ -137,7 +158,7 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('avatar')) {
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
                     $user->avatar = env('BASE_URL') . $imgpath;
                 }
 
@@ -177,7 +198,7 @@ class LearnWithYoutubeController extends Controller
                 $state->save();
 
                 $user->language_id = Language::where('code', Config::get('app.locale'))->first()->id;
-                $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
+                $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
                 $user->slug = $slug;
                 $user->age = $request->age;
                 $user->country_id = $request->country;
@@ -189,7 +210,7 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('certificate_image')) {
                     $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = $user->id;
@@ -285,14 +306,14 @@ class LearnWithYoutubeController extends Controller
 
                 if (isset($request->name)) {
                     $user->name = $request->name;
-                    $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
+                    $slug = str_replace(" ", "-", strtolower($request->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
                     $user->slug = $slug;
                 }
 
                 if ($request->file('avatar')) {
                     $attachment = $request->file('avatar');
                     $storage_path = 'user/profile/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
                     $user->avatar = env('BASE_URL') . $imgpath;
                 }
 
@@ -346,7 +367,7 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('certificate_image')) {
                     $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = $user->id;
@@ -483,7 +504,7 @@ class LearnWithYoutubeController extends Controller
                     $image = $request->file('certificate_image');
                     $attachment = $image;
                     $storage_path = 'user/certificates/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
 
                     $user_certificate = new UserCertificate();
                     $user_certificate->user_id = Auth::user()->id;
@@ -537,7 +558,7 @@ class LearnWithYoutubeController extends Controller
                 if ($request->file('certificate_image')) {
                     $attachment = $request->file('certificate_image');
                     $storage_path = 'user/certificates/';
-                    $imgpath = commonUploadImage($storage_path, $attachment);
+                    $imgpath = commonUploadFile($storage_path, $attachment);
 
                     $find_certificate->image = env('BASE_URL') . $imgpath;
                 }
@@ -762,7 +783,7 @@ class LearnWithYoutubeController extends Controller
 
         try {
             $find_certificate = UserCertificate::where(['id' => $request->certificate_id, 'user_id' => Auth::user()->id])->first();
-            
+
             if (!$find_certificate) {
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'Certificate Not Found or Unauthorized User', null);
@@ -793,7 +814,7 @@ class LearnWithYoutubeController extends Controller
 
         try {
             $find_domain = DomainUser::where(['domain_id' => $request->domain_id, 'user_id' => Auth::user()->id])->first();
-            
+
             if (!$find_domain) {
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'Skill Not Found or Unauthorized User', null);
@@ -821,7 +842,7 @@ class LearnWithYoutubeController extends Controller
 
         try {
             $find_education = EducationUser::where(['id' => $request->education_id, 'user_id' => Auth::user()->id])->first();
-            
+
             if (!$find_education) {
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'Education Not Found or Unauthorized User', null);
@@ -982,6 +1003,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
+            'description' => 'string',
             'level' => 'required|integer',
             'parent_id' => 'required|integer',
         ]);
@@ -991,11 +1013,18 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-            // if (Auth::user()->role() == Role::find(1))
-            //     return $this->apiResponse->sendResponse(401, 'User unauthorised.', null);
-            $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'level' => $request->level, 'parent_id' => $request->parent_id]);
+            if (Auth::user()->role_id == 2) {
+                if ($request->description) {
+                    $description = $request->description;
+                } else {
+                    $description = null;
+                }
+                $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'description' => $description, 'level' => $request->level, 'parent_id' => $request->parent_id]);
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+            }
             DB::commit();
-            return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+            return $this->apiResponse->sendResponse(401, 'Only Teacher can add category', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -1131,7 +1160,7 @@ class LearnWithYoutubeController extends Controller
             $parent_id = 0;
         }
 
-        $categories = Category::where('level', $request->level)->where('parent_id', $parent_id)->get();
+        $categories = Category::with('user:id,name,avatar,slug')->where('level', $request->level)->where('parent_id', $parent_id)->get();
         if (count($categories) == 0) {
             $request->request->add(['category_id' => $parent_id]);
             return $this->get_learning_path($request);
@@ -1402,7 +1431,7 @@ class LearnWithYoutubeController extends Controller
                 if (!$video) {
                     $video = new Video();
                     $video->url = $request->video_url;
-                    $video->id->save();
+                    $video->save();
                 }
                 Auth::user()->watchHistoryVidoes()->attach($video->id, ['start_time' => $start_time, 'end_time' => $end_time, 'type' => 'history']);
 
@@ -1508,7 +1537,8 @@ class LearnWithYoutubeController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|int',
             'video_url' => 'required|string',
-            'ordering' => 'required|int'
+            'ordering' => 'required|int',
+            'start_time' => 'integer'
         ]);
 
         if ($validator->fails()) {
@@ -1516,38 +1546,53 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-            $video = Video::where('url', $request->video_url)->first();
-            if (!$video) {
-                $video = new Video(['url' => $request->video_url]);
-                $video->save();
-            }
+            if (Auth::user()->role_id == 2) {
+                $video = Video::where('url', $request->video_url)->first();
+                if (!$video) {
+                    $video = new Video(['url' => $request->video_url]);
+                    $video->save();
+                }
 
-            $check = LearningPath::with('video')->where(['category_id' => $request->category_id, 'video_id' => $video->id])->first();
-            if ($check) {
+                $findAuthorizeUser = Category::where(['user_id' => Auth::user()->id, 'id' => $request->category_id])->first();
+                if ($findAuthorizeUser) {
+                    $check = LearningPath::with('video')->where(['category_id' => $request->category_id, 'video_id' => $video->id])->first();
+                    if ($check) {
+                        DB::commit();
+                        return $this->apiResponse->sendResponse(201, 'Already Video Added to this Category', $check);
+                    }
+
+                    if ($request->ordering == -1) {
+                        $lp = LearningPath::where('category_id', $request->category_id)->orderBy('ordering', 'desc')->first();
+                        if ($lp)
+                            $ordering = $lp->ordering + 1;
+                        else
+                            $ordering = 1;
+                    } else {
+                        $ordering = $request->ordering;
+                    }
+
+                    if ($request->start_time) {
+                        $start_time = $request->start_time;
+                    } else {
+                        $start_time = 0;
+                    }
+
+                    $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering, 'start_time' => $start_time]);
+
+                    $video_time = youtube_video_time_get($request->video_url); // In seconds
+                    $category_find = Category::find($request->category_id);
+                    $category_find->video_count += 1;
+                    $category_find->total_time += $video_time;
+                    $category_find->save();
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
+                }
                 DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Already Video Added to this Category', $check);
+                return $this->apiResponse->sendResponse(401, 'Unauthorize User', null);
             }
-
-            if ($request->ordering == -1) {
-                $lp = LearningPath::where('category_id', $request->category_id)->orderBy('ordering', 'desc')->first();
-                if ($lp)
-                    $ordering = $lp->ordering + 1;
-                else
-                    $ordering = 1;
-            } else {
-                $ordering = $request->ordering;
-            }
-
-            $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering]);
-
-            $video_time = youtube_video_time_get($request->video_url); // In seconds
-            $category_find = Category::find($request->category_id);
-            $category_find->video_count += 1;
-            $category_find->total_time += $video_time;
-            $category_find->save();
-
             DB::commit();
-            return $this->apiResponse->sendResponse(200, 'Learning path updated', $new_lp_id);
+            return $this->apiResponse->sendResponse(401, 'Only Teacher can add video to learning path', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -1567,24 +1612,33 @@ class LearnWithYoutubeController extends Controller
         }
 
         try {
-            $video_id = Video::where('url', $request->video_url)->first();
-            $check = LearningPath::where(['category_id' => $request->category_id, 'video_id' => $video_id->id])->first();
+            if (Auth::user()->role_id == 2) {
+                $findAuthorizeUser = Category::where(['user_id' => Auth::user()->id, 'id' => $request->category_id])->first();
+                if ($findAuthorizeUser) {
+                    $video_id = Video::where('url', $request->video_url)->first();
+                    $check = LearningPath::where(['category_id' => $request->category_id, 'video_id' => $video_id->id])->first();
 
-            if (!$check) {
+                    if (!$check) {
+                        DB::commit();
+                        return $this->apiResponse->sendResponse(404, 'Video in this Category Not Found', null);
+                    }
+
+                    $video_time = youtube_video_time_get($request->video_url);
+                    $category_find = Category::find($request->category_id);
+                    $category_find->video_count -= 1;
+                    $category_find->total_time -= $video_time;
+                    $category_find->save();
+
+                    $check->delete();
+
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Video Removed From Learning Path', null);
+                }
                 DB::commit();
-                return $this->apiResponse->sendResponse(404, 'Video in this Category Not Found', null);
+                return $this->apiResponse->sendResponse(401, 'Unauthorize User', null);
             }
-
-            $video_time = youtube_video_time_get($request->video_url);
-            $category_find = Category::find($request->category_id);
-            $category_find->video_count -= 1;
-            $category_find->total_time -= $video_time;
-            $category_find->save();
-
-            $check->delete();
-
             DB::commit();
-            return $this->apiResponse->sendResponse(200, 'Video Removed From Learning Path', null);
+            return $this->apiResponse->sendResponse(401, 'Only Teacher can remove video from learning path', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -1699,7 +1753,7 @@ class LearnWithYoutubeController extends Controller
 
                 $attachment = $request->file('image');
                 $storage_path = 'category/images/';
-                $imgpath = commonUploadImage($storage_path, $attachment);
+                $imgpath = commonUploadFile($storage_path, $attachment);
 
                 $category = Category::find($request->category_id);
                 $category->image_url = env('BASE_URL') . $imgpath;
@@ -1831,7 +1885,7 @@ class LearnWithYoutubeController extends Controller
                 return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
             }
 
-            $keywords = $category->keywords()->get();
+            $keywords = $category->keywords()->groupBy('keyword')->get();
             DB::Commit();
             return $this->apiResponse->sendResponse(200, 'Keywords get successfully', $keywords);
         } catch (\Exception $e) {
