@@ -10,7 +10,6 @@ class Category extends Model
 
     protected $fillable = [
         'title',
-        'description',
         'user_id',
         'level',
         'parent_id',
@@ -24,9 +23,5 @@ class Category extends Model
 
     public function keywords() {
         return $this->belongsToMany('App\Keyword')->withTimestamps();
-    }
-
-    public function user() {
-        return $this->belongsTo('App\User');
     }
 }
