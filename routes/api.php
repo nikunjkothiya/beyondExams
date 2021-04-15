@@ -229,6 +229,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('remove_video_from_learning_path', ['uses' => 'LearnWithYoutubeController@remove_video_from_learning_path']);
         
         //-- Update APi in For User Profiles --//
+        //Route::post('user_slug_update', ['uses' => 'LearnWithYoutubeController@user_slug_update']);
         Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
         Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);
         Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);

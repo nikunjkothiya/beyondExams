@@ -86,8 +86,11 @@ class AuthFirebaseController extends Controller
                 $new_user->role()->attach([$request->role_id]);
             }
 
-            if (!is_null($firebase_user->displayName))
+            if (!is_null($firebase_user->displayName)){
                 $new_user->name = $firebase_user->displayName;
+                $slug = str_replace(" ", "-", strtolower($firebase_user->displayName)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
+                $new_user->slug = $slug;
+            }
 
             $new_user->email = $firebase_user->email;
             $new_user->unique_id = $firebase_user->uid;
