@@ -32,11 +32,11 @@ Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resourc
 Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learning_path']);
 Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
 
-Route::get('get_most_searched_terms',['uses' => 'SearchController@get_most_searched_terms']);
-Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
-Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
+Route::get('get_most_searched_terms', ['uses' => 'SearchController@get_most_searched_terms']);
+Route::get('get_video_annotations', ['uses' => 'VideoAnnotationController@get_video_annotations']);
+Route::post('add_search_term', ['uses' => 'SearchController@add_search_term']);
 
-Route::get('get_ses_videos',['uses' => 'ChemistryUniverseController@get_ses_videos']);
+Route::get('get_ses_videos', ['uses' => 'ChemistryUniverseController@get_ses_videos']);
 Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_to_chat_type_id']);
 //Route::post('load_whatsapp_chat_into_db', ['uses' => 'ChatController@load_whatsapp_chat_into_db']);
 
@@ -48,9 +48,9 @@ Route::get('getPublicHistory', ['uses' => 'LearnWithYoutubeController@getPublicH
 Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_data']);
 
 //-- Get Total Video Annotation Votes --//
-Route::get('get_video_note_total_votes',['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
+Route::get('get_video_note_total_votes', ['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
 
-Route::get('get_video_all_details',['uses' => 'LearnWithYoutubeController@get_video_all_details']);
+Route::get('get_video_all_details', ['uses' => 'LearnWithYoutubeController@get_video_all_details']);
 
 Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
 
@@ -62,27 +62,22 @@ Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYou
 //Route::group(['middleware' => 'admin_access'], function () {
 Route::group(['middleware' => 'auth:api'], function () {
 
-    // Searches term & search_user  Video_annotations
-//      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
+        // Searches term & search_user  Video_annotations
+        //      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
-    Route::group(['middleware' => ['login_status']], function () {
+        Route::group(['middleware' => ['login_status']], function () {
 
         //--- Change user_id to admin from 0 or null from category and video_annotation table ---//  Only For Admin
 //        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
 //        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
-        //--- End for Only Admin --- //
+                Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
+                
+                //--- End for Only Admin --- //
 
-        Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
-        Route::post('add_ses_video',['uses' => 'ChemistryUniverseController@add_ses_video']);
+                Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
+                Route::post('add_ses_video', ['uses' => 'ChemistryUniverseController@add_ses_video']);
 
-//        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
-        
-        // --------  Video Notes/Annotations ---------- //
-        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
-//        Route::get('get_video_annotations',['uses' => 'VideoAnnotationController@get_video_annotations']);
-        Route::post('edit_video_note',['uses' => 'VideoAnnotationController@edit_video_note']);
-        Route::post('delete_video_note',['uses' => 'VideoAnnotationController@delete_video_note']);
-        Route::post('change_note_privacy',['uses' => 'VideoAnnotationController@change_note_privacy']);
+                //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
         // -------  Add Category and Video Annotation Report ------- //
         Route::post('add_category_report',['uses' => 'VideoAnnotationController@add_category_report']);
