@@ -92,7 +92,6 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
         try {
-            if (Auth::user()) {
                 $user = User::where('slug', $request->slug)->first();
                 if ($user) {
                     $user_profile = $this->get_current_user_details($user->id);
@@ -102,7 +101,6 @@ class LearnWithYoutubeController extends Controller
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'User not found', null);
-            }
             DB::commit();
             return $this->apiResponse->sendResponse(401, 'Unauthorize User', null);
         } catch (Exception $e) {
@@ -2025,14 +2023,14 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
 
         try {
-            if (Auth::user()->role_id == 3) {
+//            if (Auth::user()->role_id == 3) {
                 $change_user_id = Category::where('user_id', 0)->orWhere('user_id', null)->update(['user_id' => 1]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-            }
+//            } else {
+//                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+//            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -2043,14 +2041,14 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            if (Auth::user()->role_id == 3) {
+//            if (Auth::user()->role_id == 3) {
                 $change_user_id = VideoAnnotation::where('user_id', 0)->update(['user_id' => 1]);
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
-            } else {
-                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-            }
+//            } else {
+//                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+//            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
