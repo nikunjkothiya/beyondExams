@@ -88,7 +88,7 @@ class AuthFirebaseController extends Controller
 
             if (!is_null($firebase_user->displayName)){
                 $new_user->name = $firebase_user->displayName;
-                $slug = str_replace(" ", "-", strtolower($firebase_user->displayName)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 3);
+                $slug = str_replace(" ", "-", strtolower($firebase_user->displayName)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
                 $new_user->slug = $slug;
             }
 
