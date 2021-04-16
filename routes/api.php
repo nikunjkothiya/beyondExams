@@ -52,6 +52,11 @@ Route::get('get_video_note_total_votes',['uses' => 'VideoAnnotationController@ge
 
 Route::get('get_video_all_details',['uses' => 'LearnWithYoutubeController@get_video_all_details']);
 
+Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
+
+Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
+Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
+
 
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
@@ -63,8 +68,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::group(['middleware' => ['login_status']], function () {
 
         //--- Change user_id to admin from 0 or null from category and video_annotation table ---//  Only For Admin
-        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
-        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
+//        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
+//        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
         //--- End for Only Admin --- //
 
         Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
@@ -232,7 +237,7 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('remove_video_from_learning_path', ['uses' => 'LearnWithYoutubeController@remove_video_from_learning_path']);
         
         //-- Update APi in For User Profiles --//
-        Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);///
+//        Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
         Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
         Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);
         Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);
