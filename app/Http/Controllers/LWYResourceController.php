@@ -61,18 +61,19 @@ class LWYResourceController extends Controller
 
             /*
             $storage_path = 'video_reading_material/';
-            $pdf_filepath = commonUploadFile($storage_path, $file); */
+            */
 
             $ext = "." . pathinfo($_FILES["pdf_file"]["name"])['extension'];
             $name = time() . uniqid() . $ext;
             $contents = file_get_contents($file);
             $filePath = "lwy_notes/" . $name;
-            Storage::disk('s3')->put($filePath, $contents);
+            //Storage::disk('s3')->put($filePath, $contents);
+            $pdf_filepath = commonUploadFile($filePath, $file);
 
             $note = new Note();
             $note->user_id = Auth::user()->id;
             $note->title = $title;
-            $note->url = $this->aws_base_url . $filePath;
+            $note->url = env('BASE_URL') . $filePath;
             $note->resource_url = $request->video_url;
             $note->size = $file_size;
             $note->total_pages = $pages;

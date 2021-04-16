@@ -778,6 +778,33 @@ class LearnWithYoutubeController extends Controller
         }
     }
 
+    public function old_user_slug_generate(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if (Auth::user()->role_id == 3) {
+                $find_users = User::where('slug', null)->get();
+                if(count($find_users) > 0){
+                    foreach($find_users as $key=>$user){
+                        $current_user = User::find($user->id);
+                        $slug = str_replace(" ", "-", strtolower($current_user->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+                        $current_user->slug = $slug;
+                        $current_user->save();
+                    }
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'Slug Genereted Successfully', null);
+                }
+                DB::commit();
+                return $this->apiResponse->sendResponse(404, 'User not found without slug', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(401, 'Only Admin use this api', null);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function delete_certificate(Request $request)
     {
         DB::beginTransaction();
@@ -1012,6 +1039,7 @@ class LearnWithYoutubeController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',
             'description' => 'string',
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:1024',
             'level' => 'required|integer',
             'parent_id' => 'required|integer',
         ]);
@@ -1022,14 +1050,26 @@ class LearnWithYoutubeController extends Controller
 
         try {
             if (Auth::user()->role_id == 2) {
-                if ($request->description) {
-                    $description = $request->description;
-                } else {
-                    $description = null;
+                $find = Category::where('title', strtolower($request->title))->first();
+                if (!$find) {
+                    $description = ($request->description) ? $request->description : null;
+
+                    $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+
+                    if ($request->image) {
+                        $cate_image = $request->file('image');
+                        $storage_path = 'category/images/';
+                        $imgpath = commonUploadFile($storage_path, $cate_image);
+                        $full_imgpath = env('BASE_URL') . $imgpath;
+                    }
+
+                    $image = ($request->image) ? $full_imgpath : null;
+                    $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'description' => $description, 'image_url' => $image, 'level' => $request->level, 'parent_id' => $request->parent_id, 'slug' => $slug]);
+                    DB::commit();
+                    return $this->apiResponse->sendResponse(200, 'New Category added', $category);
                 }
-                $category = Category::create(['user_id' => Auth::user()->id, 'title' => $request->title, 'description' => $description, 'level' => $request->level, 'parent_id' => $request->parent_id]);
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'New Category added', $category);
+                return $this->apiResponse->sendResponse(201, 'Already Category have', $find);
             }
             DB::commit();
             return $this->apiResponse->sendResponse(401, 'Only Teacher can add category', null);
@@ -1044,6 +1084,7 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|integer',
+            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:1024',
             'title' => 'string',
             'description' => 'string',
         ]);
@@ -1059,10 +1100,22 @@ class LearnWithYoutubeController extends Controller
                 if ($findCategory) {
                     if ($request->title) {
                         $findCategory->title = $request->title;
+                        $slug = str_replace(" ", "-", strtolower($request->title)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+                        $findCategory->slug = $slug;
                     }
                     if ($request->description) {
                         $findCategory->description = $request->description;
                     }
+
+                    if ($request->image) {
+                        $cate_image = $request->file('image');
+                        $storage_path = 'category/images/';
+                        $imgpath = commonUploadFile($storage_path, $cate_image);
+                        $full_imgpath = env('BASE_URL') . $imgpath;
+                        $image = ($request->image) ? $full_imgpath : $findCategory->image_url;
+                        $findCategory->image_url = $image;
+                    }
+
                     $findCategory->save();
 
                     DB::commit();

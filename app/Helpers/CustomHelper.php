@@ -33,9 +33,9 @@ function youtube_data_api($video_url)
 
     //return $response;
     $data = json_decode($response);
-    /* if(empty($data->items)){
-        return false;
-    } */
+     if(empty($data->items)){
+         return 0;
+    }
     $newArray = [];
     $title = $data->items[0]->snippet->title;
     

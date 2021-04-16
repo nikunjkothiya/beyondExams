@@ -15,7 +15,8 @@ class Category extends Model
         'level',
         'parent_id',
         'previous_id',
-        'image_url'
+        'image_url',
+        'slug'
     ];
 
     public function toggle_visibility(){
