@@ -83,7 +83,8 @@ class AuthFirebaseController extends Controller
                 $new_user->role_id = 1;
 
             if ($request->role_id) {
-                $new_user->role()->attach([$request->role_id]);
+		if (!$new_user->role->contains($request->role_id))
+                    $new_user->role()->attach([$request->role_id]);
             }
 
             if (!is_null($firebase_user->displayName)){
@@ -127,6 +128,7 @@ class AuthFirebaseController extends Controller
             $data["email"] = $new_user->email;
             $data["name"] = $new_user->name;
             $data["role_id"] = $new_user->role_id;
+	    $data["slug"] = $new_user->slug;
 
             return $this->apiResponse->sendResponse(200, 'Login Successful', $data);
 
