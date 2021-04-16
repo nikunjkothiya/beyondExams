@@ -264,72 +264,72 @@ class VideoAnnotationController extends Controller
             if ($note) {
                 $findVote = VideoNoteVote::where(['user_id' => Auth::user()->id, 'note_id' => $request->note_id])->first();
                 if ($findVote) {
+                    $old_vote = VideoNoteVote::where(['user_id' => Auth::user()->id, 'note_id' => $request->note_id])->first();
                     if ($request->vote == -1) {
-                        if ($findVote->upvote == $request->vote) {
+                        if ($request->vote == $old_vote->vote) {
+                            $message = 'Already Given Downvote';
+                            $data = $findVote;
+                        } else {
+                            $findVote->vote = $request->vote;
+                            $findVote->save();
 
+                            if ($old_vote->vote == 1) {
+                                $message = 'Vote Change From Upvote to Downvote Successfully';
+                            } else {
+                                $message = 'Vote Change From No-vote to Downvote Successfully';
+                            }
+
+                            $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
+                            $data = $findVote;
+                        }
+                    } else if ($request->vote == +1) {
+                        if ($request->vote == $old_vote->vote) {
                             $message = 'Already Given Upvote';
                             $data = $findVote;
                         } else {
-                            $findVote->upvote = 0;
-                            $findVote->downvote = 1;
+                            $findVote->vote = $request->vote;
                             $findVote->save();
 
-                            $this->video_note_vote_count(Auth::user()->id, $request->note_id, $request->vote, null);
-                            $message = 'Vote Change From Upvote to Downvote Successfully';
+                            if ($old_vote->vote == -1) {
+                                $message = 'Vote Change From Downvote to Upvote Successfully';
+                            } else {
+                                $message = 'Vote Change From No-vote to Upvote Successfully';
+                            }
+
+                            $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
                             $data = $findVote;
                         }
-                    }
-
-                    if ($request->vote == 1) {
-                        if ($findVote->downvote == $request->vote) {
-                            $findVote->upvote = 1;
-                            $findVote->downvote = 0;
+                    } else if ($request->vote == 0) {
+                        if ($request->vote == $old_vote->vote) {
+                            $message = 'Already Given No-vote';
+                            $data = $findVote;
+                        } else {
+                            $findVote->vote = $request->vote;
                             $findVote->save();
 
-                            $this->video_note_vote_count(Auth::user()->id, $request->note_id, $request->vote, null);
-                            $message = 'Vote Change From Downvote to Upvote Successfully';
-                            $data = $findVote;
-                        } else {
+                            if ($old_vote->vote == -1) {
+                                $message = 'Vote Change From Downvote to No-vote Successfully';
+                            } else {
+                                $message = 'Vote Change From Upvote to No-vote Successfully';
+                            }
 
-                            $message = 'Already Given Downvote';
+                            $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
                             $data = $findVote;
                         }
-                    }
-
-                    if ($request->vote == 0) {
-                        if ($findVote->upvote == 0) {
-                            $remove = -1;
-                        } else {
-                            $remove = 1;
-                        }
-                        $this->video_note_vote_count(Auth::user()->id, $request->note_id, $request->vote, $remove);
-                        $findVote->delete();
-
-                        $message = 'Vote Removed Successfully';
-                        $data = null;
                     }
 
                     DB::Commit();
                     return $this->apiResponse->sendResponse(200, $message, $data);
                 } else {
-                    if ($request->vote == 0) {
-                        DB::Commit();
-                        return $this->apiResponse->sendResponse(400, 'Please add upvote or downvote', null);
-                    } else {
-                        $newVote = new VideoNoteVote();
-                        $newVote->user_id = Auth::user()->id;
-                        $newVote->note_id = $request->note_id;
-                        if ($request->vote == +1) {
-                            $newVote->upvote = 1;
-                        }
-                        if ($request->vote == -1) {
-                            $newVote->downvote = 1;
-                        }
-                        $newVote->save();
 
-                        $new_user = 'new_user';
-                        $this->video_note_vote_count(Auth::user()->id, $request->note_id, $request->vote, $new_user);
-                    }
+                    $newVote = new VideoNoteVote();
+                    $newVote->user_id = Auth::user()->id;
+                    $newVote->note_id = $request->note_id;
+                    $newVote->vote = $request->vote;
+                    $newVote->save();
+
+                    $this->video_note_vote_count($request->note_id, $request->vote, null);
+
                     DB::Commit();
                     return $this->apiResponse->sendResponse(200, 'Vote added successfully', $newVote);
                 }
@@ -359,7 +359,7 @@ class VideoAnnotationController extends Controller
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'Note / Annotation Not Found', null);
             } else {
-               $find = VideoNoteTotalVote::where('video_annotation_id', $request->note_id)->first();
+                $find = VideoNoteTotalVote::where('video_annotation_id', $request->note_id)->select('total_upvote','total_downvote')->first();
 
                 DB::commit();
                 return $this->apiResponse->sendResponse(200, 'Video Annotations Total Votes get Successfully', $find);
@@ -370,48 +370,39 @@ class VideoAnnotationController extends Controller
         }
     }
 
-    private function video_note_vote_count($user_id, $note_id, $vote, $remove)
+    private function video_note_vote_count($note_id, $vote, $old_vote)
     {
-        $user = VideoNoteVote::where(['user_id' => $user_id, 'note_id' => $note_id])->first();
         $find = VideoNoteTotalVote::where('video_annotation_id', $note_id)->first();
-        if ($remove == null) {
-            if ($find) {
-                if ($vote == -1) {
-                    if ($user->downvote == 1) {
-                        $find->total_downvote += 1;
-                        $find->total_upvote -= 1;
-                    }
-                } else {
-                    if ($user->upvote == 1) {
-                        $find->total_upvote += 1;
-                        $find->total_downvote -= 1;
-                    }
-                }
-            } else {
-                $newCreate = new VideoNoteTotalVote();
-                $newCreate->video_annotation_id = $note_id;
-                if ($vote == 1) {
-                    $newCreate->total_upvote = 1;
-                } else {
-                    $newCreate->total_downvote = 1;
-                }
-                $newCreate->save();
-            }
-        } else if ($remove == 'new_user') {
-            if ($vote == +1) {
-                $find->total_upvote += 1;
-            }
+        if ($find) {
             if ($vote == -1) {
                 $find->total_downvote += 1;
-            }
-        } else {
-            if ($remove == 1) {
-                $find->total_upvote -= 1;
+                if ($old_vote == 1) {
+                    $find->total_upvote -= 1;
+                }
+            } else if ($vote == 1) {
+                $find->total_upvote += 1;
+                if ($old_vote == -1) {
+                    $find->total_downvote -= 1;
+                }
             } else {
-                $find->total_downvote -= 1;
+                if ($old_vote == -1) {
+                    $find->total_downvote -= 1;
+                }
+                if ($old_vote == 1) {
+                    $find->total_upvote -= 1;
+                }
             }
+            $find->save();
+        } else {
+            $newCreate = new VideoNoteTotalVote();
+            $newCreate->video_annotation_id = $note_id;
+            if ($vote == 1) {
+                $newCreate->total_upvote = 1;
+            } else if ($vote == -1) {
+                $newCreate->total_downvote = 1;
+            }
+            $newCreate->save();
         }
-        $find->save();
         return true;
     }
 }

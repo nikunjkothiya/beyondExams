@@ -122,6 +122,16 @@ class Video extends Model
 
     public function notes()
     {
-        return $this->hasMany('App\VideoNote', 'video_id', 'id');
+        return $this->hasMany('App\Note', 'resource_url', 'url');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany('App\VideoRating', 'video_id', 'id');
+    }
+
+    public function learning_path()
+    {
+        return $this->hasOne('App\LearningPath','video_id','id');
     }
 }

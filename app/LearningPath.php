@@ -12,4 +12,8 @@ class LearningPath extends Model
     public function video(){
         return $this->belongsTo('App\Video');
     }
+
+    public function category(){
+        return $this->belongsTo('App\Category');
+    }
 }

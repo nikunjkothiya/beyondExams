@@ -50,6 +50,8 @@ Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_d
 //-- Get Total Video Annotation Votes --//
 Route::get('get_video_note_total_votes',['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
 
+Route::get('get_video_all_details',['uses' => 'LearnWithYoutubeController@get_video_all_details']);
+
 
 // Protected APIs via Auth Middleware
 //Route::group(['middleware' => 'admin_access'], function () {
@@ -226,10 +228,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 
         // Chemistry Universe
         Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
+        Route::post('change_video_ordering', ['uses' => 'LearnWithYoutubeController@change_video_ordering']);
         Route::post('remove_video_from_learning_path', ['uses' => 'LearnWithYoutubeController@remove_video_from_learning_path']);
         
         //-- Update APi in For User Profiles --//
-        //Route::post('user_slug_update', ['uses' => 'LearnWithYoutubeController@user_slug_update']);
+        Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);///
         Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
         Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);
         Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);
