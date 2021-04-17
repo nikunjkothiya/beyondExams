@@ -38,6 +38,14 @@ class Video extends Model
         self::created(function ($model) {
             $response = youtube_data_api($model->url);
 
+            if ($response == 0) {
+                $myfile = fopen(public_path()."/dummyVideoUrl.txt", "a") or die("Unable to open file!");
+                $txt = $model->url."\n";
+                fwrite($myfile, $txt);
+                fclose($myfile);
+                return true;
+            }
+
             Video::where('id',$model->id)->update(['slug'=>$response['slug'],'title'=>$response['title'] ,'description'=>$response['description']]);
             
             $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $response['slug'];
