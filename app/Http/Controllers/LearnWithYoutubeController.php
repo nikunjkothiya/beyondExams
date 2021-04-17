@@ -1676,7 +1676,7 @@ class LearnWithYoutubeController extends Controller
                         $start_time = 0;
                     }
 
-                    $new_lp_id = LearningPath::create(['category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering, 'start_time' => $start_time]);
+                    $new_lp_id = LearningPath::create(['user_id'=>Auth::user()->id,'category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering, 'start_time' => $start_time]);
 
                     $video_time = youtube_video_time_get($request->video_url); // In seconds
                     $category_find = Category::find($request->category_id);
