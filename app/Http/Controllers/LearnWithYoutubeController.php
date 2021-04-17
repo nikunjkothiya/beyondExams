@@ -780,7 +780,7 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-            if (Auth::user()->role_id == 3) {
+//            if (Auth::user()->role_id == 3) {
                 $find_users = User::where('slug', null)->get();
                 if(count($find_users) > 0){
                     foreach($find_users as $key=>$user){
@@ -794,9 +794,9 @@ class LearnWithYoutubeController extends Controller
                 }
                 DB::commit();
                 return $this->apiResponse->sendResponse(404, 'User not found without slug', null);
-            }
-            DB::commit();
-            return $this->apiResponse->sendResponse(401, 'Only Admin use this api', null);
+//            }
+//            DB::commit();
+//            return $this->apiResponse->sendResponse(401, 'Only Admin use this api', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
