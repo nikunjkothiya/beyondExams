@@ -1048,7 +1048,7 @@ class LearnWithYoutubeController extends Controller
 
         try {
             if (Auth::user()->role_id == 2) {
-                $find = Category::where(['title', strtolower($request->title)], ['parent_id', $request->parent_id])->first();
+                $find = Category::where([['title', strtolower($request->title)], ['parent_id', $request->parent_id]])->first();
                 if (!$find) {
                     $description = ($request->description) ? $request->description : null;
 
