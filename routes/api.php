@@ -50,7 +50,7 @@ Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_d
 //-- Get Total Video Annotation Votes --//
 Route::get('get_video_note_total_votes', ['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
 
-Route::get('get_video_all_details', ['uses' => 'LearnWithYoutubeController@get_video_all_details']);
+Route::post('get_video_all_details', ['uses' => 'YouTubeController@get_video_all_details']);
 
 Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
 
@@ -90,7 +90,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         // Add new category in Browse section
         Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
         Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);
-        
+        Route::post('edit_category', ['uses' => 'LearnWithYoutubeController@edit_category']);
+
         //-- Rating to Category --// 
         Route::post('add_category_rating', ['uses' => 'LearnWithYoutubeController@add_category_rating']);
         Route::get('get_category_rating', ['uses' => 'LearnWithYoutubeController@get_category_rating']);

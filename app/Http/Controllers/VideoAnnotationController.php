@@ -206,7 +206,7 @@ class VideoAnnotationController extends Controller
             if (!AnnotationUserReport::where(['video_annotation_id' => $request->video_annotation_id, 'user_id' => Auth::user()->id])->first()) {
                 Auth::user()->videoAnnotationReports()->attach($request->video_annotation_id);
             } else {
-                return $this->apiResponse->sendResponse(200, 'Already Reported For this Video Annotation', null);
+                return $this->apiResponse->sendResponse(409, 'Already Reported For this Video Annotation', null);
             }
 
             DB::commit();
@@ -236,7 +236,7 @@ class VideoAnnotationController extends Controller
             if (!CategoryUserReport::where(['category_id' => $request->category_id, 'user_id' => Auth::user()->id])->first()) {
                 Auth::user()->categoryReports()->attach($request->category_id);
             } else {
-                return $this->apiResponse->sendResponse(200, 'Already Reported For this Category', null);
+                return $this->apiResponse->sendResponse(409, 'Already Reported For this Category', null);
             }
 
             DB::commit();
@@ -269,6 +269,7 @@ class VideoAnnotationController extends Controller
                         if ($request->vote == $old_vote->vote) {
                             $message = 'Already Given Downvote';
                             $data = $findVote;
+                            $statusCode = 409;
                         } else {
                             $findVote->vote = $request->vote;
                             $findVote->save();
@@ -281,11 +282,13 @@ class VideoAnnotationController extends Controller
 
                             $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
                             $data = $findVote;
+                            $statusCode = 200;
                         }
                     } else if ($request->vote == +1) {
                         if ($request->vote == $old_vote->vote) {
                             $message = 'Already Given Upvote';
                             $data = $findVote;
+                            $statusCode = 409;
                         } else {
                             $findVote->vote = $request->vote;
                             $findVote->save();
@@ -298,11 +301,13 @@ class VideoAnnotationController extends Controller
 
                             $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
                             $data = $findVote;
+                            $statusCode = 200;
                         }
                     } else if ($request->vote == 0) {
                         if ($request->vote == $old_vote->vote) {
                             $message = 'Already Given No-vote';
                             $data = $findVote;
+                            $statusCode = 409;
                         } else {
                             $findVote->vote = $request->vote;
                             $findVote->save();
@@ -315,11 +320,12 @@ class VideoAnnotationController extends Controller
 
                             $this->video_note_vote_count($request->note_id, $request->vote, $old_vote->vote);
                             $data = $findVote;
+                            $statusCode = 200;
                         }
                     }
 
                     DB::Commit();
-                    return $this->apiResponse->sendResponse(200, $message, $data);
+                    return $this->apiResponse->sendResponse($statusCode, $message, $data);
                 } else {
 
                     $newVote = new VideoNoteVote();

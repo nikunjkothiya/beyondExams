@@ -129,7 +129,7 @@ class ChatController extends Controller
             if ($request->exists('period_name')) {
                 return $chat;
             }
-            return $this->apiResponse->sendResponse(200, 'Already Created Chat', $chat);
+            return $this->apiResponse->sendResponse(409, 'Already Created Chat', $chat);
         } catch (Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -538,7 +538,7 @@ class ChatController extends Controller
                 $old_timetable = TimeTable::where(['chat_id' => $response->id, 'start_time' => $request->start_time, 'end_time' => $request->end_time, 'period_name' => $request->period_name, 'date' => $request->date])->get();
 
                 if (count($old_timetable) > 0) {
-                    return $this->apiResponse->sendResponse(201, 'Already Exits.', $old_timetable);
+                    return $this->apiResponse->sendResponse(409, 'Already Exits.', $old_timetable);
                 } else {
                     $timetable = new TimeTable();
                     $timetable->teacher_id = Auth::user()->id;
@@ -713,7 +713,7 @@ class ChatController extends Controller
 
             $chatReviewFound = Chat::find($request->chat_id)->reviews()->where('student_id', Auth::user()->id)->first();
             if (!is_null($chatReviewFound)) {
-                return $this->apiResponse->sendResponse(201, 'Already Found Chat Review For This Chat.', $chatReviewFound);
+                return $this->apiResponse->sendResponse(409, 'Already Found Chat Review For This Chat.', $chatReviewFound);
             } else {
                 $addReview = new ChatReview();
                 $addReview->chat_id = $request->chat_id;
@@ -812,7 +812,7 @@ class ChatController extends Controller
             if (!ChatMessage::find($request->chat_message_id)) {
                 return $this->apiResponse->sendResponse(404, 'Chat Message does not exist.', null);
             } elseif (!is_null($data)) {
-                return $this->apiResponse->sendResponse(201, 'Already Saved Chat Message Found.', $data);
+                return $this->apiResponse->sendResponse(409, 'Already Saved Chat Message Found.', $data);
             } else {
                 $save_chat_message = new SaveMessage();
                 $save_chat_message->student_id = Auth::user()->id;

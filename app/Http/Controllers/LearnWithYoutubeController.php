@@ -92,15 +92,15 @@ class LearnWithYoutubeController extends Controller
             return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
         }
         try {
-                $user = User::where('slug', $request->slug)->first();
-                if ($user) {
-                    $user_profile = $this->get_current_user_details($user->id);
-                    DB::commit();
-                    return $this->apiResponse->sendResponse(200, 'User profile get successfully', $user_profile);
-                }
-
+            $user = User::where('slug', $request->slug)->first();
+            if ($user) {
+                $user_profile = $this->get_current_user_details($user->id);
                 DB::commit();
-                return $this->apiResponse->sendResponse(404, 'User not found', null);
+                return $this->apiResponse->sendResponse(200, 'User profile get successfully', $user_profile);
+            }
+
+            DB::commit();
+            return $this->apiResponse->sendResponse(404, 'User not found', null);
             DB::commit();
             return $this->apiResponse->sendResponse(401, 'Unauthorize User', null);
         } catch (Exception $e) {
@@ -780,23 +780,23 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-//            if (Auth::user()->role_id == 3) {
-                $find_users = User::where('slug', null)->get();
-                if(count($find_users) > 0){
-                    foreach($find_users as $key=>$user){
-                        $current_user = User::find($user->id);
-                        $slug = str_replace(" ", "-", strtolower($current_user->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
-                        $current_user->slug = $slug;
-                        $current_user->save();
-                    }
-                    DB::commit();
-                    return $this->apiResponse->sendResponse(200, 'Slug Genereted Successfully', null);
+            //            if (Auth::user()->role_id == 3) {
+            $find_users = User::where('slug', null)->get();
+            if (count($find_users) > 0) {
+                foreach ($find_users as $key => $user) {
+                    $current_user = User::find($user->id);
+                    $slug = str_replace(" ", "-", strtolower($current_user->name)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
+                    $current_user->slug = $slug;
+                    $current_user->save();
                 }
                 DB::commit();
-                return $this->apiResponse->sendResponse(404, 'User not found without slug', null);
-//            }
-//            DB::commit();
-//            return $this->apiResponse->sendResponse(401, 'Only Admin use this api', null);
+                return $this->apiResponse->sendResponse(200, 'Slug Genereted Successfully', null);
+            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(404, 'User not found without slug', null);
+            //            }
+            //            DB::commit();
+            //            return $this->apiResponse->sendResponse(401, 'Only Admin use this api', null);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -1067,7 +1067,7 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(200, 'New Category added', $category);
                 }
                 DB::commit();
-                return $this->apiResponse->sendResponse(201, 'Already Category have', $find);
+                return $this->apiResponse->sendResponse(409, 'Already Category have', $find);
             }
             DB::commit();
             return $this->apiResponse->sendResponse(401, 'Only Teacher can add category', null);
@@ -1156,7 +1156,7 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(200, 'Category Rating Added Successfully', $find_category);
                 }
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Already Added Rating', null);
+                return $this->apiResponse->sendResponse(409, 'Already Added Rating', null);
             }
             DB::commit();
             return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
@@ -1215,7 +1215,7 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(200, 'Category Enrollment Successfully', null);
                 }
                 DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Already Enrolled Category', null);
+                return $this->apiResponse->sendResponse(409, 'Already Enrolled Category', null);
             }
             DB::commit();
             return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
@@ -1657,7 +1657,7 @@ class LearnWithYoutubeController extends Controller
                     $check = LearningPath::with('video')->where(['category_id' => $request->category_id, 'video_id' => $video->id])->first();
                     if ($check) {
                         DB::commit();
-                        return $this->apiResponse->sendResponse(201, 'Already Video Added to this Category', $check);
+                        return $this->apiResponse->sendResponse(409, 'Already Video Added to this Category', $check);
                     }
 
                     if ($request->ordering == -1) {
@@ -1676,7 +1676,7 @@ class LearnWithYoutubeController extends Controller
                         $start_time = 0;
                     }
 
-                    $new_lp_id = LearningPath::create(['user_id'=>Auth::user()->id,'category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering, 'start_time' => $start_time]);
+                    $new_lp_id = LearningPath::create(['user_id' => Auth::user()->id, 'category_id' => $request->category_id, 'video_id' => $video->id, 'ordering' => $ordering, 'start_time' => $start_time]);
 
                     $video_time = youtube_video_time_get($request->video_url); // In seconds
                     $category_find = Category::find($request->category_id);
@@ -1731,7 +1731,7 @@ class LearnWithYoutubeController extends Controller
                             $find_learning_path->save();
                         } else {
                             DB::commit();
-                            return $this->apiResponse->sendResponse(200, 'Learning path already in this order', null);
+                            return $this->apiResponse->sendResponse(409, 'Learning path already in this order', null);
                         }
 
                         DB::commit();
@@ -1971,7 +1971,7 @@ class LearnWithYoutubeController extends Controller
                     return $this->apiResponse->sendResponse(200, 'Keyword added successfully', null);
                 } else {
 
-                    return $this->apiResponse->sendResponse(200, 'Already keyword exits by you', null);
+                    return $this->apiResponse->sendResponse(409, 'Already keyword exits by you', null);
                 }
             } else {
                 return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
@@ -2013,7 +2013,7 @@ class LearnWithYoutubeController extends Controller
 
             if ($checkRecord) {
                 DB::Commit();
-                return $this->apiResponse->sendResponse(200, 'Already added this Category', null);
+                return $this->apiResponse->sendResponse(409, 'Already added this Category', null);
             }
 
             $keyword->categories()->attach($category->id, array('user_id' => Auth::user()->id));
@@ -2076,14 +2076,14 @@ class LearnWithYoutubeController extends Controller
         DB::beginTransaction();
 
         try {
-//            if (Auth::user()->role_id == 3) {
-                $change_user_id = Category::where('user_id', 0)->orWhere('user_id', null)->update(['user_id' => 1]);
+            //            if (Auth::user()->role_id == 3) {
+            $change_user_id = Category::where('user_id', 0)->orWhere('user_id', null)->update(['user_id' => 1]);
 
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
-//            } else {
-//                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-//            }
+            DB::commit();
+            return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            //            } else {
+            //                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            //            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
@@ -2094,39 +2094,14 @@ class LearnWithYoutubeController extends Controller
     {
         DB::beginTransaction();
         try {
-//            if (Auth::user()->role_id == 3) {
-                $change_user_id = VideoAnnotation::where('user_id', 0)->update(['user_id' => 1]);
+            //            if (Auth::user()->role_id == 3) {
+            $change_user_id = VideoAnnotation::where('user_id', 0)->update(['user_id' => 1]);
 
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
-//            } else {
-//                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
-//            }
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
-    public function get_video_all_details(Request $request)
-    {
-        DB::beginTransaction();
-        $validator = Validator::make($request->all(), [
-            'video_url' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-        }
-
-        try {
-            $searchVideo = Video::with('notes.user:id,name,avatar', 'ratings', 'keywords', 'learning_path.category.user:id,name,avatar')->where('url', $request->video_url)->first();
-            if ($searchVideo) {
-                DB::commit();
-                return $this->apiResponse->sendResponse(200, 'Video with all details get successfully', $searchVideo);
-            }
             DB::commit();
-            return $this->apiResponse->sendResponse(404, 'Video Not Found', null);
+            return $this->apiResponse->sendResponse(200, 'User ID Changed Successfully', null);
+            //            } else {
+            //                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            //            }
         } catch (\Exception $e) {
             DB::rollback();
             return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
