@@ -56,6 +56,7 @@ Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user
 
 Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
 Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
+Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
 
 
 // Protected APIs via Auth Middleware
@@ -66,11 +67,12 @@ Route::group(['middleware' => 'auth:api'], function () {
         //      Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
         Route::group(['middleware' => ['login_status']], function () {
+		Route::get('check_auth', ['uses' => 'SocialController@checkAuthentication']);
 
         //--- Change user_id to admin from 0 or null from category and video_annotation table ---//  Only For Admin
 //        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
 //        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
-                Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
+//                Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
                 
                 //--- End for Only Admin --- //
 
@@ -160,7 +162,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 //        Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
 
 //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']); 
-//        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
+        Route::post('add_video_annotations',['uses' => 'VideoAnnotationController@add_video_annotations']);
 
         //-- Add Video Annotation Vote --//
         Route::post('add_video_note_vote',['uses' => 'VideoAnnotationController@add_video_note_vote']);
