@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Search;
+use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
@@ -14,6 +16,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\SitemapCron::class,
+        Commands\ResetSearchesCount::class,
     ];
 
     /**
@@ -24,6 +27,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('reset:search')->daily();
         $schedule->command('sitemap:cron')->daily();
         $schedule->command('resourceTimeline:generate')->daily();
     }
