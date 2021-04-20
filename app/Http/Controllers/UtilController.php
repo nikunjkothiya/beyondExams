@@ -14,6 +14,7 @@ use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\SitemapIndex;
 use Spatie\Sitemap\Tags\Url;
 use stdClass;
+use Illuminate\Support\Facades\Validator;
 
 class UtilController extends Controller
 {
@@ -142,18 +143,26 @@ class UtilController extends Controller
     //     }
     // }
 
-    public function generate_all_sitemap()
+    public function generate_all_sitemap(Request $request)
     {
+	$validator = Validator::make($request->all(), [
+            'sitemap_index' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
+        }
         $apiResponse = new ApiResponse;
         try {
             // Get sitemap index
-            $lastVideo = Video::latest('id')->first();
-            $index = floor($lastVideo->id / 1000);
+//            $lastVideo = Video::latest('id')->first();
+//            $index = floor($lastVideo->id / 1000);
+	   $i = $request->sitemap_index;
 
             $sitemapIndex = SitemapIndex::create();
-            for ($i = 0; $i <= $index; $i++) {
+//            for ($i = 0; $i <= $index; $i++) {
                 // Get Last 1000 Videos
-                $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->get();
+                $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->orderBy('id', 'ASC')->get();
 
                 // Start making sitemap
                 $sitemap = Sitemap::create();
@@ -176,7 +185,7 @@ class UtilController extends Controller
                 $sitemap->writeToDisk('public', $sitemap_path);
                 resolve('url')->forceRootUrl('https://api.learnwithyoutube.org/storage/');
                 $sitemapIndex->add($sitemap_path);
-            }
+//            }
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
             resolve('url')->forceRootUrl(env('APP_URL'));
             return $apiResponse->sendResponse(200, "Successfully Sitemap Generated", $index);

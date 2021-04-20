@@ -16,6 +16,15 @@ class SocialController extends Controller
     {
         $this->apiResponse = $apiResponse;
     }
+    public function checkAuthentication(){
+	try {
+	    if (Auth::check())
+                return $this->apiResponse->sendResponse(200, 'Success', "User authenticated");
+	    return $this->apiResponse->sendResponse(401, 'Failed', "Auth check failed");
+        } catch (Exception $e) {
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
 
     public function get_followers() {
         try {

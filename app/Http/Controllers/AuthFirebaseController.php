@@ -82,11 +82,6 @@ class AuthFirebaseController extends Controller
             else
                 $new_user->role_id = 1;
 
-            if ($request->role_id) {
-		if (!$new_user->role->contains($request->role_id))
-                    $new_user->role()->attach([$request->role_id]);
-            }
-
             if (!is_null($firebase_user->displayName)){
                 $new_user->name = $firebase_user->displayName;
                 $slug = str_replace(" ", "-", strtolower($firebase_user->displayName)) . "-" . substr(hash('sha256', mt_rand() . microtime()), 0, 5);
@@ -100,6 +95,10 @@ class AuthFirebaseController extends Controller
                 $new_user->avatar = $firebase_user->photoUrl;
 
             $new_user->save();
+	    if ($request->role_id) {
+                if (!$new_user->role->contains($request->role_id))
+                    $new_user->role()->attach([$request->role_id]);
+            }
 
             if (!$new_user->social_accounts)
                 $new_user->social_accounts()->create(
