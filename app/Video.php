@@ -57,11 +57,11 @@ class Video extends Model
             $objDOM = new DOMDocument();
             $objDOM->preserveWhiteSpace = false;
             $objDOM->formatOutput = true;
-            $objDOM->load($path);
+            $objDOM->load($path,LIBXML_NOWARNING);
             $urlset = $objDOM->getElementsByTagName("urlset")->item(0);
 
             $newAdd = $objDOM->createElement("url");
-                $locAdd = $objDOM->createElement("loc", htmlentities($url));
+                $locAdd = $objDOM->createElement("loc", htmlentities($url, ENT_XML1));
                 $lastmodAdd = $objDOM->createElement("lastmod", $date);
                 $changefreqAdd = $objDOM->createElement("changefreq", "monthly");
                 $priorityAdd = $objDOM->createElement("priority", "0.5");
@@ -141,5 +141,10 @@ class Video extends Model
     public function learning_path()
     {
         return $this->hasOne('App\LearningPath','video_id','id');
+    }
+
+    public function annotations()
+    {
+        return $this->hasMany('App\VideoAnnotation','video_id','id');
     }
 }

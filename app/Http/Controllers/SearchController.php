@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Search;
+use App\SearchTermHistory;
+use App\User;
+use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,9 +69,17 @@ class SearchController extends Controller
 
             if ($found) {
                 $updateSearch = Search::find($found->id);
-                $updateSearch->total_count = $found->total_count + 1;
-                $updateSearch->daily_count = $found->daily_count + 1;
+                $updateSearch->total_count += 1;
+                $updateSearch->daily_count += 1;
                 $updateSearch->save();
+
+                $todayRecord = SearchTermHistory::where(['search_id' => $updateSearch->id])->whereDate('created_at', Carbon::today())->first();
+                if ($todayRecord) {
+                    $todayRecord->count += 1;
+                    $todayRecord->save();
+                } else {
+                    SearchTermHistory::create(['search_id' => $updateSearch->id, 'count' => 1]);
+                }
 
                 if ($authorization) {
                     $auth_user = User::where('api_token', $authorization)->first();
@@ -83,24 +94,35 @@ class SearchController extends Controller
                 $newSearch->total_count = 1;
                 $newSearch->daily_count = 1;
                 $newSearch->save();
+
+                SearchTermHistory::create(['search_id' => $newSearch->id, 'count' => 1]);
                 if ($authorization)
                     $newSearch->users()->attach(Auth::id());
                 // Auth::user()->id->searches()->attach($newSearch->id)
                 // $updateSearch->users()->toggle(1, ['user_id' => 1]);
             }
-            $search_term = Search::where('search_term', $request->search_term)->first();
+            /* $search_term = Search::where('search_term', $request->search_term)->first();
 
             if ($search_term) {
                 $search_term->total_count += 1;
                 $search_term->daily_count += 1;
                 $search_term->save();
+
+                $todayRecord = DB::table('search_term_history')->where(['search_id' => $search_term->id])->whereDate('created_at', Carbon::today())->first();
+                if ($todayRecord) {
+                    $todayRecord->count += 1;
+                    $todayRecord->save();
+                } else {
+                    DB::table('search_term_history')->insert(['search_id' => $search_term->id, 'count' => 1]);
+                }
             } else {
                 $search_term = new Search();
                 $search_term->search_term = $request->search_term;
                 $search_term->total_count = 1;
                 $search_term->daily_count = 1;
                 $search_term->save();
-            }
+                DB::table('search_term_history')->insert(['search_id' => $search_term->id, 'count' => 1]);
+            } */
 
             //                Auth::user()->searches()->attach([$search_term->id]);
 
