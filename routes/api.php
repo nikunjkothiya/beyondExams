@@ -18,19 +18,19 @@ Route::post('add_version_code', ['uses' => 'UtilController@add_version_code']);
 Route::get('generate_all_sitemap', ['uses' => 'UtilController@generate_all_sitemap']);
 Route::get('generate_latest_sitemap', ['uses' => 'UtilController@generate_latest_sitemap']);
 
-Route::get('get_categories', ['uses' => 'LearnWithYoutubeController@getCategories']);
-Route::get('get_all_categories', ['uses' => 'LearnWithYoutubeController@getAllCategories']);
-Route::get('get_all_categories_hierarchically', ['uses' => 'LearnWithYoutubeController@getAllCategoriesHierarchically']);
+Route::get('get_categories', ['uses' => 'CourseController@getCategories']);  
+Route::get('get_all_categories', ['uses' => 'CourseController@getAllCategories']);  
+Route::get('get_all_categories_hierarchically', ['uses' => 'CourseController@getAllCategoriesHierarchically']);  
 Route::post('submit_feedback', ['uses' => 'LearnWithYoutubeController@submit_feedback']);
 
 Route::get('get_video_materials', ['uses' => 'LWYResourceController@get_video_materials']);
 Route::get('get_tests', ['uses' => 'LWYResourceController@get_tests']);
 
-Route::get('get_resource_comments', ['uses' => 'LearnWithYoutubeController@get_resource_comments']);
-Route::get('get_video_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
+Route::get('get_resource_comments', ['uses' => 'CourseController@get_resource_comments']); 
+Route::get('get_video_likes', ['uses' => 'CourseController@get_resource_likes']);
 
-Route::get('get_learning_path', ['uses' => 'LearnWithYoutubeController@get_learning_path']);
-Route::get('get_next_level', ['uses' => 'LearnWithYoutubeController@getNextLevel']);
+Route::get('get_learning_path', ['uses' => 'CourseController@get_learning_path']);  
+Route::get('get_next_level', ['uses' => 'CourseController@getNextLevel']); 
 
 Route::get('get_most_searched_terms', ['uses' => 'SearchController@get_most_searched_terms']);
 Route::get('get_video_annotations', ['uses' => 'VideoAnnotationController@get_video_annotations']);
@@ -42,7 +42,7 @@ Route::get('is_supprot_to_chat_type_id', ['uses' => 'ChatController@is_supprot_t
 
 Route::post('update_file_path_for_whattsapp', ['uses' => 'ChatController@update_file_path_for_whattsapp']);
 
-Route::get('getPublicHistory', ['uses' => 'LearnWithYoutubeController@getPublicHistory']);
+Route::get('getPublicHistory', ['uses' => 'CourseController@getPublicHistory']); 
 
 // For Youtube Search Data 
 Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_data']);
@@ -52,11 +52,11 @@ Route::get('get_video_note_total_votes', ['uses' => 'VideoAnnotationController@g
 
 Route::post('get_video_all_details', ['uses' => 'YouTubeController@get_video_all_details']);
 
-Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
+Route::get('get_user_from_slug', ['uses' => 'UserController@get_user_from_slug']); 
 
-Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
-Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
-Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
+Route::get('old_user_slug_generate', ['uses' => 'UserController@old_user_slug_generate']);
+Route::get('category_user_id_change_to_admin', ['uses' => 'CourseController@category_user_id_change_to_admin']); 
+Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'CourseController@video_annotataion_user_id_change_to_admin']); 
 
 
 // Protected APIs via Auth Middleware
@@ -70,69 +70,75 @@ Route::group(['middleware' => 'auth:api'], function () {
 		Route::get('check_auth', ['uses' => 'SocialController@checkAuthentication']);
 
         //--- Change user_id to admin from 0 or null from category and video_annotation table ---//  Only For Admin
-//        Route::get('category_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@category_user_id_change_to_admin']);
-//        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'LearnWithYoutubeController@video_annotataion_user_id_change_to_admin']);
-//                Route::get('old_user_slug_generate', ['uses' => 'LearnWithYoutubeController@old_user_slug_generate']);
+//        Route::get('category_user_id_change_to_admin', ['uses' => 'CourseController@category_user_id_change_to_admin']);
+//        Route::get('video_annotataion_user_id_change_to_admin', ['uses' => 'CourseController@video_annotataion_user_id_change_to_admin']);
                 
                 //--- End for Only Admin --- //
 
-                Route::post('toggle_category_visibility', ['uses' => 'LearnWithYoutubeController@toggle_category_visibility']);
+                Route::post('toggle_category_visibility', ['uses' => 'CourseController@toggle_category_visibility']); 
                 Route::post('add_ses_video', ['uses' => 'ChemistryUniverseController@add_ses_video']);
 
                 //        Route::post('add_search_term',['uses' => 'SearchController@add_search_term']);
 
         // -------  Add Category and Video Annotation Report ------- //
-        Route::post('add_category_report',['uses' => 'VideoAnnotationController@add_category_report']);
+        Route::post('add_category_report',['uses' => 'CourseController@add_category_report']);  
         Route::post('add_video_annotation_report',['uses' => 'VideoAnnotationController@add_video_annotation_report']);
 
         // ----------Browse videos----------
 
         // Add new category in Browse section
-        Route::post('add_new_category', ['uses' => 'LearnWithYoutubeController@addNewCategory']);
-        Route::post('remove_category', ['uses' => 'LearnWithYoutubeController@removeCategory']);
-        Route::post('edit_category', ['uses' => 'LearnWithYoutubeController@edit_category']);
+        Route::post('add_new_category', ['uses' => 'CourseController@addNewCategory']);   
+        Route::post('remove_category', ['uses' => 'CourseController@removeCategory']);  
+        Route::post('edit_category', ['uses' => 'CourseController@edit_category']);  
 
         //-- Rating to Category --// 
-        Route::post('add_category_rating', ['uses' => 'LearnWithYoutubeController@add_category_rating']);
-        Route::get('get_category_rating', ['uses' => 'LearnWithYoutubeController@get_category_rating']);
+        Route::post('add_category_rating', ['uses' => 'CourseController@add_category_rating']); 
+        Route::get('get_category_rating', ['uses' => 'CourseController@get_category_rating']); 
 
         //-- Enrollment in Category --//
-        Route::post('add_category_enrollment', ['uses' => 'LearnWithYoutubeController@add_category_enrollment']);
-        Route::get('get_category_enrollment', ['uses' => 'LearnWithYoutubeController@get_category_enrollment']);
+        Route::post('add_category_enrollment', ['uses' => 'CourseController@add_category_enrollment']); 
+        Route::get('get_category_enrollment', ['uses' => 'CourseController@get_category_enrollment']); 
 
         // Add Image of category in category tabel
-        Route::post('add_image_to_category', ['uses' => 'LearnWithYoutubeController@add_image_to_category']);
+        Route::post('add_image_to_category', ['uses' => 'CourseController@add_image_to_category']);  
 
         // Keyword add to video
-        Route::post('add_keyword_to_video', ['uses' => 'LearnWithYoutubeController@add_keyword_to_video']);
+        Route::post('add_keyword_to_video', ['uses' => 'CourseController@add_keyword_to_video']);  
 
         //-- Keyword add to and get of Category --//
-        Route::post('add_keyword_to_category', ['uses' => 'LearnWithYoutubeController@add_keyword_to_category']);
-        Route::get('get_keywords_of_category', ['uses' => 'LearnWithYoutubeController@get_keywords_of_category']);   
+        Route::post('add_keyword_to_category', ['uses' => 'CourseController@add_keyword_to_category']);   
+        Route::get('get_keywords_of_category', ['uses' => 'CourseController@get_keywords_of_category']);   
       
         // Profile APi
         Route::post('logout', ['uses' => 'ApiAuthController@logout']);
 
-        Route::post('submit_user_profile', ['uses' => 'LearnWithYoutubeController@submit_user_profile']);
-        Route::post('update_user_profile', ['uses' => 'LearnWithYoutubeController@update_user_profile']);
-        Route::get('get_user_profile', ['uses' => 'LearnWithYoutubeController@get_user_profile']);
-        Route::post('add_user_certificate', ['uses' => 'LearnWithYoutubeController@add_user_certificate']);        
-        Route::get('delete_certificate', ['uses' => 'LearnWithYoutubeController@delete_certificate']);        
-        Route::get('delete_skill', ['uses' => 'LearnWithYoutubeController@delete_skill']); //Domain
-        Route::get('delete_education', ['uses' => 'LearnWithYoutubeController@delete_education']); //Education
+        Route::post('submit_user_profile', ['uses' => 'UserController@submit_user_profile']); 
+        Route::post('update_user_profile', ['uses' => 'UserController@update_user_profile']); 
+        Route::get('get_user_profile', ['uses' => 'UserController@get_user_profile']); 
+        Route::post('add_user_certificate', ['uses' => 'UserController@add_user_certificate']);         
+        Route::get('delete_certificate', ['uses' => 'UserController@delete_certificate']); 
+        Route::get('delete_skill', ['uses' => 'UserController@delete_skill']); //Domain  
+        Route::get('delete_education', ['uses' => 'UserController@delete_education']); //Education  
+
+        //-- Update APi in For User Profiles --//
+        Route::post('update_user_certificate', ['uses' => 'UserController@update_user_certificate']); 
+        Route::post('update_user_skill', ['uses' => 'UserController@update_user_skill']); 
+        Route::post('update_user_education_institute', ['uses' => 'UserController@update_user_education_institute']); 
+        Route::post('update_user_education_standard', ['uses' => 'UserController@update_user_education_standard']); 
+  
+        // User Social Links add
+        Route::post('add_user_facebook_link', ['uses' => 'UserController@add_user_facebook_link']);  
+        Route::post('add_user_instagram_link', ['uses' => 'UserController@add_user_instagram_link']); 
+        Route::post('add_user_github_link', ['uses' => 'UserController@add_user_github_link']); 
+        Route::post('add_user_twitter_url', ['uses' => 'UserController@add_user_twitter_url']); 
+        Route::post('add_user_linkedin_url', ['uses' => 'UserController@add_user_linkedin_url']); 
+ 
+        // ------- User Education Add -------- //
+        Route::post('add_user_education',['uses' => 'UserController@add_user_education']); 
 
         // ------- User Histroy Privacy Change -------- //
-        Route::post('change_history_public',['uses' => 'LearnWithYoutubeController@change_history_public']);
-        // ------- User Education Add -------- //
-        Route::post('add_user_education',['uses' => 'LearnWithYoutubeController@add_user_education']);
+        Route::post('change_history_public',['uses' => 'CourseController@change_history_public']); 
 
-
-        // User Social Links add
-        Route::post('add_user_facebook_link', ['uses' => 'LearnWithYoutubeController@add_user_facebook_link']);
-        Route::post('add_user_instagram_link', ['uses' => 'LearnWithYoutubeController@add_user_instagram_link']);
-        Route::post('add_user_github_link', ['uses' => 'LearnWithYoutubeController@add_user_github_link']);
-        Route::post('add_user_twitter_url', ['uses' => 'LearnWithYoutubeController@add_user_twitter_url']);
-        Route::post('add_user_linkedin_url', ['uses' => 'LearnWithYoutubeController@add_user_linkedin_url']);
 
         Route::post('save_comment', ['uses' => 'ApiRecordCommentController@save_comment']);
         Route::post('comment_reply', ['uses' => 'ApiRecordCommentController@save_reply_comment']);
@@ -140,22 +146,22 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('mark_relevance', ['uses' => 'OpportunityController@mark_relevant']);
 
         // Resources
-        Route::post('add_resource_comment', ['uses' => 'LearnWithYoutubeController@add_resource_comment']);
-        Route::get('get_resource_likes', ['uses' => 'LearnWithYoutubeController@get_resource_likes']);
+        Route::post('add_resource_comment', ['uses' => 'CourseController@add_resource_comment']); 
+       // Route::get('get_resource_likes', ['uses' => 'CourseController@get_resource_likes']); 
 
-        Route::post('switch_video_like', ['uses' => 'LearnWithYoutubeController@switch_video_like']);
+        Route::post('switch_video_like', ['uses' => 'CourseController@switch_video_like']);  
 
-        Route::get('get_watch_history', ['uses' => 'LearnWithYoutubeController@getWatchHistory']);
-        Route::post('save_to_watch_history', ['uses' => 'LearnWithYoutubeController@addToWatchHistory']);
+        Route::get('get_watch_history', ['uses' => 'CourseController@getWatchHistory']);  
+        Route::post('save_to_watch_history', ['uses' => 'CourseController@addToWatchHistory']);  
 
         // Video_Rating
-        Route::post('give_rate_video',['uses' => 'LearnWithYoutubeController@give_video_rating']);
+        Route::post('give_rate_video',['uses' => 'CourseController@give_video_rating']); 
 
         //Book-Mark Video 
-        Route::post('user_bookmark_video',['uses' => 'LearnWithYoutubeController@user_bookmark_video']);
+        Route::post('user_bookmark_video',['uses' => 'CourseController@user_bookmark_video']); 
 
         //Attempt Test
-        Route::post('attempt_test',['uses' => 'LearnWithYoutubeController@attempt_test']);
+        Route::post('attempt_test',['uses' => 'CourseController@attempt_test']); 
 
        // Route::post('upload_notes', ['uses' => 'LWYResourceController@upload_notes']);
         Route::post('upload_test', ['uses' => 'LWYResourceController@upload_test']);
@@ -230,16 +236,9 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('send_notification', ['uses' => 'NotificationContoller@send_notification']);
 
         // Chemistry Universe
-        Route::post('add_video_to_learning_path', ['uses' => 'LearnWithYoutubeController@add_video_to_learning_path']);
-        Route::post('change_video_ordering', ['uses' => 'LearnWithYoutubeController@change_video_ordering']);
-        Route::post('remove_video_from_learning_path', ['uses' => 'LearnWithYoutubeController@remove_video_from_learning_path']);
-        
-        //-- Update APi in For User Profiles --//
-//        Route::get('get_user_from_slug', ['uses' => 'LearnWithYoutubeController@get_user_from_slug']);
-        Route::post('update_user_certificate', ['uses' => 'LearnWithYoutubeController@update_user_certificate']);
-        Route::post('update_user_skill', ['uses' => 'LearnWithYoutubeController@update_user_skill']);
-        Route::post('update_user_education_institute', ['uses' => 'LearnWithYoutubeController@update_user_education_institute']);
-        Route::post('update_user_education_standard', ['uses' => 'LearnWithYoutubeController@update_user_education_standard']);
+        Route::post('add_video_to_learning_path', ['uses' => 'CourseController@add_video_to_learning_path']); 
+        Route::post('change_video_ordering', ['uses' => 'CourseController@change_video_ordering']); 
+        Route::post('remove_video_from_learning_path', ['uses' => 'CourseController@remove_video_from_learning_path']); 
 
         Route::post('upload_video_material', ['uses' => 'LWYResourceController@upload_video_material']);
         

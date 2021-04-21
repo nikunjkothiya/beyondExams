@@ -145,47 +145,83 @@ class UtilController extends Controller
 
     public function generate_all_sitemap(Request $request)
     {
-	$validator = Validator::make($request->all(), [
-            'sitemap_index' => 'integer',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing.', $validator->errors());
-        }
+        set_time_limit(0);
         $apiResponse = new ApiResponse;
         try {
             // Get sitemap index
-//            $lastVideo = Video::latest('id')->first();
-//            $index = floor($lastVideo->id / 1000);
-	   $i = $request->sitemap_index;
+
+            $path = public_path('logFileForSitemap.txt');
+
+            $isExists = file_exists($path);
+
+            if (!$isExists) {
+                $file = fopen($path, "w") or die("Unable to open file!");
+                fclose($file);
+            }
+
+            $lines = file($path);
+
+            if (filesize($path) != 0) {
+                $last_string = str_replace("\n", "", $lines[0]);
+                $lastVideo = Video::where('url', $last_string)->first();
+            } else {
+                $lastVideo = Video::latest('id')->first();
+            }
+
+            //$lastVideo = Video::where('url',$last_string)->first();
+            $index = floor($lastVideo->id / 1000);
 
             $sitemapIndex = SitemapIndex::create();
-//            for ($i = 0; $i <= $index; $i++) {
+            if (filesize($path) == 0) {
+                $i = 0;
+                $index = 0;
+            }else{
+                $i = $index;
+                $index = $index;
+            }
+            for ($i = $i; $i <= $index; $i++) {
                 // Get Last 1000 Videos
-                $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->orderBy('id', 'ASC')->get();
+                if (filesize($path) == 0) {
+                    $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->get();
+                } else {
+                    $videos = Video::where('id', '>', $lastVideo->id)->limit(1000)->get();
+                }
 
                 // Start making sitemap
                 $sitemap = Sitemap::create();
                 // Loop through all videos
                 foreach ($videos as $video) {
-                    $response = youtube_data_api($video->url);
-                    if ($response == 0) {
-                        $myfile = fopen(public_path()."/dummyVideoUrl.txt", "a") or die("Unable to open file!");
-                        $txt = $video->url."\n";
-                        fwrite($myfile, $txt);
-                        fclose($myfile);
-                        continue;
+                    if ($video->slug == null) {
+                        $response = youtube_data_api($video->url);
+                        if ($response == 0) {
+                            $myfile = fopen(public_path() . "/dummyVideoUrl.txt", "a") or die("Unable to open file!");
+                            $txt = $video->url . "\n";
+                            fwrite($myfile, $txt);
+                            fclose($myfile);
+                            continue;
+                        }
+                    }else{
+                        $response['slug'] = $video->slug;
                     }
+
                     resolve('url')->forceRootUrl('https://beyondexams.org/dashboard/videos');
 
                     $sitemap->add(Url::create('search?id=' . $video->url . '&q=' . $response['slug'])->setChangeFrequency('monthly')->setPriority(0.5));
+
+                    // Log to file
+                    $logFile = fopen($path, "w") or die("Unable to open file!");
+                    $txt = $video->url . "\n";
+                    fwrite($logFile, $txt);
+                    fclose($logFile);
                 }
                 // Write to disk
+
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
+
                 $sitemap->writeToDisk('public', $sitemap_path);
                 resolve('url')->forceRootUrl('https://api.learnwithyoutube.org/storage/');
                 $sitemapIndex->add($sitemap_path);
-//            }
+            }
             $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
             resolve('url')->forceRootUrl(env('APP_URL'));
             return $apiResponse->sendResponse(200, "Successfully Sitemap Generated", $index);
