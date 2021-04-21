@@ -191,6 +191,7 @@ class UtilController extends Controller
                 $sitemap = Sitemap::create();
                 // Loop through all videos
                 foreach ($videos as $video) {
+                    $response = [];
                     if ($video->slug == null) {
                         $response = youtube_data_api($video->url);
                         if ($response == 0) {
