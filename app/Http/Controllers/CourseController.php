@@ -56,7 +56,7 @@ class CourseController extends Controller
         }
 
         try {
-            if (Auth::user()->role_id == 2) {
+            if (Auth::user()->role->contains(2)) {
                 $find = Category::where([['title', strtolower($request->title)], ['parent_id', $request->parent_id]])->first();
                 if (!$find) {
                     $description = ($request->description) ? $request->description : null;
@@ -101,7 +101,7 @@ class CourseController extends Controller
         }
 
         try {
-            if (Auth::user()->role_id == 2) {
+            if (Auth::user()->role->contains(2)) {
 
                 $findCategory = Category::where(['id' => $request->category_id, 'user_id' => Auth::user()->id])->first();
                 if ($findCategory) {
@@ -646,7 +646,7 @@ class CourseController extends Controller
         }
 
         try {
-            if (Auth::user()->role_id == 2) {
+            if (Auth::user()->role->contains(2)) {
                 $video = Video::where('url', $request->video_url)->first();
                 if (!$video) {
                     $video = new Video(['url' => $request->video_url]);
@@ -713,7 +713,7 @@ class CourseController extends Controller
         }
 
         try {
-            if (Auth::user()->id == 2) {
+            if (Auth::user()->role->contains(2)) {
                 $searchVideo = Video::where('url', $request->video_url)->first();
                 if ($searchVideo) {
                     $find_learning_path = LearningPath::where(['user_id' => Auth::user()->id, 'category_id' => $request->category_id, 'video_id' => $searchVideo->id])->first();
@@ -765,7 +765,7 @@ class CourseController extends Controller
         }
 
         try {
-            if (Auth::user()->role_id == 2) {
+            if (Auth::user()->role->contains(2)) {
                 $findAuthorizeUser = Category::where(['user_id' => Auth::user()->id, 'id' => $request->category_id])->first();
                 if ($findAuthorizeUser) {
                     $video_id = Video::where('url', $request->video_url)->first();
