@@ -65,7 +65,7 @@ class SearchController extends Controller
 
         try {
             $found = Search::where('search_term', $request->search_term)->first();
-            $authorization = $request->header('Authorization');
+           // $authorization = $request->header('Authorization');
 
             if ($found) {
                 $updateSearch = Search::find($found->id);
@@ -81,9 +81,9 @@ class SearchController extends Controller
                     SearchTermHistory::create(['search_id' => $updateSearch->id, 'count' => 1]);
                 }
 
-                if ($authorization) {
-                    $auth_user = User::where('api_token', $authorization)->first();
-                    $exiting = $updateSearch->users()->where('user_id', $auth_user->id)->exists();
+               // if ($authorization) {
+                if (Auth::user()) {   
+                    $exiting = $updateSearch->users()->where('user_id', Auth::user()->id)->exists();
                     if (!$exiting) {
                         $updateSearch->users()->attach(Auth::id());
                     }
@@ -96,7 +96,8 @@ class SearchController extends Controller
                 $newSearch->save();
 
                 SearchTermHistory::create(['search_id' => $newSearch->id, 'count' => 1]);
-                if ($authorization)
+               // if ($authorization)
+               if (Auth::user())
                     $newSearch->users()->attach(Auth::id());
                 // Auth::user()->id->searches()->attach($newSearch->id)
                 // $updateSearch->users()->toggle(1, ['user_id' => 1]);

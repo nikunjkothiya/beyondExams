@@ -217,36 +217,6 @@ class VideoAnnotationController extends Controller
         }
     }
 
-    public function add_category_report(Request $request)
-    {
-        DB::beginTransaction();
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|numeric',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
-        }
-
-        try {
-            if (!Category::find($request->category_id)) {
-                return $this->apiResponse->sendResponse(404, 'Category Not Found', null);
-            }
-
-            if (!CategoryUserReport::where(['category_id' => $request->category_id, 'user_id' => Auth::user()->id])->first()) {
-                Auth::user()->categoryReports()->attach($request->category_id);
-            } else {
-                return $this->apiResponse->sendResponse(409, 'Already Reported For this Category', null);
-            }
-
-            DB::commit();
-            return $this->apiResponse->sendResponse(200, 'Report For Category Added Succcessfully', null);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
-        }
-    }
-
     public function add_video_note_vote(Request $request)
     {
         DB::beginTransaction();
