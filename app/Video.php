@@ -39,37 +39,51 @@ class Video extends Model
             $response = youtube_data_api($model->url);
 
             if ($response == 0) {
-                $myfile = fopen(public_path()."/dummyVideoUrl.txt", "a") or die("Unable to open file!");
-                $txt = $model->url."\n";
+                $myfile = fopen(public_path() . "/dummyVideoUrl.txt", "a") or die("Unable to open file!");
+                $txt = $model->url . "\n";
                 fwrite($myfile, $txt);
                 fclose($myfile);
                 return true;
             }
 
-            Video::where('id',$model->id)->update(['slug'=>$response['slug'],'title'=>$response['title'] ,'description'=>$response['description']]);
-            
+            Video::where('id', $model->id)->update(['slug' => $response['slug'], 'title' => $response['title'], 'description' => $response['description']]);
+
             $url = 'https://beyondexams.org/dashboard/videos/search?id=' . $model->url . '&q=' . $response['slug'];
             $date = date('c', strtotime($model->updated_at));
 
             $index = floor($model->id / 1000);
             $path = storage_path('app/public/sitemaps/sitemap_' . ($index + 1) . '.xml');
+            $isExists = file_exists($path);
+            if (!$isExists) {
+
+                $xmlString = '<?xml version="1.0" encoding="UTF-8"?>
+            <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+            </urlset>';
+
+                $dom = new DOMDocument;
+                $dom->preserveWhiteSpace = FALSE;
+                $dom->loadXML($xmlString);
+                //Save XML as a file
+                $dom->save($path);
+            }
+
 
             $objDOM = new DOMDocument();
             $objDOM->preserveWhiteSpace = false;
             $objDOM->formatOutput = true;
-            $objDOM->load($path,LIBXML_NOWARNING);
+            $objDOM->load($path, LIBXML_NOWARNING);
             $urlset = $objDOM->getElementsByTagName("urlset")->item(0);
 
             $newAdd = $objDOM->createElement("url");
-                $locAdd = $objDOM->createElement("loc", htmlentities($url, ENT_XML1));
-                $lastmodAdd = $objDOM->createElement("lastmod", $date);
-                $changefreqAdd = $objDOM->createElement("changefreq", "monthly");
-                $priorityAdd = $objDOM->createElement("priority", "0.5");
+            $locAdd = $objDOM->createElement("loc", htmlentities($url, ENT_XML1));
+            $lastmodAdd = $objDOM->createElement("lastmod", $date);
+            $changefreqAdd = $objDOM->createElement("changefreq", "monthly");
+            $priorityAdd = $objDOM->createElement("priority", "0.5");
 
-                $newAdd->appendChild($locAdd);
-                $newAdd->appendChild($lastmodAdd);
-                $newAdd->appendChild($changefreqAdd);
-                $newAdd->appendChild($priorityAdd);
+            $newAdd->appendChild($locAdd);
+            $newAdd->appendChild($lastmodAdd);
+            $newAdd->appendChild($changefreqAdd);
+            $newAdd->appendChild($priorityAdd);
 
             $urlset->appendChild($newAdd);
             $objDOM->save($path);
@@ -140,11 +154,11 @@ class Video extends Model
 
     public function learning_path()
     {
-        return $this->hasOne('App\LearningPath','video_id','id');
+        return $this->hasOne('App\LearningPath', 'video_id', 'id');
     }
 
     public function annotations()
     {
-        return $this->hasMany('App\VideoAnnotation','video_id','id');
+        return $this->hasMany('App\VideoAnnotation', 'video_id', 'id');
     }
 }
