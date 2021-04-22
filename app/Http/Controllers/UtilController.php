@@ -8,6 +8,7 @@ use App\Language;
 use App\Tag;
 use App\Video;
 use Auth;
+use DOMDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Sitemap\Sitemap;
@@ -149,7 +150,6 @@ class UtilController extends Controller
         $apiResponse = new ApiResponse;
         try {
             // Get sitemap index
-
             $path = public_path('logFileForSitemap.txt');
 
             $isExists = file_exists($path);
@@ -175,7 +175,7 @@ class UtilController extends Controller
             if (filesize($path) == 0) {
                 $i = 0;
                 $index = 0;
-            }else{
+            } else {
                 $i = $index;
                 $index = $index;
             }
@@ -184,7 +184,10 @@ class UtilController extends Controller
                 if (filesize($path) == 0) {
                     $videos = Video::where('id', '>', ($i * 1000))->limit(1000)->get();
                 } else {
-                    $videos = Video::where('id', '>', $lastVideo->id)->limit(1000)->get();
+                    $old_id = strlen(substr($lastVideo->id, 1));
+                    $ids = str_repeat(0, $old_id);
+                    $last_id = $i . '' . $ids;
+                    $videos = Video::where('id', '>', $last_id)->limit(1000)->get();
                 }
 
                 // Start making sitemap
@@ -201,7 +204,7 @@ class UtilController extends Controller
                             fclose($myfile);
                             continue;
                         }
-                    }else{
+                    } else {
                         $response['slug'] = $video->slug;
                     }
 
@@ -218,13 +221,46 @@ class UtilController extends Controller
                 // Write to disk
 
                 $sitemap_path = 'sitemaps/sitemap_' . ($i + 1) . '.xml';
-
                 $sitemap->writeToDisk('public', $sitemap_path);
                 resolve('url')->forceRootUrl('https://api.learnwithyoutube.org/storage/');
-                $sitemapIndex->add($sitemap_path);
+                //$sitemapIndex->add($sitemap_path);
+
+                $Indexpath = storage_path('app/public/sitemaps/sitemap_index.xml');
+                $isExists = file_exists($Indexpath); //search sitemap_index.xml
+                if (!$isExists) {
+                    $xmlString = '<?xml version="1.0" encoding="UTF-8"?>
+                    <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                    </sitemapindex>';
+
+                    $dom = new DOMDocument;
+                    $dom->preserveWhiteSpace = FALSE;
+                    $dom->loadXML($xmlString);
+                    //Save XML as a file
+                    $dom->save($Indexpath);
+                }
+
+                $Indexpath = $Indexpath;
+                $date = date('c', strtotime("now"));
+                $add_sitemap_path = storage_path('app/public/sitemaps/' . $sitemap_path);
+
+                $objDOM = new DOMDocument();
+                $objDOM->preserveWhiteSpace = false;
+                $objDOM->formatOutput = true;
+                $objDOM->load($Indexpath, LIBXML_NOWARNING);
+                $urlset = $objDOM->getElementsByTagName("sitemapindex")->item(0);
+
+                $newAdd = $objDOM->createElement("sitemap");
+                $locAdd = $objDOM->createElement("loc", htmlentities($add_sitemap_path, ENT_XML1));
+                $lastmodAdd = $objDOM->createElement("lastmod", $date);
+
+                $newAdd->appendChild($locAdd);
+                $newAdd->appendChild($lastmodAdd);
+
+                $urlset->appendChild($newAdd);
+                $objDOM->save($Indexpath);
             }
-            $sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
-            resolve('url')->forceRootUrl(env('APP_URL'));
+            //$sitemapIndex->writeToDisk('public', 'sitemaps/sitemap_index.xml');
+            //resolve('url')->forceRootUrl(env('APP_URL'));
             return $apiResponse->sendResponse(200, "Successfully Sitemap Generated", $index);
         } catch (\Exception $e) {
             return $apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());

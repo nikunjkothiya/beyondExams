@@ -50,6 +50,8 @@ Route::get('youtube_search_data', ['uses' => 'YouTubeController@youtube_search_d
 //-- Get Total Video Annotation Votes --//
 Route::get('get_video_note_total_votes', ['uses' => 'VideoAnnotationController@get_video_note_total_votes']);
 
+Route::get('get_daily_top_searched_results', ['uses' => 'SearchController@get_daily_top_searched_results']);
+
 Route::post('get_video_all_details', ['uses' => 'YouTubeController@get_video_all_details']);
 
 Route::get('get_user_from_slug', ['uses' => 'UserController@get_user_from_slug']); 
@@ -103,7 +105,8 @@ Route::group(['middleware' => 'auth:api'], function () {
         Route::post('add_image_to_category', ['uses' => 'CourseController@add_image_to_category']);  
 
         // Keyword add to video
-        Route::post('add_keyword_to_video', ['uses' => 'CourseController@add_keyword_to_video']);  
+        Route::post('add_keyword_to_video', ['uses' => 'CourseController@add_keyword_to_video']);
+        Route::post('get_video_keywords', ['uses' => 'CourseController@get_video_keywords']);
 
         //-- Keyword add to and get of Category --//
         Route::post('add_keyword_to_category', ['uses' => 'CourseController@add_keyword_to_category']);   

@@ -983,6 +983,35 @@ class CourseController extends Controller
         }
     }
 
+    public function get_video_keywords(Request $request)
+    {
+        DB::beginTransaction();
+        $validator = Validator::make($request->all(), [
+            'video_urls' => 'required|array',
+            'video_urls.*' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse->sendResponse(400, 'Parameters missing or invalid.', $validator->errors());
+        }
+
+        try {
+            if (Auth::user()) {
+
+                $video_ids = Video::whereIn('url', $request->video_urls)->select('id')->get();
+                $keywords = KeywordVideo::with('video_url:id,url','keyword')->whereIn('video_id',$video_ids)->get();
+
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Keywords get successfully', $keywords);
+            } else {
+                return $this->apiResponse->sendResponse(401, 'User unauthorized', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
     public function add_keyword_to_category(Request $request)
     {
         DB::beginTransaction();

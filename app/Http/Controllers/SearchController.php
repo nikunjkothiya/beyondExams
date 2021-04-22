@@ -135,6 +135,26 @@ class SearchController extends Controller
         }
     }
 
+    public function get_daily_top_searched_results(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $yesterday = date("Y-m-d", strtotime('-1 days') );
+           
+            $getsearches = SearchTermHistory::with('search_term:id,search_term')->whereDate('created_at', $yesterday)->orderBy('count','desc')->limit(10)->get();   //10 records per call api
+            if ($getsearches) {
+                DB::commit();
+                return $this->apiResponse->sendResponse(200, 'Successfully fetched search term.', $getsearches);
+            } else {
+                return $this->apiResponse->sendResponse(404, 'No data found.', null);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->apiResponse->sendResponse(500, $e->getMessage(), $e->getTraceAsString());
+        }
+    }
+
 
     public function show(Search $search)
     {
